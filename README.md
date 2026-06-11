@@ -21,7 +21,7 @@
 
 ## 📖 About
 
-**Study Sphere AI** is an intelligent educational assistant built to make learning more engaging, accessible, and personalized. Whether you're a school student, college learner, or technology enthusiast, Study Sphere helps you discover knowledge, understand concepts, and explore new subjects with the power of AI.
+**Study Sphere AI** is an intelligent educational assistant built to make learning more engaging, accessible, and personalized. Whether you're a school student, college learner, or technology enthusiast, Study Sphere answers all your questions across any topic or problem on your mind.
 
 ---
 
@@ -52,15 +52,16 @@
 
 ---
 
-## 🎯 Subject Coverage
+## ✨ What Makes Study Sphere Great
 
 <div align="center">
 
-| Category | Topics |
-|----------|--------|
-| **Sciences** | Physics • Chemistry • Biology • Mathematics |
-| **Technology** | Computer Science • Programming • AI • Machine Learning |
-| **Academic** | Exam Preparation • General Knowledge • Concepts |
+- 🎯 **Any Question, Any Topic** - Not limited to specific subjects. Ask anything on your mind and get comprehensive answers
+- 🧠 **Intelligent Understanding** - Advanced AI that comprehends context and provides meaningful, personalized responses
+- 📖 **Clear Explanations** - Complex concepts broken down into simple, easy-to-understand explanations
+- 💾 **Knowledge Management** - Store your learnings and build your personal knowledge base
+- 🌐 **Always Available** - 24/7 learning support whenever you need it
+- ⚡ **Instant Responses** - Quick answers without waiting, optimized for your learning pace
 
 </div>
 
