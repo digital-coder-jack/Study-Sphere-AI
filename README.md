@@ -1,5 +1,7 @@
 # 🌌 Study Sphere AI
 
+![Study Sphere AI](assets/Study%20Sphere%20AI.png)
+
 ### 🎓 Your Intelligent Learning Companion
 
 Learn smarter. Explore deeper. Grow faster.
