@@ -3,7 +3,6 @@
 # 🌌 Study Sphere AI
 
 [![Study Sphere AI](assets/Study%20Sphere%20AI.png#gh-light-mode-only)](assets/Study%20Sphere%20AI.png)
-[![Study Sphere AI](assets/Study%20Sphere%20AI.png#gh-dark-mode-only)](assets/Study%20Sphere%20AI.png)
 
 ### ✨ Your Intelligent Learning Companion
 
