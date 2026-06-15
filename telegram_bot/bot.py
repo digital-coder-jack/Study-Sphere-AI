@@ -70,6 +70,7 @@ I'll ask the AI for you!
 
 🌐 <b>New:</b> Study Sphere now has a full web app too — notes,
 quizzes, flashcards, a ChatGPT-style assistant and more.
+https://study-sphere-ai-fc1f.vercel.app/
 """
 
 HELP_TEXT = """\
