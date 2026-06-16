@@ -100,14 +100,17 @@ const SS = (() => {
   /* ---------- particles ---------- */
   function initParticles(id = 'particles-js') {
     if (!document.getElementById(id) || typeof particlesJS === 'undefined') return;
+    const light = document.documentElement.getAttribute('data-theme') === 'light';
+    const lineOpacity = light ? 0.18 : 0.25;
+    const dotOpacity = light ? 0.5 : 0.45;
     particlesJS(id, {
       particles: {
         number: { value: 60, density: { enable: true, value_area: 900 } },
         color: { value: ['#6d7bff', '#a855f7', '#22d3ee'] },
         shape: { type: 'circle' },
-        opacity: { value: 0.45, random: true },
+        opacity: { value: dotOpacity, random: true },
         size: { value: 3, random: true },
-        line_linked: { enable: true, distance: 150, color: '#6d7bff', opacity: 0.25, width: 1 },
+        line_linked: { enable: true, distance: 150, color: '#6d7bff', opacity: lineOpacity, width: 1 },
         move: { enable: true, speed: 1.6, out_mode: 'out' },
       },
       interactivity: {
@@ -119,15 +122,75 @@ const SS = (() => {
     });
   }
 
-  /* ---------- mobile nav ---------- */
+  /* ---------- theme (dark / light) ---------- */
+  const THEME_KEY = 'ss_theme';
+  function getTheme() {
+    try { return localStorage.getItem(THEME_KEY) || 'dark'; } catch { return 'dark'; }
+  }
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    try { localStorage.setItem(THEME_KEY, theme); } catch { /* ignore */ }
+  }
+  function toggleTheme() {
+    const next = getTheme() === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    // Re-init particles so their colours suit the new theme.
+    if (typeof particlesJS !== 'undefined' && document.getElementById('particles-js')) {
+      initParticles();
+    }
+    return next;
+  }
+  function initTheme() {
+    applyTheme(getTheme()); // ensure attribute is set even without inline script
+    document.querySelectorAll('#themeToggle, .theme-toggle').forEach((btn) => {
+      if (btn.dataset.bound) return;
+      btn.dataset.bound = '1';
+      btn.addEventListener('click', toggleTheme);
+    });
+  }
+
+  /* ---------- mobile nav (hamburger) ---------- */
   function initNav() {
     const toggle = document.getElementById('navToggle');
     const links = document.getElementById('navLinks');
-    if (toggle && links) toggle.addEventListener('click', () => links.classList.toggle('open'));
+    const backdrop = document.getElementById('navBackdrop');
+    if (!toggle || !links) return;
+
+    const open = () => {
+      links.classList.add('open');
+      toggle.classList.add('active');
+      toggle.setAttribute('aria-expanded', 'true');
+      document.body.classList.add('nav-open');
+      if (backdrop) backdrop.classList.add('show');
+    };
+    const close = () => {
+      links.classList.remove('open');
+      toggle.classList.remove('active');
+      toggle.setAttribute('aria-expanded', 'false');
+      document.body.classList.remove('nav-open');
+      if (backdrop) backdrop.classList.remove('show');
+    };
+    const isOpen = () => links.classList.contains('open');
+
+    toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      isOpen() ? close() : open();
+    });
+
+    // Close when a menu link/button is tapped.
+    links.querySelectorAll('a').forEach((a) => a.addEventListener('click', close));
+
+    // Close when tapping the backdrop or pressing Escape.
+    if (backdrop) backdrop.addEventListener('click', close);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+
+    // Reset state if the viewport grows past the mobile breakpoint.
+    window.addEventListener('resize', () => { if (window.innerWidth > 880) close(); });
   }
 
   /* ---------- boot common UI ---------- */
   document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
     initParticles();
     attachRipples();
     initNav();
@@ -136,5 +199,5 @@ const SS = (() => {
   });
 
   return { api, getToken, setSession, getUser, clearSession, isAuthed, logout,
-           requireAuth, toast, attachRipples, initParticles };
+           requireAuth, toast, attachRipples, initParticles, toggleTheme, getTheme, applyTheme };
 })();
