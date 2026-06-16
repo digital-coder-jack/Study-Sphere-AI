@@ -36,6 +36,10 @@
     <a class="brand" href="/dashboard"><span class="logo">🌌</span><span>Study<span class="grad-text">Sphere</span></span></a>
     <nav class="side-nav">${navHtml}</nav>
     <div class="side-foot">
+      <button class="theme-toggle side-theme" id="themeToggle" aria-label="Toggle theme" title="Toggle light / dark">
+        <i class="fas fa-moon"></i><i class="fas fa-sun"></i>
+        <span class="lbl">Theme</span>
+      </button>
       <div class="side-user">
         <span class="avatar">${initial}</span>
         <div class="meta">
@@ -47,6 +51,16 @@
         <i class="fas fa-right-from-bracket"></i> Log out
       </a>
     </div>`;
+
+  // Bind the theme toggle that was just injected (app.js initTheme runs on
+  // DOMContentLoaded, before this sidebar HTML exists, so bind it here too).
+  if (window.SS && SS.toggleTheme) {
+    const tbtn = document.getElementById('themeToggle');
+    if (tbtn && !tbtn.dataset.bound) {
+      tbtn.dataset.bound = '1';
+      tbtn.addEventListener('click', () => SS.toggleTheme());
+    }
+  }
 
   document.getElementById('logoutBtn').addEventListener('click', (e) => {
     e.preventDefault();
