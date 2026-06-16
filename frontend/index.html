@@ -4,6 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <script>
+    /* Apply saved theme before paint to avoid a flash of the wrong theme. */
+    (function () {
+      try {
+        var t = localStorage.getItem('ss_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
+    })();
+  </script>
   <title>Study Sphere AI — Your Intelligent Learning Companion</title>
   <meta name="description" content="Study Sphere AI: an AI-powered study assistant with chat, notes, quizzes, flashcards, study planner and more. Learn smarter, explore deeper, grow faster." />
 
@@ -32,9 +41,17 @@
         <a class="link" href="/login">Log in</a>
         <a class="btn" href="/signup">Get started <i class="fas fa-arrow-right"></i></a>
       </nav>
-      <button class="nav-toggle" id="navToggle" aria-label="Menu"><i class="fas fa-bars"></i></button>
+      <div class="nav-actions">
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle light / dark">
+          <i class="fas fa-moon"></i><i class="fas fa-sun"></i>
+        </button>
+        <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">
+          <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+        </button>
+      </div>
     </div>
   </header>
+  <div class="nav-backdrop" id="navBackdrop"></div>
 
   <!-- Hero -->
   <section class="hero">
