@@ -143,8 +143,10 @@ if os.path.isdir(FRONTEND_DIR):
 
 def _page(name: str) -> FileResponse | JSONResponse:
     file_path = os.path.join(FRONTEND_DIR, name)
+
     if os.path.isfile(file_path):
         return FileResponse(file_path)
+
     return JSONResponse({"detail": "Page not found"}, status_code=404)
 
 

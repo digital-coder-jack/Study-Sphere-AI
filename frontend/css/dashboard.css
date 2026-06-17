@@ -18,10 +18,44 @@
   position: sticky;
   top: 0;
   height: 100vh;
-  transition: transform 0.3s ease;
+  transition: width 0.3s ease, transform 0.3s ease;
   z-index: 60;
 }
-.sidebar .brand { padding: 0.4rem 0.6rem 1.2rem; }
+
+/* Auto-collapse sidebar on desktop */
+@media (min-width: 1200px) {
+  .app-shell:not(:hover) .sidebar {
+    width: 80px;
+  }
+  .app-shell:not(:hover) .sidebar .brand span:not(.logo),
+  .app-shell:not(:hover) .sidebar .side-nav a span,
+  .app-shell:not(:hover) .sidebar .side-foot .side-user,
+  .app-shell:not(:hover) .sidebar .side-foot .theme-toggle .lbl,
+  .app-shell:not(:hover) .sidebar .nav-section {
+    display: none;
+  }
+  .app-shell:not(:hover) .sidebar .side-nav a {
+    justify-content: center;
+    padding: 0.8rem 0.5rem;
+  }
+  .app-shell:not(:hover) .sidebar .side-foot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .app-shell:not(:hover) .sidebar .side-foot .theme-toggle {
+    width: 100%;
+  }
+  .app-shell:not(:hover) .sidebar .side-foot .side-user {
+    display: none;
+  }
+  .app-shell:hover .sidebar {
+    width: 268px;
+  }
+}
+.sidebar .brand { padding: 0.4rem 0.6rem 1.2rem; display: flex; align-items: center; gap: 0.6rem; }
+.sidebar .brand .logo { font-size: 1.5rem; flex-shrink: 0; }
 
 .side-nav { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; overflow-y: auto; }
 .side-nav a {
@@ -30,13 +64,15 @@
   color: var(--text-dim); font-weight: 500;
   transition: background 0.2s, color 0.2s, transform 0.2s;
 }
-.side-nav a i { width: 20px; text-align: center; font-size: 1.05rem; }
+.side-nav a i { width: 20px; text-align: center; font-size: 1.05rem; flex-shrink: 0; }
 .side-nav a:hover { background: var(--glass); color: var(--text); transform: translateX(3px); }
 .side-nav a.active { background: var(--grad); color: #fff; box-shadow: 0 10px 26px rgba(109,123,255,0.4); }
 .side-nav .nav-section { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-dim); padding: 1rem 0.95rem 0.4rem; }
 
-.side-foot { border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 0.6rem; }
-.side-user { display: flex; align-items: center; gap: 0.7rem; padding: 0.6rem 0.5rem; }
+.side-foot { border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 0.6rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.side-foot .theme-toggle { display: flex; align-items: center; gap: 0.6rem; justify-content: flex-start; }
+.side-foot .theme-toggle .lbl { display: inline; }
+.side-user { display: flex; align-items: center; gap: 0.7rem; padding: 0.6rem 0.5rem; flex-shrink: 0; }
 .side-user .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--grad); display: grid; place-items: center; font-weight: 700; flex-shrink: 0; }
 .side-user .meta { overflow: hidden; }
 .side-user .meta b { display: block; font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
