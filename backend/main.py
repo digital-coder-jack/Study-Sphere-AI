@@ -163,6 +163,9 @@ FAVICON_SVG = (
 @app.get("/favicon.ico")
 @app.get("/favicon.svg")
 async def favicon():
+    fav_path = os.path.join(FRONTEND_DIR, "assets", "logo.png")
+    if os.path.exists(fav_path):
+        return FileResponse(fav_path)
     return Response(content=FAVICON_SVG, media_type="image/svg+xml")
 
 

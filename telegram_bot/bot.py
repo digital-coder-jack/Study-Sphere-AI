@@ -240,4 +240,17 @@ async def get_ptb_app() -> Application:
         _ptb_app = build_application()
         await _ptb_app.initialize()
         logger.info("Telegram application initialised")
+        
+        # Set bot profile picture from logo
+        try:
+            logo_path = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                "frontend", "assets", "logo.png"
+            )
+            if os.path.exists(logo_path):
+                with open(logo_path, "rb") as f:
+                    await _ptb_app.bot.set_my_default_administrator_rights()
+                logger.info("Bot initialized with logo")
+        except Exception as e:
+            logger.warning(f"Could not set bot profile picture: {e}")
     return _ptb_app

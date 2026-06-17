@@ -37,7 +37,7 @@
   aside.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;padding:0 .5rem;">
       <a class="brand" href="/dashboard" style="padding:0;margin:0;">
-        <span class="logo">🌌</span>
+        <span class="logo"><img src="/assets/logo.png" alt="Logo" /></span>
         <span style="transition:opacity .2s;${isCollapsed ? 'opacity:0;width:0;pointer-events:none;' : ''}">Study<span class="grad-text">Sphere</span></span>
       </a>
       <button id="sidebarCollapse" class="btn ghost" style="padding:0;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;${window.innerWidth < 880 ? 'display:none;' : ''}">
