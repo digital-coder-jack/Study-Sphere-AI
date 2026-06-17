@@ -134,6 +134,10 @@ img { max-width: 100%; display: block; }
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   box-shadow: var(--shadow);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.glass:hover {
+  border-color: rgba(109, 123, 255, 0.4);
 }
 
 /* ---------- Navbar ---------- */
@@ -194,8 +198,24 @@ img { max-width: 100%; display: block; }
 }
 .brand .grad-text { background: var(--grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
 .nav-links { display: flex; align-items: center; gap: 1.6rem; }
-.nav-links a.link { color: var(--text-dim); font-weight: 500; transition: color 0.2s; }
-.nav-links a.link:hover { color: var(--text); }
+.nav-links a.link { 
+  color: var(--text-dim); 
+  font-weight: 500; 
+  transition: color 0.2s, transform 0.2s; 
+  position: relative;
+}
+.nav-links a.link:hover { color: var(--text); transform: translateY(-1px); }
+.nav-links a.link::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--grad);
+  transition: width 0.3s ease;
+}
+.nav-links a.link:hover::after { width: 100%; }
 /* ---------- Hamburger toggle ---------- */
 .nav-toggle {
   display: none;
@@ -338,6 +358,10 @@ img { max-width: 100%; display: block; }
 .nav-backdrop.show { opacity: 1; visibility: visible; }
 
 /* ---------- Responsive ---------- */
+@media (max-width: 1024px) {
+  .grid.cols-3 { grid-template-columns: repeat(2, 1fr); }
+}
+
 @media (max-width: 880px) {
   .grid.cols-3, .grid.cols-2 { grid-template-columns: 1fr; }
   .nav-toggle { display: block; }
@@ -355,10 +379,19 @@ img { max-width: 100%; display: block; }
   }
   .nav-links a.link { padding: 0.4rem 0.2rem; border-bottom: 1px solid var(--border); }
   .nav-links a.link:last-of-type { border-bottom: none; }
+  .nav-links a.link::after { display: none; }
   .nav-links .btn { justify-content: center; margin-top: 0.3rem; }
   .nav-links.open {
     transform: translateY(0) scale(1);
     opacity: 1; visibility: visible;
   }
   .hero-stats { gap: 1.6rem; }
+  .section { padding: 3rem 0; }
+  .hero { padding: 4rem 0 2rem; }
+}
+
+@media (max-width: 480px) {
+  .hero-stats { flex-direction: column; gap: 1.2rem; }
+  .hero-cta { flex-direction: column; width: 100%; }
+  .hero-cta .btn { width: 100%; justify-content: center; }
 }

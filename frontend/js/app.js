@@ -160,43 +160,62 @@ const SS = (() => {
       links.classList.add('open');
       toggle.classList.add('active');
       toggle.setAttribute('aria-expanded', 'true');
-      document.body.classList.add('nav-open');
+      document.body.style.overflow = 'hidden';
       if (backdrop) backdrop.classList.add('show');
     };
     const close = () => {
       links.classList.remove('open');
       toggle.classList.remove('active');
       toggle.setAttribute('aria-expanded', 'false');
-      document.body.classList.remove('nav-open');
+      document.body.style.overflow = '';
+      if (backdrop) backdrop.classList.add('show'); // Ensure transition works
       if (backdrop) backdrop.classList.remove('show');
     };
     const isOpen = () => links.classList.contains('open');
 
     toggle.addEventListener('click', (e) => {
+      e.preventDefault();
       e.stopPropagation();
       isOpen() ? close() : open();
     });
 
     // Close when a menu link/button is tapped.
-    links.querySelectorAll('a').forEach((a) => a.addEventListener('click', close));
+    links.querySelectorAll('a, .btn').forEach((el) => {
+      el.addEventListener('click', () => {
+        if (isOpen()) close();
+      });
+    });
 
     // Close when tapping the backdrop or pressing Escape.
-    if (backdrop) backdrop.addEventListener('click', close);
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+    if (backdrop) {
+      backdrop.addEventListener('click', close);
+    }
+    
+    document.addEventListener('keydown', (e) => { 
+      if (e.key === 'Escape' && isOpen()) close(); 
+    });
 
     // Reset state if the viewport grows past the mobile breakpoint.
-    window.addEventListener('resize', () => { if (window.innerWidth > 880) close(); });
+    window.addEventListener('resize', () => { 
+      if (window.innerWidth > 880 && isOpen()) close(); 
+    });
   }
 
   /* ---------- boot common UI ---------- */
-  document.addEventListener('DOMContentLoaded', () => {
+  function boot() {
     initTheme();
     initParticles();
     attachRipples();
     initNav();
     const y = document.getElementById('year');
     if (y) y.textContent = new Date().getFullYear();
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
 
   return { api, getToken, setSession, getUser, clearSession, isAuthed, logout,
            requireAuth, toast, attachRipples, initParticles, toggleTheme, getTheme, applyTheme };

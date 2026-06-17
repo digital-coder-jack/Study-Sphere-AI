@@ -14,6 +14,11 @@
 .auth-card {
   width: min(440px, 100%);
   padding: 2.4rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.auth-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
 }
 
 .auth-card .brand {
@@ -87,6 +92,9 @@
   margin-top: 1.4rem;
   color: var(--text-dim);
   font-size: 0.92rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 .auth-foot a { color: var(--accent); font-weight: 600; }
 

@@ -32,8 +32,19 @@
     return `<a class="${cls}" href="${it.href}"><i class="fas ${it.icon}"></i> ${it.label}</a>`;
   }).join('');
 
+  const isCollapsed = localStorage.getItem('ss_sidebar_collapsed') === 'true';
+  if (isCollapsed) aside.classList.add('collapsed');
+
   aside.innerHTML = `
-    <a class="brand" href="/dashboard"><span class="logo">🌌</span><span>Study<span class="grad-text">Sphere</span></span></a>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;padding:0 .5rem;">
+      <a class="brand" href="/dashboard" style="padding:0;margin:0;">
+        <span class="logo">🌌</span>
+        <span style="transition:opacity .2s;${isCollapsed ? 'opacity:0;width:0;pointer-events:none;' : ''}">Study<span class="grad-text">Sphere</span></span>
+      </a>
+      <button id="sidebarCollapse" class="btn ghost" style="padding:0;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;${window.innerWidth < 880 ? 'display:none;' : ''}">
+        <i class="fas fa-chevron-${isCollapsed ? 'right' : 'left'}" style="font-size:.8rem;"></i>
+      </button>
+    </div>
     <nav class="side-nav">${navHtml}</nav>
     <div class="side-foot">
       <button class="theme-toggle side-theme" id="themeToggle" aria-label="Toggle theme" title="Toggle light / dark">
@@ -48,9 +59,27 @@
         </div>
       </div>
       <a class="side-nav" href="#" id="logoutBtn" style="display:flex;align-items:center;gap:.85rem;padding:.7rem .95rem;border-radius:12px;color:var(--danger);margin-top:.4rem;">
-        <i class="fas fa-right-from-bracket"></i> Log out
+        <i class="fas fa-right-from-bracket"></i> <span>Log out</span>
       </a>
     </div>`;
+
+  // Collapse logic
+  const collBtn = document.getElementById('sidebarCollapse');
+  if (collBtn) {
+    collBtn.addEventListener('click', () => {
+      const collapsed = aside.classList.toggle('collapsed');
+      localStorage.setItem('ss_sidebar_collapsed', collapsed);
+      const icon = collBtn.querySelector('i');
+      icon.className = `fas fa-chevron-${collapsed ? 'right' : 'left'}`;
+      
+      const brandSpan = aside.querySelector('.brand span:not(.logo)');
+      if (brandSpan) {
+        brandSpan.style.opacity = collapsed ? '0' : '1';
+        brandSpan.style.width = collapsed ? '0' : 'auto';
+        brandSpan.style.pointerEvents = collapsed ? 'none' : 'auto';
+      }
+    });
+  }
 
   // Bind the theme toggle that was just injected (app.js initTheme runs on
   // DOMContentLoaded, before this sidebar HTML exists, so bind it here too).
@@ -71,18 +100,39 @@
   // Mobile sidebar toggle.
   const toggle = document.getElementById('sidebarToggle');
   const overlay = document.getElementById('sideOverlay');
+  
+  const openSidebar = () => {
+    aside.classList.add('open');
+    if (overlay) overlay.classList.add('show');
+    document.body.style.overflow = 'hidden';
+  };
+  
+  const closeSidebar = () => {
+    aside.classList.remove('open');
+    if (overlay) overlay.classList.remove('show');
+    document.body.style.overflow = '';
+  };
+
   if (toggle) {
-    toggle.addEventListener('click', () => {
-      aside.classList.toggle('open');
-      if (overlay) overlay.classList.toggle('show');
+    toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      aside.classList.contains('open') ? closeSidebar() : openSidebar();
     });
   }
+  
   if (overlay) {
-    overlay.addEventListener('click', () => {
-      aside.classList.remove('open');
-      overlay.classList.remove('show');
-    });
+    overlay.addEventListener('click', closeSidebar);
   }
+
+  // Close on Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && aside.classList.contains('open')) closeSidebar();
+  });
+
+  // Close on resize
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 880 && aside.classList.contains('open')) closeSidebar();
+  });
 
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
