@@ -204,3 +204,24 @@ async def generate_flashcards(topic: str, num_cards: int = 8) -> list[dict]:
         {"front": str(it.get("front", "")), "back": str(it.get("back", ""))}
         for it in data if isinstance(it, dict) and "front" in it
     ]
+
+
+async def generate_mindmap(topic: str) -> dict:
+    """Return a hierarchical JSON structure for a mindmap."""
+    reply = await groq_chat(
+        [
+            {"role": "system", "content":
+                "You are a mindmap generator. Respond ONLY with valid JSON, no prose."},
+            {"role": "user", "content":
+                f"Create a hierarchical mindmap about '{topic}'. "
+                f"Return a JSON object with a 'name' (the topic) and 'children' (array of objects). "
+                f"Each child can also have 'children'. Go at least 3 levels deep. "
+                f"Keep node names short and concise. Output ONLY the JSON object."},
+        ],
+        temperature=0.6,
+        max_tokens=2500,
+    )
+    data = _extract_json(reply)
+    if not isinstance(data, dict):
+        return {"name": topic, "children": []}
+    return data

@@ -44,6 +44,7 @@
         <button data-tab="planner"><i class="fas fa-calendar-days"></i> Planner</button>
         <button data-tab="summarizer"><i class="fas fa-file-pdf"></i> Summarizer</button>
         <button data-tab="homework"><i class="fas fa-pen-to-square"></i> Homework</button>
+        <button data-tab="mindmap"><i class="fas fa-sitemap"></i> Mindmap</button>
       </div>
 
       <!-- Notes -->
@@ -144,6 +145,20 @@
           <div style="margin-top:0.9rem"><button class="btn" id="hwBtn"><i class="fas fa-wand-magic-sparkles"></i> Get help</button></div>
           <div class="tool-loading" id="hwLoading"><span class="spinner"></span> Thinking it through…</div>
           <div class="result" id="hwResult"></div>
+        </div>
+      </section>
+
+      <!-- Mindmap -->
+      <section class="tool-panel" id="panel-mindmap">
+        <div class="tool-card glass">
+          <h2><i class="fas fa-sitemap"></i> Mindmap Generator</h2>
+          <p class="desc">Visualize concepts with an interactive AI-generated mindmap.</p>
+          <div class="tool-form">
+            <div class="grow"><label>Topic</label><input id="mmTopic" placeholder="e.g. Ancient Rome" /></div>
+            <button class="btn" id="mmBtn"><i class="fas fa-wand-magic-sparkles"></i> Generate</button>
+          </div>
+          <div class="tool-loading" id="mmLoading"><span class="spinner"></span> Visualizing your topic…</div>
+          <div id="mmResult" class="mindmap-container"></div>
         </div>
       </section>
     </main>

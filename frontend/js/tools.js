@@ -268,6 +268,60 @@ async function homework() {
   finally { busyBtn(btn, false); setLoading('hwLoading', false); }
 }
 
+/* =========================================================
+   MINDMAP
+   ========================================================= */
+async function genMindmap() {
+  const topic = document.getElementById('mmTopic').value.trim();
+  if (!topic) return SS.toast('Enter a topic first.', 'error');
+  const btn = document.getElementById('mmBtn');
+  busyBtn(btn, true, 'Visualizing…');
+  setLoading('mmLoading', true);
+  try {
+    const data = await SS.api('/api/tools/mindmap', { method: 'POST', body: { topic } });
+    renderMindmap(data.mindmap);
+    SS.toast('Mindmap generated!');
+  } catch (err) { SS.toast(err.message, 'error'); }
+  finally { busyBtn(btn, false); setLoading('mmLoading', false); }
+}
+
+function renderMindmap(data) {
+  const container = document.getElementById('mmResult');
+  container.innerHTML = '';
+  container.classList.add('show');
+  
+  const root = document.createElement('div');
+  root.className = 'mm-node mm-root';
+  root.innerHTML = `<span>${esc(data.name)}</span>`;
+  container.appendChild(root);
+  
+  if (data.children && data.children.length) {
+    const childrenContainer = document.createElement('div');
+    childrenContainer.className = 'mm-children';
+    data.children.forEach(child => childrenContainer.appendChild(createNode(child)));
+    container.appendChild(childrenContainer);
+  }
+}
+
+function createNode(node) {
+  const wrap = document.createElement('div');
+  wrap.className = 'mm-wrap';
+  
+  const el = document.createElement('div');
+  el.className = 'mm-node';
+  el.innerHTML = `<span>${esc(node.name)}</span>`;
+  wrap.appendChild(el);
+  
+  if (node.children && node.children.length) {
+    const childrenContainer = document.createElement('div');
+    childrenContainer.className = 'mm-children';
+    node.children.forEach(child => childrenContainer.appendChild(createNode(child)));
+    wrap.appendChild(childrenContainer);
+  }
+  
+  return wrap;
+}
+
 /* ---------- Boot ---------- */
 document.addEventListener('DOMContentLoaded', () => {
   initTabs();
@@ -280,6 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('planBtn').addEventListener('click', genPlan);
   document.getElementById('sumBtn').addEventListener('click', summarize);
   document.getElementById('hwBtn').addEventListener('click', homework);
+  document.getElementById('mmBtn').addEventListener('click', genMindmap);
 });
 
 // expose for inline download buttons

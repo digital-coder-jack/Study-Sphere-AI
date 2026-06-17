@@ -52,10 +52,36 @@
           <h3><i class="fas fa-user-pen" style="color:var(--accent)"></i> Edit profile</h3>
           <div class="form-msg" id="profileMsg"></div>
           <form id="profileForm">
-            <div class="field"><label>Full name</label><input id="editName" type="text" class="with-icon" style="padding-left:1rem" /></div>
-            <div class="field"><label>Email (read-only)</label><input id="editEmail" type="email" disabled style="padding-left:1rem;opacity:.7" /></div>
+            <div class="field"><label>Full name</label><input id="editName" type="text" placeholder="Your name" /></div>
+            <div class="field"><label>Email (read-only)</label><input id="editEmail" type="email" disabled style="opacity:.7" /></div>
             <button class="btn block" id="profileBtn"><i class="fas fa-floppy-disk"></i> Save changes</button>
           </form>
+        </div>
+
+        <!-- Preferences -->
+        <div class="settings-card glass">
+          <h3><i class="fas fa-sliders" style="color:var(--accent)"></i> Preferences</h3>
+          <div class="pref-row">
+            <div class="pref-info">
+              <b>Email Notifications</b>
+              <span>Receive weekly study summaries</span>
+            </div>
+            <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+          </div>
+          <div class="pref-row">
+            <div class="pref-info">
+              <b>AI Insights</b>
+              <span>Allow AI to suggest study goals</span>
+            </div>
+            <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+          </div>
+          <div class="pref-row">
+            <div class="pref-info">
+              <b>Public Profile</b>
+              <span>Let others see your achievements</span>
+            </div>
+            <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+          </div>
         </div>
 
         <!-- Change password -->
@@ -63,10 +89,17 @@
           <h3><i class="fas fa-lock" style="color:var(--accent)"></i> Change password</h3>
           <div class="form-msg" id="pwMsg"></div>
           <form id="pwForm">
-            <div class="field"><label>Current password</label><input id="curPw" type="password" style="padding-left:1rem" /></div>
-            <div class="field"><label>New password</label><input id="newPw" type="password" style="padding-left:1rem" /></div>
+            <div class="field"><label>Current password</label><input id="curPw" type="password" placeholder="••••••••" /></div>
+            <div class="field"><label>New password</label><input id="newPw" type="password" placeholder="At least 6 characters" /></div>
             <button class="btn block" id="pwBtn"><i class="fas fa-key"></i> Update password</button>
           </form>
+        </div>
+
+        <!-- Danger zone -->
+        <div class="settings-card glass" style="border-color:rgba(251,113,133,0.3)">
+          <h3 style="color:var(--danger)"><i class="fas fa-triangle-exclamation"></i> Danger zone</h3>
+          <p class="sub" style="margin-bottom:1.2rem">Once you delete your account, there is no going back. Please be certain.</p>
+          <button class="btn block ghost" style="color:var(--danger);border-color:var(--danger)"><i class="fas fa-trash-can"></i> Delete account</button>
         </div>
       </div>
 

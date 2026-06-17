@@ -255,3 +255,9 @@ async def summarize(body: TextIn, user=Depends(auth.current_user)):
 async def homework(body: QuestionIn, user=Depends(auth.current_user)):
     content = await ai.homework_help(body.question)
     return {"answer": content}
+
+
+@router.post("/tools/mindmap")
+async def make_mindmap(body: TopicIn, user=Depends(auth.current_user)):
+    data = await ai.generate_mindmap(body.topic)
+    return {"topic": body.topic, "mindmap": data}

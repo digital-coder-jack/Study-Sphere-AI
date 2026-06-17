@@ -22,6 +22,7 @@
     { id: 'planner', href: '/tools#planner', icon: 'fa-calendar-days', label: 'Study Planner' },
     { id: 'summarizer', href: '/tools#summarizer', icon: 'fa-file-pdf', label: 'PDF Summarizer' },
     { id: 'homework', href: '/tools#homework', icon: 'fa-pen-to-square', label: 'Homework Helper' },
+    { id: 'mindmap', href: '/tools#mindmap', icon: 'fa-sitemap', label: 'Mindmap' },
     { section: 'Account' },
     { id: 'profile', href: '/profile', icon: 'fa-user-gear', label: 'Profile & Settings' },
   ];
