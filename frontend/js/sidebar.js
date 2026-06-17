@@ -22,8 +22,7 @@
     { id: 'planner', href: '/tools#planner', icon: 'fa-calendar-days', label: 'Study Planner' },
     { id: 'summarizer', href: '/tools#summarizer', icon: 'fa-file-pdf', label: 'PDF Summarizer' },
     { id: 'homework', href: '/tools#homework', icon: 'fa-pen-to-square', label: 'Homework Helper' },
-    { section: 'Account' },
-    { id: 'profile', href: '/profile', icon: 'fa-user-gear', label: 'Profile & Settings' },
+
   ];
 
   const navHtml = items.map((it) => {
@@ -58,9 +57,7 @@
           <span>${escapeHtml(user.email || '')}</span>
         </div>
       </div>
-      <a class="side-nav" href="#" id="logoutBtn" style="display:flex;align-items:center;gap:.85rem;padding:.7rem .95rem;border-radius:12px;color:var(--danger);margin-top:.4rem;">
-        <i class="fas fa-right-from-bracket"></i> <span>Log out</span>
-      </a>
+
     </div>`;
 
   // Collapse logic
@@ -91,11 +88,7 @@
     }
   }
 
-  document.getElementById('logoutBtn').addEventListener('click', (e) => {
-    e.preventDefault();
-    SS.toast('Logged out. See you soon!');
-    setTimeout(() => SS.logout(), 400);
-  });
+
 
   // Mobile sidebar toggle.
   const toggle = document.getElementById('sidebarToggle');

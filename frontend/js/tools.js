@@ -3,7 +3,7 @@
    summarizer, homework helper)
    ===================================================================== */
 
-if (!SS.requireAuth()) { /* redirected */ }
+
 
 marked.setOptions({ breaks: true, gfm: true });
 function md(text) { return DOMPurify.sanitize(marked.parse(text || '')); }

@@ -157,16 +157,38 @@ CREDENTIALS_EXCEPTION = HTTPException(
 async def current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
 ):
-    """FastAPI dependency that returns the authenticated user row (dict)."""
+    """FastAPI dependency that returns the authenticated user row (dict).
+    If no valid token is provided, auto-creates a guest session.
+    """
     if credentials is None or not credentials.credentials:
-        raise CREDENTIALS_EXCEPTION
+        return _create_guest_user()
     try:
         payload = decode_access_token(credentials.credentials)
         user_id = int(payload["sub"])
     except (ValueError, KeyError):
-        raise CREDENTIALS_EXCEPTION
+        return _create_guest_user()
 
     user = db.get_user_by_id(user_id)
     if user is None:
-        raise CREDENTIALS_EXCEPTION
+        return _create_guest_user()
+    return dict(user)
+
+
+def _create_guest_user():
+    """Create a disposable guest account and return the user dict."""
+    suffix = secrets.token_hex(5)
+    email = f"guest_{suffix}@guest.studysphere"
+    password = secrets.token_urlsafe(24)
+    pw_hash = hash_password(password)
+    
+    user_id = db.create_user(f"Guest {suffix[:4].upper()}", email, pw_hash)
+    if user_id is None:
+        suffix = secrets.token_hex(6)
+        email = f"guest_{suffix}@guest.studysphere"
+        user_id = db.create_user(f"Guest {suffix[:4].upper()}", email, pw_hash)
+        if user_id is None:
+            raise HTTPException(status_code=500, detail="Could not start a guest session.")
+    
+    db.touch_last_login(user_id)
+    user = db.get_user_by_id(user_id)
     return dict(user)

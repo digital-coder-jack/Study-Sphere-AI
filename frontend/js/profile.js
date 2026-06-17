@@ -2,7 +2,7 @@
    Study Sphere AI  -  profile.js  (profile + settings)
    ===================================================================== */
 
-if (!SS.requireAuth()) { /* redirected */ }
+
 
 function pmsg(boxId, text, type) {
   const box = document.getElementById(boxId);

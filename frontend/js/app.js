@@ -24,9 +24,20 @@ const SS = (() => {
     localStorage.removeItem(USER_KEY);
   }
   function isAuthed() { return !!getToken(); }
-  function logout() { clearSession(); window.location.href = '/login'; }
+  function logout() { clearSession(); location.reload(); }
   function requireAuth() {
-    if (!isAuthed()) { window.location.href = '/login'; return false; }
+    if (!isAuthed()) {
+      (async () => {
+        try {
+          const data = await api('/api/auth/guest', { method: 'POST', auth: false });
+          setSession(data.token, data.user);
+          location.reload();
+        } catch (err) {
+          console.error('Guest login failed:', err);
+        }
+      })();
+      return false;
+    }
     return true;
   }
 
@@ -43,9 +54,14 @@ const SS = (() => {
     });
 
     if (res.status === 401 && auth) {
-      clearSession();
-      if (!location.pathname.includes('login')) window.location.href = '/login';
-      throw new Error('Session expired. Please log in again.');
+      try {
+        const data = await api('/api/auth/guest', { method: 'POST', auth: false });
+        setSession(data.token, data.user);
+        return api(path, { method, body, auth, raw });
+      } catch (err) {
+        console.error('Failed to refresh session:', err);
+        throw new Error('Connection error. Please refresh the page.');
+      }
     }
     if (raw) return res;
 

@@ -2,7 +2,7 @@
    Study Sphere AI  -  chat.js  (AI chat interface with streaming)
    ===================================================================== */
 
-if (!SS.requireAuth()) { /* redirected */ }
+
 
 const state = { chats: [], currentId: null, streaming: false };
 

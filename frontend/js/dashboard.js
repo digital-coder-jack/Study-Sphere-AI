@@ -3,7 +3,6 @@
    ===================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
-  if (!SS.isAuthed()) return;
 
   const user = SS.getUser();
   const nameEl = document.getElementById('userName');
