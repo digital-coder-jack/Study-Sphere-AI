@@ -72,6 +72,7 @@ def init_db() -> None:
     """Create every table if it does not exist yet (idempotent)."""
     with closing(get_connection()) as conn:
         # --- Bot's original table (DO NOT CHANGE its shape) ---------------
+
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS questions (
