@@ -33,6 +33,7 @@ async function handleGuest(e) {
   try {
     const data = await SS.api('/api/auth/guest', { method: 'POST', auth: false });
     SS.setSession(data.token, data.user);
+    sessionStorage.setItem('ss_show_welcome', 'true');
     SS.toast('Exploring as guest. Sign up anytime to save your work!');
     setTimeout(() => (window.location.href = '/dashboard'), 500);
   } catch (err) {
@@ -107,7 +108,7 @@ async function handleLogin(e) {
   try {
     const data = await SS.api('/api/auth/login', { method: 'POST', auth: false, body: { email, password } });
     SS.setSession(data.token, data.user);
-    sessionStorage.setItem('lastLoginTime', Date.now().toString());
+    sessionStorage.setItem('ss_show_welcome', 'true');
     SS.toast('Welcome back, ' + data.user.name + '!');
     setTimeout(() => (window.location.href = '/dashboard'), 500);
   } catch (err) {
@@ -130,7 +131,7 @@ async function handleSignup(e) {
   try {
     const data = await SS.api('/api/auth/signup', { method: 'POST', auth: false, body: { name, email, password } });
     SS.setSession(data.token, data.user);
-    sessionStorage.setItem('lastLoginTime', Date.now().toString());
+    sessionStorage.setItem('ss_show_welcome', 'true');
     SS.toast('Account created! Welcome, ' + data.user.name + '.');
     setTimeout(() => (window.location.href = '/dashboard'), 600);
   } catch (err) {

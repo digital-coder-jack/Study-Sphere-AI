@@ -1,84 +1,102 @@
 /* =====================================================================
-   Study Sphere AI  -  confetti.js  (celebratory confetti effect)
-   Displays colorful papers falling down when user opens dashboard.
+   Study Sphere AI  -  confetti.js
+   Premium welcome celebration with confetti and modal
    ===================================================================== */
 
-function createConfetti() {
-  const confettiPieces = [];
-  const colors = ['#6d7bff', '#a855f7', '#22d3ee', '#fb923c', '#34d399', '#f472b6'];
-  
-  // Create confetti container
-  const container = document.createElement('div');
-  container.id = 'confetti-container';
-  container.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 999;
-  `;
-  document.body.appendChild(container);
+(function() {
+  function showWelcomeCelebration() {
+    if (sessionStorage.getItem('ss_show_welcome') !== 'true') return;
+    sessionStorage.removeItem('ss_show_welcome');
 
-  // Create confetti pieces
-  for (let i = 0; i < 50; i++) {
-    const piece = document.createElement('div');
-    const color = colors[Math.floor(Math.random() * colors.length)];
-    const size = Math.random() * 8 + 4;
-    const duration = Math.random() * 2 + 2.5;
-    const delay = Math.random() * 0.5;
-    const left = Math.random() * 100;
-    const rotation = Math.random() * 360;
-    
-    piece.style.cssText = `
-      position: absolute;
-      left: ${left}%;
-      top: -10px;
-      width: ${size}px;
-      height: ${size}px;
-      background: ${color};
-      border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
-      opacity: 0.8;
-      animation: fall ${duration}s linear ${delay}s forwards;
-      transform: rotate(${rotation}deg);
+    const user = SS.getUser();
+    const name = user.name || 'Student';
+
+    // 1. Create Confetti
+    createConfetti();
+
+    // 2. Create Modal
+    const modal = document.createElement('div');
+    modal.className = 'welcome-modal-overlay';
+    modal.innerHTML = `
+      <div class="welcome-modal glass">
+        <div class="welcome-icon">🎉</div>
+        <h2>Welcome to Study Sphere AI, ${name}!</h2>
+        <p>Your intelligent learning companion is ready. Let's start your journey to success!</p>
+        <button class="btn" id="closeWelcome">Let's Go <i class="fas fa-rocket"></i></button>
+      </div>
     `;
-    
-    container.appendChild(piece);
-    confettiPieces.push(piece);
+    document.body.appendChild(modal);
+
+    const close = () => {
+      modal.classList.add('fade-out');
+      setTimeout(() => modal.remove(), 500);
+    };
+
+    document.getElementById('closeWelcome').addEventListener('click', close);
+    setTimeout(close, 5000);
   }
 
-  // Add keyframe animation
-  if (!document.getElementById('confetti-style')) {
-    const style = document.createElement('style');
-    style.id = 'confetti-style';
-    style.textContent = `
-      @keyframes fall {
-        to {
-          transform: translateY(100vh) rotate(720deg);
-          opacity: 0;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-  }
+  function createConfetti() {
+    const container = document.createElement('div');
+    container.id = 'confetti-container';
+    document.body.appendChild(container);
 
-  // Remove confetti after animation completes
-  setTimeout(() => {
-    container.remove();
-  }, 4500);
-}
-
-// Trigger confetti on dashboard load
-document.addEventListener('DOMContentLoaded', () => {
-  if (window.location.pathname === '/dashboard' || window.location.pathname === '/dashboard.html') {
-    // Check if user just logged in (within last 2 seconds)
-    const lastLoginTime = sessionStorage.getItem('lastLoginTime');
-    const now = Date.now();
+    const colors = ['#6d7bff', '#a855f7', '#22d3ee', '#34d399', '#fb7185'];
     
-    if (lastLoginTime && now - parseInt(lastLoginTime) < 2000) {
-      setTimeout(() => createConfetti(), 300);
-      sessionStorage.removeItem('lastLoginTime');
+    for (let i = 0; i < 100; i++) {
+      const p = document.createElement('div');
+      p.className = 'confetti-piece';
+      p.style.left = Math.random() * 100 + 'vw';
+      p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      p.style.transform = `rotate(${Math.random() * 360}deg)`;
+      p.style.animationDelay = Math.random() * 2 + 's';
+      p.style.width = Math.random() * 10 + 5 + 'px';
+      p.style.height = Math.random() * 10 + 5 + 'px';
+      container.appendChild(p);
     }
+
+    setTimeout(() => container.remove(), 6000);
   }
-});
+
+  // Inject Styles
+  const style = document.createElement('style');
+  style.id = 'welcome-style';
+  style.textContent = `
+    .welcome-modal-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      display: grid; place-items: center;
+      background: rgba(0,0,0,0.4); backdrop-filter: blur(8px);
+      padding: 1.5rem; animation: fadeIn 0.4s ease;
+    }
+    .welcome-modal {
+      max-width: 480px; width: 100%; padding: 3rem 2rem;
+      text-align: center; border-radius: 24px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+    }
+    .welcome-icon { font-size: 4rem; margin-bottom: 1.5rem; animation: bounce 1s infinite; }
+    .welcome-modal h2 { font-size: 1.8rem; margin-bottom: 1rem; }
+    .welcome-modal p { color: var(--text-dim); margin-bottom: 2rem; font-size: 1.1rem; }
+    .welcome-modal-overlay.fade-out { opacity: 0; transition: opacity 0.5s ease; }
+    
+    #confetti-container { position: fixed; inset: 0; z-index: 9998; pointer-events: none; }
+    .confetti-piece {
+      position: absolute; top: -20px;
+      border-radius: 2px;
+      animation: confetti-fall 4s linear forwards;
+    }
+
+    @keyframes confetti-fall {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  `;
+  document.head.appendChild(style);
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', showWelcomeCelebration);
+  } else {
+    showWelcomeCelebration();
+  }
+})();
