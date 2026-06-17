@@ -34,8 +34,7 @@ async function handleGuest(e) {
     const data = await SS.api('/api/auth/guest', { method: 'POST', auth: false });
     SS.setSession(data.token, data.user);
     sessionStorage.setItem('ss_show_welcome', 'true');
-    SS.toast('Exploring as guest. Sign up anytime to save your work!');
-    setTimeout(() => (window.location.href = '/dashboard'), 500);
+    window.location.href = '/dashboard';
   } catch (err) {
     msg(err.message);
     busy(btn, false);

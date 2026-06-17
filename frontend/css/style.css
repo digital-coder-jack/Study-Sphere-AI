@@ -6,51 +6,51 @@
 /* ===== DARK THEME (default) ===== */
 :root,
 :root[data-theme='dark'] {
-  --bg-0: #060814;
-  --bg-1: #0b1022;
-  --bg-2: #11173a;
-  --glass: rgba(255, 255, 255, 0.06);
-  --glass-strong: rgba(255, 255, 255, 0.1);
-  --border: rgba(255, 255, 255, 0.12);
-  --text: #e8ecff;
-  --text-dim: #9aa3c7;
-  --primary: #6d7bff;
+  --bg-0: #020617;
+  --bg-1: #0f172a;
+  --bg-2: #1e293b;
+  --glass: rgba(30, 41, 59, 0.5);
+  --glass-strong: rgba(15, 23, 42, 0.8);
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #f8fafc;
+  --text-dim: #94a3b8;
+  --primary: #6366f1;
   --primary-2: #a855f7;
   --accent: #22d3ee;
-  --success: #34d399;
-  --danger: #fb7185;
-  --shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
-  --radius: 18px;
-  --grad: linear-gradient(135deg, #6d7bff 0%, #a855f7 50%, #22d3ee 100%);
-  --nav-bg: rgba(6, 8, 20, 0.55);
-  --menu-bg: rgba(11, 16, 34, 0.96);
+  --success: #10b981;
+  --danger: #ef4444;
+  --shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  --radius: 20px;
+  --grad: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #22d3ee 100%);
+  --nav-bg: rgba(2, 6, 23, 0.7);
+  --menu-bg: rgba(15, 23, 42, 0.95);
   --page-bg:
-    radial-gradient(1200px 800px at 15% -10%, rgba(109, 123, 255, 0.18), transparent 55%),
-    radial-gradient(1000px 700px at 110% 10%, rgba(168, 85, 247, 0.16), transparent 55%),
+    radial-gradient(1200px 800px at 15% -10%, rgba(99, 102, 241, 0.15), transparent 55%),
+    radial-gradient(1000px 700px at 110% 10%, rgba(168, 85, 247, 0.12), transparent 55%),
     var(--bg-0);
 }
 
 /* ===== LIGHT THEME ===== */
 :root[data-theme='light'] {
-  --bg-0: #eef1fb;
+  --bg-0: #f8faff;
   --bg-1: #ffffff;
-  --bg-2: #f4f6ff;
-  --glass: rgba(255, 255, 255, 0.72);
-  --glass-strong: rgba(255, 255, 255, 0.9);
-  --border: rgba(20, 30, 80, 0.12);
-  --text: #16203f;
-  --text-dim: #5a648a;
-  --primary: #5b67ff;
-  --primary-2: #9333ea;
+  --bg-2: #f0f4ff;
+  --glass: rgba(255, 255, 255, 0.8);
+  --glass-strong: rgba(255, 255, 255, 0.95);
+  --border: rgba(0, 0, 0, 0.08);
+  --text: #0f172a;
+  --text-dim: #475569;
+  --primary: #4f46e5;
+  --primary-2: #7c3aed;
   --accent: #0891b2;
-  --success: #059669;
-  --danger: #e11d48;
-  --shadow: 0 20px 50px rgba(60, 70, 130, 0.18);
-  --nav-bg: rgba(255, 255, 255, 0.7);
-  --menu-bg: rgba(255, 255, 255, 0.97);
+  --success: #10b981;
+  --danger: #ef4444;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  --nav-bg: rgba(255, 255, 255, 0.85);
+  --menu-bg: rgba(255, 255, 255, 0.98);
   --page-bg:
-    radial-gradient(1200px 800px at 15% -10%, rgba(109, 123, 255, 0.20), transparent 55%),
-    radial-gradient(1000px 700px at 110% 10%, rgba(168, 85, 247, 0.16), transparent 55%),
+    radial-gradient(1200px 800px at 15% -10%, rgba(79, 70, 229, 0.08), transparent 55%),
+    radial-gradient(1000px 700px at 110% 10%, rgba(124, 58, 237, 0.08), transparent 55%),
     var(--bg-0);
 }
 
@@ -65,7 +65,7 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   line-height: 1.6;
-  transition: background 0.4s ease, color 0.4s ease;
+  transition: background 0.4s ease, color 0.4s ease, border-color 0.4s ease;
 }
 body.nav-open { overflow: hidden; }
 
