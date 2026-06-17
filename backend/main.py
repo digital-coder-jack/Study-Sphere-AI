@@ -22,7 +22,8 @@ from __future__ import annotations
 import logging
 import os
 
-from fastapi import FastAPI, Request, Response
+from datetime import datetime
+from fastapi import FastAPI, Request, Response, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -32,6 +33,8 @@ from backend import database as db
 from backend.routes import chat as chat_routes
 from backend.routes import files as files_routes
 from backend.routes import users as users_routes
+from backend.analytics_web import web_analytics_db
+from backend.auth import current_user
 
 # Rate limiting (simple in-memory token bucket per IP).
 from backend.ratelimit import RateLimitMiddleware
@@ -71,6 +74,41 @@ db.init_db()
 app.include_router(users_routes.router)
 app.include_router(chat_routes.router)
 app.include_router(files_routes.router)
+
+# Web Analytics API Routes
+@app.post("/api/analytics/track-visit")
+async def track_visit_endpoint(request: Request, guest_id: str, page_url: str):
+    user_agent = request.headers.get("User-Agent", "Unknown")
+    ip_address = request.client.host
+    web_analytics_db.track_visit(guest_id, user_agent, ip_address, page_url)
+    return {"status": "ok"}
+
+@app.post("/api/analytics/track-activity")
+async def track_activity_endpoint(guest_id: str, current_page: str, time_spent_on_page: float):
+    web_analytics_db.update_activity(guest_id, current_page, time_spent_on_page)
+    return {"status": "ok"}
+
+@app.post("/api/analytics/track-session-end")
+async def track_session_end_endpoint(guest_id: str, session_start: datetime, session_end: datetime):
+    web_analytics_db.track_session_end(guest_id, session_start, session_end)
+    return {"status": "ok"}
+
+@app.post("/api/analytics/track-feature")
+async def track_feature_endpoint(guest_id: str, feature: str):
+    web_analytics_db.track_feature_usage(guest_id, feature)
+    return {"status": "ok"}
+
+# Admin Dashboard API Route
+@app.get("/api/analytics/dashboard-stats")
+async def get_dashboard_stats_endpoint(current_user: dict = Depends(current_user)):
+    # Basic admin check: assuming an admin user has a specific ID or role
+    # For now, let's assume TELEGRAM_ADMIN_ID is also the web admin ID for simplicity
+    admin_id = os.environ.get("TELEGRAM_ADMIN_ID") # Reusing for web admin check
+    if not admin_id or str(current_user.get("id")) != admin_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    stats = web_analytics_db.get_dashboard_stats()
+    return stats
 
 
 # ---------------------------------------------------------------------------
@@ -214,6 +252,12 @@ async def tools_page():
 @app.get("/profile.html")
 async def profile_page():
     return _page("profile.html")
+
+
+@app.get("/analytics")
+@app.get("/analytics.html")
+async def analytics_page():
+    return _page("analytics.html")
 
 
 # Generic fallback for any other top-level .html file.

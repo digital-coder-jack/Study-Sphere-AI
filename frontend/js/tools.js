@@ -52,6 +52,10 @@ function downloadText(filename, text) {
 async function genNotes() {
   const topic = document.getElementById('notesTopic').value.trim();
   if (!topic) return SS.toast('Enter a topic first.', 'error');
+
+  // Track notes generation
+  if (window.trackNotesGenerated) window.trackNotesGenerated();
+
   const btn = document.getElementById('notesBtn');
   busyBtn(btn, true, 'Generating…');
   setLoading('notesLoading', true);
@@ -102,6 +106,10 @@ async function genQuiz() {
   const topic = document.getElementById('quizTopic').value.trim();
   const num = parseInt(document.getElementById('quizNum').value, 10) || 5;
   if (!topic) return SS.toast('Enter a topic first.', 'error');
+
+  // Track quiz attempt
+  if (window.trackQuizAttempt) window.trackQuizAttempt();
+
   const btn = document.getElementById('quizBtn');
   busyBtn(btn, true, 'Generating…');
   setLoading('quizLoading', true);

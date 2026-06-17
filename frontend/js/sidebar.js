@@ -22,8 +22,13 @@
     { id: 'planner', href: '/tools#planner', icon: 'fa-calendar-days', label: 'Study Planner' },
     { id: 'summarizer', href: '/tools#summarizer', icon: 'fa-file-pdf', label: 'PDF Summarizer' },
     { id: 'homework', href: '/tools#homework', icon: 'fa-pen-to-square', label: 'Homework Helper' },
-
   ];
+
+  // Add Analytics for admin (simulated check)
+  if (user.id == 1 || user.is_admin) {
+    items.push({ section: 'Admin' });
+    items.push({ id: 'analytics', href: '/analytics', icon: 'fa-chart-pie', label: 'Analytics' });
+  }
 
   const navHtml = items.map((it) => {
     if (it.section) return `<div class="nav-section">${it.section}</div>`;

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('ss_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
+    })();
+  </script>
+  <title>Analytics Dashboard · Study Sphere AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/dashboard.css" />
+  <link rel="stylesheet" href="/css/analytics.css" />
+  
+  <!-- Vercel Speed Insights -->
+  <script type="module">
+    import { injectSpeedInsights } from 'https://cdn.jsdelivr.net/npm/@vercel/speed-insights@2.0.0/dist/index.mjs';
+    injectSpeedInsights();
+  </script>
+</head>
+<body>
+  <div id="particles-js"></div>
+  <div id="toast-wrap"></div>
+  <div class="side-overlay" id="sideOverlay"></div>
+
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" data-active="analytics"></aside>
+
+    <main class="content">
+      <div class="topbar">
+        <div>
+          <h1>Analytics Dashboard 📊</h1>
+          <p class="sub">Real-time visitor and usage analytics.</p>
+        </div>
+        <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+      </div>
+
+      <!-- Key Metrics -->
+      <section class="stats">
+        <div class="stat-card glass">
+          <div class="ic"><i class="fas fa-users"></i></div>
+          <b id="totalVisitors">—</b>
+          <span>Total Visitors</span>
+        </div>
+        <div class="stat-card glass">
+          <div class="ic"><i class="fas fa-user-check"></i></div>
+          <b id="activeVisitorsToday">—</b>
+          <span>Active Today</span>
+        </div>
+        <div class="stat-card glass">
+          <div class="ic"><i class="fas fa-user-plus"></i></div>
+          <b id="newVisitorsToday">—</b>
+          <span>New Today</span>
+        </div>
+        <div class="stat-card glass">
+          <div class="ic"><i class="fas fa-repeat"></i></div>
+          <b id="returningVisitors">—</b>
+          <span>Returning</span>
+        </div>
+        <div class="stat-card glass">
+          <div class="ic"><i class="fas fa-hourglass-end"></i></div>
+          <b id="avgSessionDuration">—</b>
+          <span>Avg Session (s)</span>
+        </div>
+      </section>
+
+      <!-- Charts and Tables -->
+      <section class="panels">
+        <!-- Weekly Growth Chart -->
+        <div class="panel glass">
+          <h3><i class="fas fa-chart-line"></i> Weekly Growth</h3>
+          <div class="chart-wrap"><canvas id="weeklyGrowthChart"></canvas></div>
+        </div>
+
+        <!-- Monthly Growth Chart -->
+        <div class="panel glass">
+          <h3><i class="fas fa-chart-bar"></i> Monthly Growth</h3>
+          <div class="chart-wrap"><canvas id="monthlyGrowthChart"></canvas></div>
+        </div>
+
+        <!-- Most Visited Pages -->
+        <div class="panel glass">
+          <h3><i class="fas fa-link"></i> Most Visited Pages</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Page URL</th>
+                  <th>Visits</th>
+                </tr>
+              </thead>
+              <tbody id="mostVisitedPagesTable">
+                <tr><td colspan="2" class="skeleton" style="height:30px"></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Feature Usage -->
+        <div class="panel glass">
+          <h3><i class="fas fa-cube"></i> Feature Usage</h3>
+          <div class="feature-usage">
+            <div class="feature-item">
+              <span>AI Chat</span>
+              <b id="totalAIChats">—</b>
+            </div>
+            <div class="feature-item">
+              <span>Quiz Attempts</span>
+              <b id="totalQuizAttempts">—</b>
+            </div>
+            <div class="feature-item">
+              <span>Notes Generated</span>
+              <b id="totalNotesGenerated">—</b>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/sidebar.js"></script>
+  <script src="/js/analytics-dashboard.js"></script>
+</body>
+</html>
