@@ -176,6 +176,8 @@
     transform: translateX(-100%); 
     box-shadow: var(--shadow); 
     width: 280px !important;
+    z-index: 130;        /* above the fixed topbar (120) when sliding in */
+    overflow-y: auto;    /* scroll inside if all tool types overflow viewport */
   }
   .sidebar.open { transform: translateX(0); }
   .sidebar-toggle { display: grid; place-items: center; }
@@ -188,13 +190,48 @@
     right: 0;
     background: var(--nav-bg);
     backdrop-filter: blur(12px);
-    z-index: 90;
+    z-index: 120; /* above the sidebar (100) so the hamburger is always tappable */
     padding: 0 1rem;
     height: 64px;
     margin-bottom: 0;
+    display: flex;
+    flex-direction: row;        /* keep title + hamburger on one row */
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    gap: 0.75rem;
+    border-bottom: 1px solid var(--border);
   }
-  .topbar h1 { font-size: 1.4rem; }
-  .topbar .sub { font-size: 0.8rem; }
+  /* The text block (title + subtitle) should flex/shrink, never push out the burger */
+  .topbar > div:first-child { min-width: 0; flex: 1 1 auto; overflow: hidden; }
+  .topbar h1 {
+    font-size: 1.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .topbar .sub {
+    font-size: 0.78rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* Hamburger always visible, never shrinks, sits at the far right */
+  .sidebar-toggle {
+    display: grid !important;
+    place-items: center;
+    flex: 0 0 auto;
+    order: 99;
+    margin-left: auto;
+  }
+  /* If a button group wraps the burger (e.g. dashboard's New chat + burger) keep it inline */
+  .topbar > div:last-child {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 0 0 auto;
+    width: auto;
+  }
   .stats-grid { gap: 0.8rem; }
   .stat-card { padding: 1rem; }
   .stat-card b { font-size: 1.4rem; }
@@ -207,12 +244,13 @@
 }
 
 @media (max-width: 480px) {
-  .content { padding: 5rem 0.8rem 2rem; }
-  .topbar { padding: 0 0.8rem; height: 56px; flex-direction: column; align-items: flex-start; gap: 0.5rem; }
-  .topbar h1 { font-size: 1.2rem; }
-  .topbar .sub { font-size: 0.75rem; }
-  .topbar > div:last-child { width: 100%; display: flex; justify-content: space-between; }
-  .topbar .btn { padding: 0.7rem 1rem; font-size: 0.85rem; }
+  .content { padding: 4.5rem 0.8rem 2rem; }
+  /* Stay a single row so the hamburger never gets clipped on small phones */
+  .topbar { padding: 0 0.8rem; height: 60px; flex-direction: row; align-items: center; gap: 0.6rem; }
+  .topbar h1 { font-size: 1.1rem; }
+  .topbar .sub { display: none; } /* hide subtitle to keep the row compact */
+  .topbar .btn { padding: 0.55rem 0.8rem; font-size: 0.82rem; }
+  .sidebar-toggle { width: 40px; height: 40px; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 0.7rem; margin-bottom: 1.2rem; }
   .stat-card { padding: 0.9rem; }
   .stat-card .ic { width: 40px; height: 40px; font-size: 1rem; }
@@ -234,5 +272,5 @@
 }
 
 /* overlay when mobile sidebar open */
-.side-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 55; }
+.side-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 125; }
 .side-overlay.show { display: block; }

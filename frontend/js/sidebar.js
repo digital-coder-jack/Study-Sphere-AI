@@ -122,6 +122,13 @@
     overlay.addEventListener('click', closeSidebar);
   }
 
+  // On mobile, tapping a nav link should close the drawer (it navigates anyway).
+  aside.querySelectorAll('.side-nav a').forEach((link) => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth <= 880) closeSidebar();
+    });
+  });
+
   // Close on Escape
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && aside.classList.contains('open')) closeSidebar();

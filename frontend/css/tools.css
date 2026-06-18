@@ -93,3 +93,25 @@
 .dropzone:hover, .dropzone.drag { border-color: var(--primary); background: rgba(109,123,255,0.06); color: var(--text); }
 .dropzone i { font-size: 2.2rem; margin-bottom: 0.7rem; display: block; color: var(--accent); }
 .file-chip { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.9rem; border-radius: 999px; background: var(--glass-strong); border: 1px solid var(--border); margin-top: 1rem; }
+
+/* ---------- Mobile: keep all tool types reachable ---------- */
+@media (max-width: 880px) {
+  /* Horizontal-scroll tab bar so Notes/Quiz/Flashcards/Planner/Summarizer/Homework
+     are all reachable without wrapping into a tall, awkward block. */
+  .tools-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 0.4rem;
+    margin-bottom: 1.2rem;
+  }
+  .tools-tabs::-webkit-scrollbar { display: none; }
+  .tools-tabs button {
+    flex: 0 0 auto;      /* don't squish; let the row scroll */
+    white-space: nowrap;
+  }
+}
+@media (max-width: 480px) {
+  .tools-tabs button { padding: 0.55rem 0.9rem; font-size: 0.85rem; }
+}
