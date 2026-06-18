@@ -1,12 +1,12 @@
 # Backend API dependencies (kept in sync with the root requirements.txt).
 # For deployment, the ROOT requirements.txt is what platforms install.
-fastapi==0.115.8
-uvicorn[standard]==0.34.0
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
 gunicorn==23.0.0
-python-multipart==0.0.20
+python-multipart==0.0.12
 python-telegram-bot==21.10
 httpx==0.28.1
-pydantic==2.10.6
+pydantic==2.9.2
 pypdf==5.1.0
 python-docx==1.1.2
-pymongo[srv]==4.6.1
+pymongo==4.10.1
