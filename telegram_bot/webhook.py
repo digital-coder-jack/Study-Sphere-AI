@@ -1,5 +1,6 @@
 from telegram import Update
 from telegram_bot.bot import get_ptb_app
+import asyncio
 
 async def handler(request):
     if request.method != "POST":
@@ -14,3 +15,7 @@ async def handler(request):
     await app.process_update(update)
 
     return {"statusCode": 200, "body": "OK"}
+
+
+def main(request):
+    return asyncio.run(handler(request))
