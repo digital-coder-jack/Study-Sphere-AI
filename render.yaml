@@ -1,0 +1,53 @@
+# =====================================================================
+#  Study Sphere AI  -  Render deployment blueprint
+#  Docs: https://render.com/docs/blueprint-spec
+#
+#  Deploy: push this repo to GitHub, then in Render:
+#    New +  ->  Blueprint  ->  pick this repo  ->  Apply.
+#  Set the secret env vars (marked sync:false) in the Render dashboard.
+# =====================================================================
+services:
+  - type: web
+    name: study-sphere-ai
+    runtime: python
+    plan: starter            # "free" works too, but free has no persistent disk
+    region: oregon           # change if you prefer another region
+    branch: main
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn backend.main:app -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:$PORT --timeout 120"
+    healthCheckPath: /api/health
+    autoDeploy: true
+
+    # Persistent disk so the SQLite database survives restarts/redeploys.
+    # (Free plan does NOT support disks — remove this block on the free plan;
+    #  data will then be ephemeral and reset on each deploy.)
+    disk:
+      name: study-sphere-data
+      mountPath: /data
+      sizeGB: 1
+
+    envVars:
+      - key: DB_PATH
+        value: /data/study_sphere.db          # lives on the persistent disk
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: WEB_CONCURRENCY
+        value: "2"
+
+      # ----- Secrets: set these in the Render dashboard (sync:false) -----
+      - key: GROQ_API_KEY
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true                   # Render generates a strong secret
+      - key: ALLOWED_ORIGINS
+        sync: false                           # e.g. https://your-app.vercel.app
+      - key: MONGODB_URI_WEB
+        sync: false                           # MongoDB Atlas connection string
+      - key: GROQ_MODEL
+        sync: false                           # optional override
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false                           # optional (bot)
+      - key: WEBHOOK_SECRET
+        sync: false                           # optional (bot)
+      - key: TELEGRAM_ADMIN_ID
+        sync: false                           # optional (analytics dashboard admin)

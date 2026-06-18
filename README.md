@@ -179,14 +179,26 @@ uvicorn backend.main:app --reload --port 3000
 
 ---
 
-## ☁️ Deployment (Vercel)
+## ☁️ Deployment (split: frontend on Vercel, backend on Render/Railway)
 
-- `vercel.json` builds `api/index.py` with `@vercel/python` and routes all traffic to it.
-- Set env vars (`GROQ_API_KEY`, `JWT_SECRET`, `TELEGRAM_BOT_TOKEN`, …) in the Vercel dashboard.
-- **Telegram bot**: after deploy, visit `https://<your-app>.vercel.app/api/set-webhook` once to register the webhook (unchanged from before).
+> The frontend stays on **Vercel**. The backend (this FastAPI app) is now a
+> **standalone API** deployed to **Render** or **Railway**. See
+> **`DEPLOYMENT.md`** for full step-by-step instructions.
 
-- **Platform**: Vercel (Python serverless) · **Status**: ✅ Ready · **Tech**: FastAPI + Vanilla JS + GSAP/AOS/particles.js + Chart.js + Groq
-- **Last Updated**: 2026-06-15
+### TL;DR
+1. **Backend** → deploy this repo to Render (`render.yaml`) or Railway (`railway.json`).
+   - **Build command**: `pip install -r requirements.txt`
+   - **Start command**: `gunicorn backend.main:app -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:$PORT --timeout 120`
+   - **Health check**: `/api/health`
+2. Copy the backend URL (e.g. `https://study-sphere-ai.onrender.com`).
+3. **Frontend** → edit `frontend/js/config.js`, set
+   `window.SS_API_BASE = "https://study-sphere-ai.onrender.com";` and redeploy on Vercel.
+4. On the backend, set `ALLOWED_ORIGINS=https://<your-app>.vercel.app`.
+5. **Telegram bot** (optional): visit `https://<backend-url>/api/set-webhook` once.
+
+- **Platform**: Vercel (frontend) + Render/Railway (backend API) · **Status**: ✅ Ready
+- **Tech**: FastAPI + Gunicorn/Uvicorn + Vanilla JS + Chart.js + Groq + MongoDB Atlas (analytics)
+- **Last Updated**: 2026-06-18
 
 ---
 

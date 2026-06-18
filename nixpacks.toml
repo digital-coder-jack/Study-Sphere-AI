@@ -1,0 +1,18 @@
+# =====================================================================
+#  Study Sphere AI  -  Nixpacks build config (Railway / Nixpacks)
+# =====================================================================
+[phases.setup]
+nixPkgs = ["python312", "gcc"]
+
+[phases.install]
+cmds = [
+  "python -m venv /opt/venv",
+  ". /opt/venv/bin/activate && pip install --upgrade pip",
+  ". /opt/venv/bin/activate && pip install -r requirements.txt",
+]
+
+[start]
+cmd = "gunicorn backend.main:app -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:$PORT --timeout 120"
+
+[variables]
+PYTHON_VERSION = "3.12"

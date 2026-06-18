@@ -9,6 +9,21 @@
   const LAST_ACTIVITY_KEY = 'ss_last_activity';
   const ACTIVITY_INTERVAL = 30000; // 30 seconds
 
+  /* Resolve the backend base URL (same logic as app.js) so analytics works
+     when the frontend (Vercel) and backend are on different origins. */
+  function resolveApiBase() {
+    let base = '';
+    if (typeof window !== 'undefined' && window.SS_API_BASE) {
+      base = String(window.SS_API_BASE);
+    } else {
+      const meta = document.querySelector('meta[name="api-base"]');
+      if (meta && meta.content) base = meta.content;
+    }
+    return base.replace(/\/+$/, '');
+  }
+  const API_BASE = resolveApiBase();
+  const apiUrl = (p) => (/^https?:\/\//i.test(p) ? p : API_BASE + p);
+
   class AnalyticsTracker {
     constructor() {
       this.guestId = this.getOrCreateGuestId();
@@ -42,7 +57,7 @@
     }
 
     trackVisit() {
-      fetch('/api/analytics/track-visit', {
+      fetch(apiUrl('/api/analytics/track-visit'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -59,7 +74,7 @@
         const timeSpentOnPage = (now - this.lastActivityTime) / 1000; // in seconds
         this.lastActivityTime = now;
 
-        fetch('/api/analytics/track-activity', {
+        fetch(apiUrl('/api/analytics/track-activity'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -111,9 +126,9 @@
         });
 
         if (navigator.sendBeacon) {
-          navigator.sendBeacon('/api/analytics/track-session-end', data);
+          navigator.sendBeacon(apiUrl('/api/analytics/track-session-end'), data);
         } else {
-          fetch('/api/analytics/track-session-end', {
+          fetch(apiUrl('/api/analytics/track-session-end'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: data,
@@ -124,7 +139,7 @@
     }
 
     trackFeatureUsage(feature) {
-      fetch('/api/analytics/track-feature', {
+      fetch(apiUrl('/api/analytics/track-feature'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

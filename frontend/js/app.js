@@ -9,6 +9,31 @@ const SS = (() => {
   const TOKEN_KEY = 'ss_token';
   const USER_KEY = 'ss_user';
 
+  /* ---------- API base URL ----------
+     The frontend (Vercel) and backend (Render/Railway) live on DIFFERENT
+     origins, so API calls must be prefixed with the backend's URL.
+     Resolution order (first match wins):
+       1. window.SS_API_BASE   — set via an inline <script> (recommended)
+       2. <meta name="api-base" content="https://api.example.com">
+       3. '' (empty) — same-origin (works when frontend+backend share a host)
+     A trailing slash is stripped so we never produce '//api/...'. */
+  function resolveApiBase() {
+    let base = '';
+    if (typeof window !== 'undefined' && window.SS_API_BASE) {
+      base = String(window.SS_API_BASE);
+    } else {
+      const meta = document.querySelector('meta[name="api-base"]');
+      if (meta && meta.content) base = meta.content;
+    }
+    return base.replace(/\/+$/, '');
+  }
+  const API_BASE = resolveApiBase();
+  // Prefix only absolute API paths ('/api/...'); leave full URLs untouched.
+  function apiUrl(path) {
+    if (/^https?:\/\//i.test(path)) return path;
+    return API_BASE + path;
+  }
+
   /* ---------- session ---------- */
   function getToken() { return localStorage.getItem(TOKEN_KEY) || ''; }
   function setSession(token, user) {
@@ -47,7 +72,7 @@ const SS = (() => {
     if (body && !(body instanceof FormData)) headers['Content-Type'] = 'application/json';
     if (auth && getToken()) headers['Authorization'] = 'Bearer ' + getToken();
 
-    const res = await fetch(path, {
+    const res = await fetch(apiUrl(path), {
       method,
       headers,
       body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined),

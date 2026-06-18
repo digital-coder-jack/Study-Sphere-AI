@@ -27,7 +27,7 @@ from fastapi import FastAPI, Request, Response, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from telegram import Update
+from pydantic import BaseModel
 
 from backend import database as db
 from backend.routes import chat as chat_routes
@@ -50,17 +50,102 @@ logger = logging.getLogger("study-sphere")
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FRONTEND_DIR = os.path.join(PROJECT_ROOT, "frontend")
 
+
+# ---------------------------------------------------------------------------
+# Environment variable validation
+# ---------------------------------------------------------------------------
+# The backend will still boot if optional vars are missing (so health checks
+# pass on a fresh deploy), but it logs loud warnings so misconfiguration is
+# obvious in the platform logs. Set FAIL_FAST=1 to abort startup instead.
+def _validate_environment() -> None:
+    """Validate and report on the environment configuration at boot."""
+    required_for_ai = {
+        "GROQ_API_KEY": "AI chat, notes, quizzes, flashcards, plans, summaries",
+    }
+    recommended = {
+        "JWT_SECRET": "stable session signing secret (logins break on restart without it)",
+        "ALLOWED_ORIGINS": "comma-separated list of frontend origins allowed by CORS",
+    }
+    optional = {
+        "GROQ_MODEL": "override default Groq model (llama-3.3-70b-versatile)",
+        "MONGODB_URI_WEB": "MongoDB Atlas URI for web-analytics dashboard",
+        "TELEGRAM_BOT_TOKEN": "Telegram bot integration",
+        "WEBHOOK_SECRET": "verify Telegram webhook calls",
+        "DB_PATH": "persistent SQLite path (set to a mounted disk in production)",
+        "TELEGRAM_ADMIN_ID": "admin id allowed to read analytics dashboard stats",
+    }
+
+    missing_required = [k for k in required_for_ai if not os.environ.get(k)]
+    missing_recommended = [k for k in recommended if not os.environ.get(k)]
+
+    logger.info("=" * 60)
+    logger.info("Study Sphere AI — environment check")
+    for key, why in required_for_ai.items():
+        status = "OK" if os.environ.get(key) else "MISSING"
+        logger.info("  [%s] %-18s — %s", status, key, why)
+    for key, why in recommended.items():
+        status = "OK" if os.environ.get(key) else "not set"
+        logger.info("  [%s] %-18s — %s", status, key, why)
+    for key, why in optional.items():
+        if os.environ.get(key):
+            logger.info("  [OK] %-18s — %s", key, why)
+    logger.info("=" * 60)
+
+    if missing_required:
+        logger.warning(
+            "Missing REQUIRED env var(s): %s — AI features will return a "
+            "configuration message until these are set.",
+            ", ".join(missing_required),
+        )
+    if missing_recommended:
+        logger.warning(
+            "Missing recommended env var(s): %s — strongly advised in production.",
+            ", ".join(missing_recommended),
+        )
+
+    if os.environ.get("FAIL_FAST") == "1" and missing_required:
+        raise RuntimeError(
+            "FAIL_FAST=1 and required env vars are missing: "
+            + ", ".join(missing_required)
+        )
+
+
+_validate_environment()
+
 app = FastAPI(title="Study Sphere AI", docs_url=None, redoc_url=None)
 
-# CORS — the frontend is served from the same origin, but allow API use
-# from elsewhere too (e.g. local dev tools).
+# ---------------------------------------------------------------------------
+# CORS — the frontend now lives on a DIFFERENT origin (Vercel) than this API
+# (Render / Railway), so CORS must explicitly allow that origin.
+#
+# Configure with the ALLOWED_ORIGINS env var, e.g.:
+#   ALLOWED_ORIGINS=https://your-app.vercel.app,https://www.yourdomain.com
+#
+# Comma-separated. If unset, we fall back to "*" (open) so the app keeps
+# working out-of-the-box, but you should pin it to your real frontend
+# origin(s) in production. We also allow all *.vercel.app preview URLs via a
+# regex so Vercel preview deployments work without reconfiguring.
+# ---------------------------------------------------------------------------
+_raw_origins = os.environ.get("ALLOWED_ORIGINS", "").strip()
+if _raw_origins:
+    ALLOWED_ORIGINS = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+    _allow_credentials = True
+else:
+    ALLOWED_ORIGINS = ["*"]
+    _allow_credentials = False  # "*" + credentials is invalid per the CORS spec
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=ALLOWED_ORIGINS,
+    # Always permit Vercel preview/prod deployments + localhost dev.
+    allow_origin_regex=r"https://([a-z0-9-]+\.)*vercel\.app|http://localhost(:\d+)?",
+    allow_credentials=_allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
+
+logger.info("CORS allowed origins: %s", ALLOWED_ORIGINS)
 
 # Rate limiting for API routes.
 app.add_middleware(RateLimitMiddleware)
@@ -75,27 +160,76 @@ app.include_router(users_routes.router)
 app.include_router(chat_routes.router)
 app.include_router(files_routes.router)
 
-# Web Analytics API Routes
+# ---------------------------------------------------------------------------
+# Web Analytics API Routes (MongoDB Atlas)
+#
+# These accept JSON request BODIES to match exactly what
+# frontend/js/analytics-tracker.js sends. (The previous version declared the
+# fields as query parameters, which made every analytics call fail with 422.)
+# All handlers are defensive so analytics never breaks the page if Mongo is
+# unavailable.
+# ---------------------------------------------------------------------------
+class TrackVisitIn(BaseModel):
+    guest_id: str
+    page_url: str = "/"
+
+
+class TrackActivityIn(BaseModel):
+    guest_id: str
+    current_page: str = "/"
+    time_spent_on_page: float = 0.0
+
+
+class TrackSessionEndIn(BaseModel):
+    guest_id: str
+    session_start: datetime
+    session_end: datetime
+
+
+class TrackFeatureIn(BaseModel):
+    guest_id: str
+    feature: str
+
+
 @app.post("/api/analytics/track-visit")
-async def track_visit_endpoint(request: Request, guest_id: str, page_url: str):
-    user_agent = request.headers.get("User-Agent", "Unknown")
-    ip_address = request.client.host
-    web_analytics_db.track_visit(guest_id, user_agent, ip_address, page_url)
+async def track_visit_endpoint(body: TrackVisitIn, request: Request):
+    try:
+        user_agent = request.headers.get("User-Agent", "Unknown")
+        ip_address = request.client.host if request.client else "unknown"
+        web_analytics_db.track_visit(body.guest_id, user_agent, ip_address, body.page_url)
+    except Exception:
+        logger.exception("track_visit failed")
     return {"status": "ok"}
+
 
 @app.post("/api/analytics/track-activity")
-async def track_activity_endpoint(guest_id: str, current_page: str, time_spent_on_page: float):
-    web_analytics_db.update_activity(guest_id, current_page, time_spent_on_page)
+async def track_activity_endpoint(body: TrackActivityIn):
+    try:
+        web_analytics_db.update_activity(
+            body.guest_id, body.current_page, body.time_spent_on_page
+        )
+    except Exception:
+        logger.exception("track_activity failed")
     return {"status": "ok"}
+
 
 @app.post("/api/analytics/track-session-end")
-async def track_session_end_endpoint(guest_id: str, session_start: datetime, session_end: datetime):
-    web_analytics_db.track_session_end(guest_id, session_start, session_end)
+async def track_session_end_endpoint(body: TrackSessionEndIn):
+    try:
+        web_analytics_db.track_session_end(
+            body.guest_id, body.session_start, body.session_end
+        )
+    except Exception:
+        logger.exception("track_session_end failed")
     return {"status": "ok"}
 
+
 @app.post("/api/analytics/track-feature")
-async def track_feature_endpoint(guest_id: str, feature: str):
-    web_analytics_db.track_feature_usage(guest_id, feature)
+async def track_feature_endpoint(body: TrackFeatureIn):
+    try:
+        web_analytics_db.track_feature_usage(body.guest_id, body.feature)
+    except Exception:
+        logger.exception("track_feature failed")
     return {"status": "ok"}
 
 # Admin Dashboard API Route
@@ -120,8 +254,21 @@ async def health() -> dict:
         "status": "ok",
         "app": "Study Sphere AI",
         "storage": "sqlite",
+        "db_path": db.DB_PATH,
         "ai_configured": bool(os.environ.get("GROQ_API_KEY")),
         "bot_configured": bool(os.environ.get("TELEGRAM_BOT_TOKEN")),
+        "mongo_analytics_configured": bool(os.environ.get("MONGODB_URI_WEB")),
+        "cors_allowed_origins": ALLOWED_ORIGINS,
+    }
+
+
+@app.get("/api")
+async def api_root_status() -> dict:
+    """Friendly JSON status at the API base."""
+    return {
+        "status": "ok",
+        "service": "Study Sphere AI — backend API",
+        "health": "/api/health",
     }
 
 
@@ -131,6 +278,9 @@ async def health() -> dict:
 @app.post("/api/webhook")
 async def telegram_webhook(request: Request) -> Response:
     """Telegram posts every update here; we hand it to python-telegram-bot."""
+    # Imported lazily so a missing/broken telegram dependency never prevents
+    # the whole API from booting — only the webhook route would be affected.
+    from telegram import Update
     from telegram_bot.bot import get_ptb_app
 
     secret = os.environ.get("WEBHOOK_SECRET")
@@ -209,7 +359,20 @@ async def favicon():
 
 @app.get("/")
 async def index():
-    return _page("index.html")
+    # If the frontend is bundled with this backend (single-origin deploy),
+    # serve it. Otherwise (API-only deploy, frontend on Vercel) return a
+    # friendly JSON status so hitting the API root never shows a raw 404.
+    index_path = os.path.join(FRONTEND_DIR, "index.html")
+    if os.path.isfile(index_path):
+        return FileResponse(index_path)
+    return JSONResponse(
+        {
+            "status": "ok",
+            "service": "Study Sphere AI — backend API",
+            "health": "/api/health",
+            "note": "Frontend is hosted separately (e.g. Vercel).",
+        }
+    )
 
 
 @app.get("/login")

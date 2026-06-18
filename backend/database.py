@@ -37,14 +37,37 @@ from datetime import datetime, timezone
 # ---------------------------------------------------------------------------
 # Database location
 # ---------------------------------------------------------------------------
+# Resolution order:
+#   1. DB_PATH env var  -> use it verbatim (set this to a MOUNTED DISK path in
+#                          production so data survives restarts/redeploys, e.g.
+#                          Render disk mounted at /data -> DB_PATH=/data/study_sphere.db
+#                          Railway volume mounted at /data -> DB_PATH=/data/study_sphere.db).
+#   2. Vercel           -> /tmp (only writable location; note: EPHEMERAL).
+#   3. Local/dev        -> study_sphere.db beside the project.
+#
+# The parent directory is created automatically if it does not exist.
 IS_VERCEL = os.environ.get("VERCEL") == "1"
+_DEFAULT_LOCAL = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "study_sphere.db",
+)
 DB_PATH = os.environ.get(
     "DB_PATH",
-    "/tmp/study_sphere.db" if IS_VERCEL else os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        "study_sphere.db",
-    ),
+    "/tmp/study_sphere.db" if IS_VERCEL else _DEFAULT_LOCAL,
 )
+
+# Ensure the directory holding the DB file exists (e.g. a mounted /data disk).
+_db_dir = os.path.dirname(os.path.abspath(DB_PATH))
+try:
+    os.makedirs(_db_dir, exist_ok=True)
+except OSError:
+    # If we cannot create it (read-only FS), fall back to /tmp so the app
+    # still boots rather than crash-looping.
+    DB_PATH = "/tmp/study_sphere.db"
+    try:
+        os.makedirs("/tmp", exist_ok=True)
+    except OSError:
+        pass
 
 
 def get_connection() -> sqlite3.Connection:

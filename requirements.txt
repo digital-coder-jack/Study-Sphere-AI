@@ -1,14 +1,15 @@
 # =====================================================================
-#  Study Sphere AI  -  Python dependencies
-#  Powers BOTH the Telegram bot and the full web application.
+#  Study Sphere AI  -  Python dependencies (backend API)
+#  Powers BOTH the Telegram bot and the full web application backend.
 # =====================================================================
 
-# --- Web framework + server -----------------------------------------
+# --- Web framework + ASGI server ------------------------------------
 fastapi==0.115.8
-uvicorn==0.34.0
+uvicorn[standard]==0.34.0
+gunicorn==23.0.0              # production process manager (Render/Railway)
 python-multipart==0.0.20      # required by FastAPI for file uploads / forms
 
-# --- Telegram bot (unchanged) ---------------------------------------
+# --- Telegram bot (optional; imported lazily) -----------------------
 python-telegram-bot==21.10
 
 # --- HTTP client used to call the Groq API --------------------------
@@ -20,8 +21,10 @@ pydantic==2.10.6
 # --- File text extraction for the upload feature --------------------
 pypdf==5.1.0                  # PDF text extraction
 python-docx==1.1.2            # DOCX text extraction
-pymongo==4.6.1                # MongoDB driver for analytics
+
+# --- MongoDB Atlas (web analytics dashboard) ------------------------
+pymongo[srv]==4.6.1           # [srv] enables mongodb+srv:// Atlas URIs
 
 # NOTE: Password hashing and JWT are implemented with the Python
 # standard library (hashlib / hmac), so no extra crypto packages are
-# needed and the app deploys cleanly on Vercel's Python runtime.
+# needed.
