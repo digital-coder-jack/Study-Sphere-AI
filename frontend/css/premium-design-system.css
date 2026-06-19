@@ -1,0 +1,456 @@
+/* =====================================================================
+   Study Sphere AI - Premium Design System
+   Enhanced CSS variables, animations, and component foundations
+   ===================================================================== */
+
+/* ===== PREMIUM DARK THEME ===== */
+:root,
+:root[data-theme='dark'] {
+  /* Base Colors */
+  --bg-0: #060814;
+  --bg-1: #0b1022;
+  --bg-2: #11173a;
+  --bg-3: #1a1f3a;
+  
+  /* Glass & Transparency */
+  --glass: rgba(255, 255, 255, 0.06);
+  --glass-strong: rgba(255, 255, 255, 0.1);
+  --glass-premium: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 255, 255, 0.12);
+  --border-light: rgba(255, 255, 255, 0.08);
+  
+  /* Text */
+  --text: #e8ecff;
+  --text-dim: #9aa3c7;
+  --text-muted: #6b7280;
+  
+  /* Primary Colors */
+  --primary: #6d7bff;
+  --primary-2: #a855f7;
+  --primary-light: #8b9eff;
+  --primary-dark: #4f5fd9;
+  
+  /* Accent & Status */
+  --accent: #22d3ee;
+  --accent-light: #67e8f9;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --danger: #fb7185;
+  --info: #60a5fa;
+  
+  /* Shadows */
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.45);
+  --shadow-xl: 0 30px 80px rgba(0, 0, 0, 0.55);
+  --shadow-glow: 0 0 30px rgba(109, 123, 255, 0.3);
+  
+  /* Gradients */
+  --grad: linear-gradient(135deg, #6d7bff 0%, #a855f7 50%, #22d3ee 100%);
+  --grad-primary: linear-gradient(135deg, #6d7bff, #a855f7);
+  --grad-accent: linear-gradient(135deg, #22d3ee, #06b6d4);
+  --grad-warm: linear-gradient(135deg, #f97316, #fb923c);
+  --grad-cool: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  
+  /* Navigation */
+  --nav-bg: rgba(6, 8, 20, 0.55);
+  --menu-bg: rgba(11, 16, 34, 0.96);
+  
+  /* Page Background */
+  --page-bg:
+    radial-gradient(1200px 800px at 15% -10%, rgba(109, 123, 255, 0.18), transparent 55%),
+    radial-gradient(1000px 700px at 110% 10%, rgba(168, 85, 247, 0.16), transparent 55%),
+    var(--bg-0);
+  
+  /* Spacing (8px grid) */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+  
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 999px;
+  
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.3s ease;
+  --transition-slow: 0.5s ease;
+  --transition-smooth: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== PREMIUM LIGHT THEME ===== */
+:root[data-theme='light'] {
+  --bg-0: #eef1fb;
+  --bg-1: #ffffff;
+  --bg-2: #f4f6ff;
+  --bg-3: #f0f4ff;
+  
+  --glass: rgba(255, 255, 255, 0.72);
+  --glass-strong: rgba(255, 255, 255, 0.9);
+  --glass-premium: rgba(255, 255, 255, 0.85);
+  --border: rgba(20, 30, 80, 0.12);
+  --border-light: rgba(20, 30, 80, 0.08);
+  
+  --text: #16203f;
+  --text-dim: #5a648a;
+  --text-muted: #9ca3af;
+  
+  --primary: #5b67ff;
+  --primary-2: #9333ea;
+  --primary-light: #818cf8;
+  --primary-dark: #3730a3;
+  
+  --accent: #0891b2;
+  --accent-light: #06b6d4;
+  --success: #059669;
+  --warning: #d97706;
+  --danger: #e11d48;
+  --info: #2563eb;
+  
+  --shadow-sm: 0 4px 12px rgba(60, 70, 130, 0.08);
+  --shadow-md: 0 10px 30px rgba(60, 70, 130, 0.12);
+  --shadow-lg: 0 20px 50px rgba(60, 70, 130, 0.18);
+  --shadow-xl: 0 30px 80px rgba(60, 70, 130, 0.22);
+  --shadow-glow: 0 0 30px rgba(91, 103, 255, 0.25);
+  
+  --grad: linear-gradient(135deg, #5b67ff 0%, #9333ea 50%, #0891b2 100%);
+  --grad-primary: linear-gradient(135deg, #5b67ff, #9333ea);
+  --grad-accent: linear-gradient(135deg, #0891b2, #06b6d4);
+  --grad-warm: linear-gradient(135deg, #f97316, #fb923c);
+  --grad-cool: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  
+  --nav-bg: rgba(255, 255, 255, 0.7);
+  --menu-bg: rgba(255, 255, 255, 0.97);
+  
+  --page-bg:
+    radial-gradient(1200px 800px at 15% -10%, rgba(91, 103, 255, 0.15), transparent 55%),
+    radial-gradient(1000px 700px at 110% 10%, rgba(147, 51, 234, 0.12), transparent 55%),
+    var(--bg-0);
+  
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+  
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 999px;
+  
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.3s ease;
+  --transition-slow: 0.5s ease;
+  --transition-smooth: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== PREMIUM ANIMATIONS ===== */
+
+/* Page Transitions */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Component Animations */
+@keyframes hoverGlow {
+  0% {
+    box-shadow: 0 0 20px rgba(109, 123, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(109, 123, 255, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(109, 123, 255, 0.3);
+  }
+}
+
+@keyframes cardLift {
+  from {
+    transform: translateY(0);
+    box-shadow: var(--shadow-md);
+  }
+  to {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+@keyframes buttonHover {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.02);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+/* Loading Skeleton */
+@keyframes skeletonLoading {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* Typing Animation */
+@keyframes typing {
+  0% {
+    width: 0;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+/* Confetti Animation */
+@keyframes confetti-fall {
+  to {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* ===== UTILITY ANIMATIONS ===== */
+
+.animate-fade-in-up {
+  animation: fadeInUp var(--transition-smooth) ease-out;
+}
+
+.animate-fade-in-down {
+  animation: fadeInDown var(--transition-smooth) ease-out;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft var(--transition-smooth) ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight var(--transition-smooth) ease-out;
+}
+
+.animate-zoom-in {
+  animation: zoomIn var(--transition-smooth) ease-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.animate-bounce {
+  animation: bounce 1s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* ===== PREMIUM COMPONENT FOUNDATIONS ===== */
+
+/* Smooth Transitions */
+* {
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+button, a, input, textarea, select {
+  transition: all var(--transition-base);
+}
+
+/* Focus States */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+button:focus-visible {
+  box-shadow: var(--shadow-glow);
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(109, 123, 255, 0.1);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--glass-strong);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border);
+}
+
+/* Selection */
+::selection {
+  background: var(--primary);
+  color: white;
+}
+
+/* Placeholder */
+::placeholder {
+  color: var(--text-muted);
+}
+
+/* ===== RESPONSIVE UTILITIES ===== */
+
+@media (max-width: 1024px) {
+  :root {
+    --space-3xl: 2.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --space-2xl: 2rem;
+    --space-3xl: 2.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --space-lg: 1rem;
+    --space-xl: 1.5rem;
+    --space-2xl: 2rem;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
