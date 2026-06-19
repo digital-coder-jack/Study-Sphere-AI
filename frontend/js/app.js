@@ -242,12 +242,40 @@ const SS = (() => {
     });
   }
 
+  /* ---------- page transitions ---------- */
+  function initPageTransitions() {
+    // Add page-in animation to body
+    document.body.classList.add('animate-fade-in-up');
+    
+    // Intercept link clicks for smooth transitions
+    document.addEventListener('click', (e) => {
+      const link = e.target.closest('a');
+      if (!link || !link.href) return;
+      
+      const url = new URL(link.href);
+      if (url.origin !== window.location.origin) return; // External link
+      if (link.getAttribute('target') === '_blank') return; // New tab
+      if (link.getAttribute('download') !== null) return; // Download
+      if (url.pathname === window.location.pathname && url.hash) return; // Anchor on same page
+
+      e.preventDefault();
+      document.body.style.opacity = '0';
+      document.body.style.transform = 'translateY(10px)';
+      document.body.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+      
+      setTimeout(() => {
+        window.location.href = link.href;
+      }, 300);
+    });
+  }
+
   /* ---------- boot common UI ---------- */
   function boot() {
     initTheme();
     initParticles();
     attachRipples();
     initNav();
+    initPageTransitions();
     const y = document.getElementById('year');
     if (y) y.textContent = new Date().getFullYear();
   }
