@@ -3,10 +3,83 @@
    ===================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
-
   const user = SS.getUser();
   const nameEl = document.getElementById('userName');
   if (nameEl) nameEl.textContent = (user.name || 'there').split(' ')[0];
+
+  // Show guest banner if user is a guest
+  if (user.is_guest) {
+    const banner = document.createElement('div');
+    banner.className = 'guest-banner glass';
+    banner.innerHTML = `
+      <div class="guest-banner-content">
+        <div class="guest-banner-text">
+          <i class="fas fa-user-secret"></i>
+          <div>
+            <strong>You're in Guest Mode!</strong>
+            <p>Your data is temporary. Create an account to save your chats and notes permanently.</p>
+          </div>
+        </div>
+        <a href="/signup" class="btn small primary"><i class="fas fa-user-plus"></i> Create Account</a>
+      </div>
+    `;
+    
+    // Insert banner before the topbar
+    const content = document.querySelector('.content');
+    if (content) {
+      content.insertBefore(banner, content.firstChild);
+    }
+    
+    // Add styles for the banner
+    if (!document.getElementById('guest-banner-styles')) {
+      const style = document.createElement('style');
+      style.id = 'guest-banner-styles';
+      style.textContent = `
+        .guest-banner {
+          margin-bottom: 1.5rem;
+          padding: 1rem 1.5rem;
+          border-radius: 16px;
+          border: 1px solid var(--border);
+          background: linear-gradient(90deg, rgba(109, 123, 255, 0.1), rgba(34, 211, 238, 0.1));
+          backdrop-filter: blur(12px);
+          animation: slideDown 0.4s ease;
+        }
+        .guest-banner-content {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 1.5rem;
+          flex-wrap: wrap;
+        }
+        .guest-banner-text {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          flex: 1;
+        }
+        .guest-banner-text i {
+          font-size: 1.5rem;
+          color: var(--accent);
+        }
+        .guest-banner-text strong {
+          display: block;
+          font-size: 1.05rem;
+          margin-bottom: 0.2rem;
+        }
+        .guest-banner-text p {
+          font-size: 0.85rem;
+          color: var(--text-dim);
+          margin: 0;
+        }
+        @media (max-width: 600px) {
+          .guest-banner-content { flex-direction: column; align-items: stretch; gap: 1rem; }
+          .guest-banner-text i { font-size: 1.2rem; }
+          .guest-banner { padding: 1rem; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  }
 
   try {
     const s = await SS.api('/api/stats');
