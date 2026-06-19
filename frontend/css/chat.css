@@ -109,3 +109,25 @@
   .chat-burger { display: grid; place-items: center; }
   .suggest-grid { grid-template-columns: 1fr; }
 }
+
+
+@media (max-width: 480px) {
+  .chat-side { width: 100%; }
+  .chat-top .title b { max-width: 150px; }
+  .messages { padding: 1rem 0.6rem; }
+  .msg-stream { gap: 1rem; }
+  .msg { gap: 0.6rem; }
+  .msg .avatar { width: 28px; height: 28px; font-size: 0.75rem; }
+  .msg .role { font-size: 0.7rem; }
+  .msg .body { font-size: 0.9rem; }
+  .msg .body code:not(pre code) { font-size: 0.8em; padding: 0.1rem 0.3rem; }
+  .chat-top { padding: 0.6rem; gap: 0.5rem; }
+  .icon-btn { width: 32px; height: 32px; font-size: 0.8rem; }
+  .composer { padding: 0.6rem; }
+  .composer-inner { border-radius: 12px; padding: 0.4rem; }
+  .composer textarea { font-size: 0.9rem; max-height: 120px; }
+  .send-btn { width: 36px; height: 36px; font-size: 0.85rem; }
+  .suggest { padding: 0.8rem; }
+  .suggest b { font-size: 0.9rem; }
+  .suggest span { font-size: 0.75rem; }
+}
