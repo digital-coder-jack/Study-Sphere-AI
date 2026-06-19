@@ -111,6 +111,15 @@ img { max-width: 100%; display: block; }
   backdrop-filter: blur(12px);
 }
 .btn.ghost:hover { background: var(--glass-strong); box-shadow: 0 10px 24px rgba(0,0,0,0.35); }
+.btn.primary {
+  background: var(--primary);
+  box-shadow: 0 10px 30px rgba(109, 123, 255, 0.4);
+}
+.btn.primary:hover { box-shadow: 0 16px 40px rgba(109, 123, 255, 0.6); }
+.btn.small {
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+}
 .btn.block { width: 100%; justify-content: center; }
 .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
@@ -325,6 +334,8 @@ img { max-width: 100%; display: block; }
 .cta-band { text-align: center; padding: 3.5rem; margin: 2rem 0; }
 .cta-band h2 { font-size: clamp(1.4rem, 3.5vw, 2.6rem); margin-bottom: 1rem; }
 .cta-band p { color: var(--text-dim); margin-bottom: 1.8rem; }
+.cta-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+.cta-buttons .btn { padding: 0.9rem 1.8rem; font-size: 1rem; }
 
 /* ---------- Footer ---------- */
 .footer { padding: 3rem 0 2rem; border-top: 1px solid var(--border); margin-top: 3rem; }
