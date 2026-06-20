@@ -4,8 +4,8 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   // Already logged in? skip auth pages.
-  if (SS.isAuthed() && (location.pathname.includes('login') || location.pathname.includes('signup'))) {
-    window.location.href = '/dashboard';
+  if (SS.isAuthed() && (location.pathname.includes('login.html') || location.pathname.includes('signup,html'))) {
+    window.location.href = '/dashboard.html';
     return;
   }
 
@@ -35,7 +35,7 @@ async function handleGuest(e) {
     SS.setSession(data.token, data.user);
     sessionStorage.setItem('ss_show_welcome', 'true');
     SS.toast('Exploring as guest. Sign up anytime to save your work!');
-    setTimeout(() => (window.location.href = '/dashboard'), 500);
+    setTimeout(() => (window.location.href = '/dashboard.html'), 500);
   } catch (err) {
     msg(err.message);
     busy(btn, false);
@@ -137,7 +137,7 @@ async function handleSignup(e) {
     SS.setSession(data.token, data.user);
     sessionStorage.setItem('ss_show_welcome', 'true');
     SS.toast('Account created! Welcome, ' + data.user.name + '.');
-    setTimeout(() => (window.location.href = '/dashboard'), 600);
+    setTimeout(() => (window.location.href = '/dashboard.html'), 600);
   } catch (err) {
     msg(err.message);
     busy(btn, false);
@@ -181,7 +181,7 @@ async function handleReset(e) {
   try {
     const data = await SS.api('/api/auth/reset-password', { method: 'POST', auth: false, body: { token, password } });
     msg(data.message + ' Redirecting to login…', 'success');
-    setTimeout(() => (window.location.href = '/login'), 1500);
+    setTimeout(() => (window.location.href = '/login.html'), 1500);
   } catch (err) {
     msg(err.message);
     busy(btn, false);
