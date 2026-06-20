@@ -272,5 +272,5 @@
 }
 
 /* overlay when mobile sidebar open */
-.side-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 125; }
-.side-overlay.show { display: block; }
+.side-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 125; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
+.side-overlay.show { opacity: 1; visibility: visible; }

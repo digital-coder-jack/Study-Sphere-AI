@@ -12,12 +12,27 @@ function esc(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 /* ---------- Tabs ---------- */
 function initTabs() {
   const tabs = document.querySelectorAll('#toolsTabs button');
-  function activate(name) {
+  function activate(name, scroll = false) {
+    if (!document.getElementById(`panel-${name}`)) return;
     tabs.forEach((b) => b.classList.toggle('active', b.dataset.tab === name));
     document.querySelectorAll('.tool-panel').forEach((p) => p.classList.toggle('active', p.id === `panel-${name}`));
     history.replaceState(null, '', `/tools#${name}`);
+    if (scroll) {
+      // On mobile, bring the active panel into view after a sidebar link tap.
+      document.querySelector('.content')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
+
   tabs.forEach((b) => b.addEventListener('click', () => activate(b.dataset.tab)));
+
+  // React to in-page hash changes (e.g. tapping a sidebar link like
+  // /tools#flashcards while ALREADY on the tools page). Without this the
+  // sidebar links silently did nothing on mobile and desktop.
+  window.addEventListener('hashchange', () => {
+    const h = location.hash.replace('#', '');
+    if (h) activate(h, true);
+  });
+
   const hash = location.hash.replace('#', '');
   if (hash && document.getElementById(`panel-${hash}`)) activate(hash);
 }

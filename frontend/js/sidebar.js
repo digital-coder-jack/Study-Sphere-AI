@@ -71,35 +71,90 @@
     const style = document.createElement('style');
     style.id = 'sidebar-styles';
     style.textContent = `
-      .side-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; padding: 0 0.5rem; }
-      .brand { display: flex; align-items: center; gap: 0.8rem; text-decoration: none; color: inherit; }
-      .brand .logo { font-size: 1.5rem; }
-      .brand-text { font-weight: 700; font-size: 1.2rem; transition: opacity 0.2s, width 0.2s; overflow: hidden; white-space: nowrap; }
-      .sidebar.collapsed .brand-text { opacity: 0; width: 0; pointer-events: none; }
-      
-      .collapse-btn { 
-        background: var(--glass); border: 1px solid var(--border); color: var(--text); 
-        width: 28px; height: 28px; border-radius: 8px; cursor: pointer; 
-        display: flex; align-items: center; justify-content: center; font-size: 0.7rem;
-        transition: all 0.2s;
+      /* ============ Cool sidebar (PC + mobile) ============ */
+
+      /* Animated gradient sheen behind the whole sidebar */
+      .sidebar { position: relative; overflow: hidden; isolation: isolate; }
+      .sidebar::before {
+        content: ''; position: absolute; inset: -40% -60% auto -60%; height: 60%;
+        background: radial-gradient(60% 80% at 50% 0%, rgba(109,123,255,0.30), transparent 70%);
+        filter: blur(28px); z-index: -1; pointer-events: none;
+        animation: sideGlow 9s ease-in-out infinite alternate;
       }
-      .collapse-btn:hover { background: var(--glass-strong); border-color: var(--accent); }
+      @keyframes sideGlow {
+        0%   { transform: translateX(-10%) translateY(0);   opacity: 0.7; }
+        100% { transform: translateX(12%)  translateY(6%);  opacity: 1;   }
+      }
+
+      .side-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.6rem; padding: 0.2rem 0.4rem 0.9rem; border-bottom: 1px solid var(--border); }
+      .brand { display: flex; align-items: center; gap: 0.7rem; text-decoration: none; color: inherit; }
+      .brand .logo {
+        font-size: 1.4rem; line-height: 1; display: grid; place-items: center;
+        width: 40px; height: 40px; border-radius: 13px; flex-shrink: 0;
+        background: var(--grad); box-shadow: 0 8px 22px rgba(109,123,255,0.45);
+        transition: transform 0.35s cubic-bezier(.34,1.56,.64,1);
+      }
+      .brand:hover .logo { transform: rotate(-8deg) scale(1.08); }
+      .brand-text { font-weight: 800; font-size: 1.18rem; letter-spacing: -0.02em; transition: opacity 0.2s, width 0.2s; overflow: hidden; white-space: nowrap; }
+      .grad-text {
+        background: var(--grad); -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent; color: transparent;
+      }
+      .sidebar.collapsed .brand-text { opacity: 0; width: 0; pointer-events: none; }
+
+      .collapse-btn {
+        background: var(--glass); border: 1px solid var(--border); color: var(--text);
+        width: 30px; height: 30px; border-radius: 10px; cursor: pointer;
+        display: flex; align-items: center; justify-content: center; font-size: 0.72rem;
+        transition: all 0.25s ease;
+      }
+      .collapse-btn:hover { background: var(--glass-strong); border-color: var(--accent); color: var(--accent); transform: scale(1.08); }
       @media (max-width: 880px) { .collapse-btn { display: none; } }
 
+      /* Nav links: animated gradient active bar + icon pop */
+      .side-nav a { position: relative; overflow: hidden; }
+      .side-nav a i { transition: transform 0.25s cubic-bezier(.34,1.56,.64,1); }
+      .side-nav a:hover i { transform: scale(1.18) rotate(-4deg); }
+      .side-nav a::before {
+        content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%) scaleY(0);
+        width: 4px; height: 55%; border-radius: 0 4px 4px 0;
+        background: var(--grad); transition: transform 0.28s ease; z-index: 1;
+      }
+      .side-nav a:hover:not(.active)::before { transform: translateY(-50%) scaleY(1); }
+      .side-nav a.active { box-shadow: 0 8px 22px rgba(109,123,255,0.45); }
+      .side-nav a.active i { animation: navPop 0.4s ease; }
+      @keyframes navPop { 0% { transform: scale(0.7); } 60% { transform: scale(1.25); } 100% { transform: scale(1); } }
       .side-nav a span { transition: opacity 0.2s; }
       .sidebar.collapsed .side-nav a span { opacity: 0; width: 0; display: none; }
       .sidebar.collapsed .nav-section { opacity: 0; height: 0; margin: 0; padding: 0; overflow: hidden; }
 
-      .side-user-wrap { display: flex; align-items: center; gap: 0.5rem; background: var(--glass); padding: 0.5rem; border-radius: 16px; border: 1px solid var(--border); }
+      /* Footer user card */
+      .side-user-wrap {
+        display: flex; align-items: center; gap: 0.5rem;
+        background: var(--glass); padding: 0.55rem; border-radius: 16px;
+        border: 1px solid var(--border); transition: border-color 0.25s, background 0.25s;
+      }
+      .side-user-wrap:hover { border-color: rgba(109,123,255,0.45); background: var(--glass-strong); }
       .sidebar.collapsed .side-user-wrap { padding: 0.4rem; justify-content: center; }
       .side-user { display: flex; align-items: center; gap: 0.8rem; text-decoration: none; color: inherit; flex: 1; overflow: hidden; }
-      .sidebar.collapsed .side-user .meta { display: none; }
-      
-      .logout-btn { 
-        background: transparent; border: none; color: var(--text-dim); 
-        cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: all 0.2s;
+      .side-user .avatar {
+        position: relative; transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
+        box-shadow: 0 6px 16px rgba(109,123,255,0.4);
       }
-      .logout-btn:hover { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+      .side-user-wrap:hover .avatar { transform: scale(1.06); }
+      /* tiny online dot */
+      .side-user .avatar::after {
+        content: ''; position: absolute; right: -2px; bottom: -2px;
+        width: 11px; height: 11px; border-radius: 50%;
+        background: var(--success); border: 2px solid var(--bg-1);
+      }
+      .sidebar.collapsed .side-user .meta { display: none; }
+
+      .logout-btn {
+        background: transparent; border: none; color: var(--text-dim);
+        cursor: pointer; padding: 0.55rem; border-radius: 10px; transition: all 0.25s;
+      }
+      .logout-btn:hover { color: #fff; background: var(--danger); transform: rotate(8deg) scale(1.05); }
       .sidebar.collapsed .logout-btn { display: none; }
 
       /* Tooltips for collapsed mode */
@@ -120,6 +175,48 @@
         box-shadow: var(--shadow);
         z-index: 1000;
         pointer-events: none;
+      }
+
+      /* ============ Mobile drawer polish ============ */
+      @media (max-width: 880px) {
+        .sidebar {
+          border-right: none;
+          border-radius: 0 22px 22px 0;
+          box-shadow: 18px 0 60px rgba(0,0,0,0.55);
+          padding-top: 1.2rem;
+        }
+        /* stagger nav items in when the drawer opens */
+        .sidebar .side-nav a, .sidebar .side-nav .nav-section { opacity: 0; transform: translateX(-14px); }
+        .sidebar.open .side-nav a, .sidebar.open .side-nav .nav-section {
+          opacity: 1; transform: translateX(0);
+          transition: opacity 0.32s ease, transform 0.32s ease;
+        }
+        .sidebar.open .side-nav > *:nth-child(1)  { transition-delay: 0.04s; }
+        .sidebar.open .side-nav > *:nth-child(2)  { transition-delay: 0.07s; }
+        .sidebar.open .side-nav > *:nth-child(3)  { transition-delay: 0.10s; }
+        .sidebar.open .side-nav > *:nth-child(4)  { transition-delay: 0.13s; }
+        .sidebar.open .side-nav > *:nth-child(5)  { transition-delay: 0.16s; }
+        .sidebar.open .side-nav > *:nth-child(6)  { transition-delay: 0.19s; }
+        .sidebar.open .side-nav > *:nth-child(7)  { transition-delay: 0.22s; }
+        .sidebar.open .side-nav > *:nth-child(8)  { transition-delay: 0.25s; }
+        .sidebar.open .side-nav > *:nth-child(9)  { transition-delay: 0.28s; }
+        .sidebar.open .side-nav > *:nth-child(10) { transition-delay: 0.31s; }
+        .sidebar.open .side-nav > *:nth-child(n+11){ transition-delay: 0.34s; }
+        /* bigger tap targets on touch */
+        .side-nav a { padding: 0.95rem 1rem; }
+      }
+
+      /* smoother overlay fade */
+      .side-overlay {
+        background: rgba(3,5,16,0.6);
+        backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+        opacity: 0; transition: opacity 0.3s ease;
+      }
+      .side-overlay.show { opacity: 1; }
+
+      @media (prefers-reduced-motion: reduce) {
+        .sidebar::before { animation: none; }
+        .side-nav a.active i { animation: none; }
       }
     `;
     document.head.appendChild(style);
@@ -171,9 +268,30 @@
     overlay.addEventListener('click', closeSidebar);
   }
 
-  // On mobile, tapping a nav link should close the drawer
+  // Nav link handling.
   aside.querySelectorAll('.side-nav a').forEach((link) => {
-    link.addEventListener('click', () => {
+    link.addEventListener('click', (e) => {
+      const href = link.getAttribute('href') || '';
+      const hashIdx = href.indexOf('#');
+
+      // Same-page hash links (e.g. /tools#flashcards while already on /tools):
+      // the browser won't fire hashchange if the hash is unchanged, so we
+      // dispatch it manually to switch the tab. This is what was broken on
+      // mobile — the drawer closed but the tool panel never changed.
+      if (hashIdx > -1) {
+        const targetPath = href.slice(0, hashIdx) || window.location.pathname;
+        const targetHash = href.slice(hashIdx); // includes '#'
+        if (targetPath === window.location.pathname) {
+          e.preventDefault();
+          if (window.location.hash === targetHash) {
+            // Hash unchanged → fire a synthetic event so listeners react.
+            window.dispatchEvent(new HashChangeEvent('hashchange'));
+          } else {
+            window.location.hash = targetHash;
+          }
+        }
+      }
+
       if (window.innerWidth <= 880) closeSidebar();
     });
   });
