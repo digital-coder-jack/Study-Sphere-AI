@@ -1,0 +1,200 @@
+/* =====================================================================
+   Study Sphere AI  -  responsive.css
+   Cross-device polish layer for PC · Tablet · Mobile.
+   Loaded AFTER style.css / dashboard.css on every page so it can
+   refine and fill gaps in the per-page responsive rules.
+
+   Breakpoint strategy:
+     - Large desktop : >= 1440px  (comfortable scaling up)
+     - Desktop       : 1025-1439px (default styles)
+     - Tablet        : 769-1024px
+     - Mobile (lg)   : 481-768px
+     - Mobile (sm)   : <= 480px
+     - Landscape phone: max-height 500px + landscape
+   ===================================================================== */
+
+/* ---------- Global ergonomics ---------- */
+:root { --tap-min: 44px; }
+
+/* Auth links inside the mobile hamburger menu are hidden on desktop;
+   they appear only inside the breakpoint where the burger is shown. */
+.nav-links .mobile-auth { display: none; }
+
+/* Respect notch / rounded-corner safe areas on modern phones */
+.nav .container,
+.footer .container,
+.content,
+.chat-top,
+.composer {
+  padding-left: max(env(safe-area-inset-left), 0px) ;
+}
+
+/* Avoid iOS auto-zoom on focus: inputs must be >= 16px on small screens.
+   Applied inside the small breakpoint below. */
+
+/* Prevent horizontal scroll bleed from glows / particles everywhere */
+html, body { max-width: 100%; overflow-x: hidden; }
+
+/* The hero's decorative glow circles are absolutely positioned with
+   negative offsets and can push the document ~50px wider than the
+   viewport, causing a faint horizontal scrollbar on every device.
+   Clip them to the hero box so the page never scrolls sideways. */
+.hero { position: relative; overflow-x: clip; }
+.hero-glow { z-index: 0; }
+
+/* Smooth momentum scrolling for any scroll containers */
+.messages, .chat-list, .side-nav, .tools-tabs, .settings-tabs, .table-wrap {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* =====================================================================
+   LARGE DESKTOP  (>= 1440px) — let the design breathe on big screens
+   ===================================================================== */
+@media (min-width: 1440px) {
+  .container { width: min(1320px, 90%); }
+  .hero { padding: 7rem 0 5rem; }
+  .section { padding: 6rem 0; }
+  /* Landing feature grid can use a roomier 3-col without feeling sparse */
+  .grid.cols-3 { gap: 1.8rem; }
+}
+
+@media (min-width: 1800px) {
+  .container { width: min(1480px, 84%); }
+}
+
+/* =====================================================================
+   TABLET  (769px – 1024px)
+   ===================================================================== */
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* Landing: 2-col feature grid already set in style.css; tighten spacing */
+  .section { padding: 3.5rem 0; }
+  .hero { padding: 4.5rem 0 3rem; }
+
+  /* Dashboard / analytics shells: keep sidebar but slightly narrower */
+  .sidebar { width: 240px; }
+  .sidebar.collapsed { width: 80px; }
+
+  /* Analytics: two charts side-by-side is fine, but tables get breathing room */
+  .analytics .panels,
+  .panels { gap: 1.2rem; }
+
+  /* Tools: keep form on one row but allow wrap gracefully */
+  .tool-form .grow { min-width: 200px; }
+
+  /* Flashcards: 3 across reads well on tablet */
+  .flash-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* =====================================================================
+   HAMBURGER RANGE  (<= 880px) — match style.css where the burger appears.
+   Hide the inline Sign In / Sign Up buttons (they overflow the bar and
+   push the hamburger off-screen) and surface the same links inside the
+   dropdown menu instead.
+   ===================================================================== */
+@media (max-width: 880px) {
+  .nav-actions > .btn.small { display: none; }
+  .nav-links .mobile-auth {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-top: 0.4rem;
+  }
+  .nav-links .mobile-auth .btn { width: 100%; justify-content: center; }
+}
+
+/* =====================================================================
+   MOBILE  (<= 768px)  general layout
+   ===================================================================== */
+@media (max-width: 768px) {
+  /* Comfortable touch targets across the app */
+  .btn,
+  .icon-btn,
+  .nav-toggle,
+  .sidebar-toggle,
+  .theme-toggle,
+  .tab-btn,
+  .tools-tabs button,
+  .quiz-opt,
+  .send-btn {
+    min-height: var(--tap-min);
+  }
+
+  /* Landing nav spacing tweak */
+  .nav-actions { gap: 0.5rem; }
+
+  /* Hero CTA buttons go full-friendly width on phones */
+  .cta-buttons { gap: 0.7rem; }
+  .cta-buttons .btn { flex: 1 1 auto; justify-content: center; }
+
+  /* Hero stat grid: 2 columns reads better than auto-fit squeeze */
+  .hero-stats { grid-template-columns: repeat(2, 1fr) !important; gap: 1rem; }
+
+  /* Tools forms stack cleanly so inputs are full width and reachable */
+  .tool-form { flex-direction: column; align-items: stretch; }
+  .tool-form .grow,
+  .tool-form .small { width: 100%; max-width: 100%; min-width: 0; }
+  .tool-form .btn { width: 100%; justify-content: center; }
+
+  /* Dropzone a touch shorter so the Summarise button stays in view */
+  .dropzone { padding: 1.6rem 1rem; }
+
+  /* Tables: allow horizontal scroll instead of breaking layout */
+  .table-wrap { overflow-x: auto; }
+  .result table, .msg .body table { display: block; overflow-x: auto; white-space: nowrap; }
+}
+
+/* =====================================================================
+   SMALL MOBILE  (<= 480px)
+   ===================================================================== */
+@media (max-width: 480px) {
+  /* Stop iOS from zooming when focusing inputs — 16px minimum */
+  input, textarea, select { font-size: 16px !important; }
+
+  /* Hero buttons stack into a single comfortable column */
+  .cta-buttons { flex-direction: column; }
+  .cta-buttons .btn { width: 100%; }
+
+  /* Landing hero stats: single column with bigger numbers */
+  .hero-stats { grid-template-columns: 1fr !important; }
+
+  /* Flashcards: single comfortable column */
+  .flash-grid { grid-template-columns: 1fr; }
+  .flashcard { height: 160px; }
+
+  /* Saved items wrap actions below text instead of cramping */
+  .saved-item { flex-wrap: wrap; gap: 0.6rem; }
+  .saved-item .row-actions { width: 100%; justify-content: flex-end; }
+
+  /* Footer brand centred (already partly handled) */
+  .footer .socials { justify-content: center; width: 100%; }
+
+  /* Tool card padding trims */
+  .tool-card { padding: 1.2rem; }
+  .tool-card h2 { font-size: 1.1rem; }
+}
+
+/* =====================================================================
+   LANDSCAPE PHONES  (short height) — chat & auth shouldn't trap content
+   ===================================================================== */
+@media (max-height: 500px) and (orientation: landscape) {
+  .hero { padding: 2.5rem 0 1.5rem; }
+  .auth-wrap { padding: 1rem; align-items: flex-start; }
+  .auth-card { padding: 1.4rem; }
+  .chat-empty .big { font-size: 2rem; margin-bottom: 0.5rem; }
+  .chat-empty h2 { font-size: 1.2rem; }
+  /* Keep the composer from eating the whole screen */
+  .composer { padding: 0.5rem 0.8rem; }
+  .composer textarea { max-height: 80px; }
+}
+
+/* =====================================================================
+   ACCESSIBILITY — honour reduced-motion preference
+   ===================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
