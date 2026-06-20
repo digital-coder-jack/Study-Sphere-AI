@@ -65,7 +65,7 @@
   aside.innerHTML = `
     <div class="side-head">
       <a class="brand" href="/dashboard" aria-label="Study Sphere Dashboard">
-        <span class="logo" aria-hidden="true">🌌</span>
+        <span class="logo" aria-hidden="true"><img src="/assets/logo.png" alt="Study Sphere AI Logo" class="logo-img" /></span>
         <span class="brand-text">Study<span class="grad-text">Sphere</span></span>
       </a>
       <button id="sidebarCollapse" class="collapse-btn" aria-label="Toggle Sidebar" 
