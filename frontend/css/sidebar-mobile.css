@@ -1,84 +1,73 @@
 /* =====================================================================
-   Study Sphere AI  -  sidebar-mobile.css
-   Premium mobile-first sidebar redesign with fixed positioning,
-   blur backdrop, z-index hierarchy, and SaaS-quality UX.
-   
-   Key improvements:
-   - Fixed positioning (no content shift)
-   - Proper z-index stacking (sidebar 1000+, backdrop 999)
-   - Blur backdrop with rgba overlay
-   - Hardware-accelerated animations
-   - Full touch/click support
-   - Responsive widths (mobile 280px, tablet 320px, desktop 300px)
-   - Accessibility (keyboard nav, focus trap, ARIA labels)
+   Study Sphere AI  -  sidebar-mobile.css   (SINGLE SOURCE OF TRUTH)
+   Premium mobile-first sidebar with correct desktop layout.
+
+   ROOT-CAUSE FIX (2026-06-21):
+   The previous version declared `.sidebar { position: fixed }` as a BASE
+   rule (applying at ALL widths) and only restored `sticky` at >=1025px,
+   while the mobile breakpoint elsewhere was 880px. That pulled the sidebar
+   out of normal flow on desktop/tablet, so the flex shell stopped reserving
+   the 300px column and the dashboard content collapsed / appeared "pushed
+   down". This file now uses ONE consistent breakpoint (880px):
+     - Desktop / tablet (> 880px): sidebar is STICKY and IN-FLOW (no shift).
+     - Mobile (<= 880px): sidebar is a FIXED off-canvas drawer with backdrop.
+   Sidebar layout rules live ONLY here; dashboard.css no longer redefines
+   them, eliminating the specificity/order conflicts.
+
+   Z-INDEX HIERARCHY
+     0-99    background / particles
+     100     desktop sidebar (sticky)
+     120     mobile topbar
+     999     mobile backdrop
+     1000    mobile sidebar drawer
+     9999    toasts
    ===================================================================== */
 
-/* ========== Z-INDEX HIERARCHY ==========
-   0-99:    Page background, particles
-   100-199: Sidebar (fixed) and related
-   200+:    Modals, notifications
-   
-   Specific values:
-   - Sidebar: 1000
-   - Backdrop: 999
-   - Topbar: 120
-   - Toast: 9999
-   ========================================== */
-
-/* ========== SIDEBAR CONTAINER (FIXED POSITION) ========== */
+/* ========== SIDEBAR CONTAINER — DESKTOP / TABLET (default, in-flow) ====== */
 .sidebar {
-  position: fixed;
-  left: 0;
+  /* Sticky keeps the sidebar in the flex flow so .content gets its column */
+  position: sticky;
   top: 0;
+  left: 0;
   width: 300px;
+  flex-shrink: 0;
   height: 100vh;
-  height: 100dvh; /* Support for dynamic viewport height on mobile */
-  
-  /* Safe area support for notched devices */
-  padding-left: max(env(safe-area-inset-left), 1rem);
-  padding-right: 1rem;
-  padding-top: 1.5rem;
-  padding-bottom: max(env(safe-area-inset-bottom), 1.5rem);
-  
+  height: 100dvh;
+
+  padding: 1.5rem 1rem;
+
   background: var(--glass-strong);
   border-right: 1px solid var(--border);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: none;
-  
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+
   display: flex;
   flex-direction: column;
-  
-  z-index: 1000;
+
+  z-index: 100;
   overflow-y: auto;
   overflow-x: hidden;
-  
-  /* Smooth slide animation */
+
   transform: translateX(0);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
               width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  
-  /* Prevent scrollbar from causing layout shift */
+
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+
+  /* Hardware acceleration for smooth slide on mobile */
+  will-change: transform;
+}
+
+.sidebar.collapsed {
+  width: 88px;
 }
 
 /* Webkit scrollbar styling */
-.sidebar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.sidebar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
-}
-
-.sidebar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.15);
-}
+.sidebar::-webkit-scrollbar { width: 6px; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
+.sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.15); }
 
 /* Animated gradient sheen behind sidebar */
 .sidebar::before {
@@ -115,24 +104,34 @@
   gap: 0.7rem;
   text-decoration: none;
   color: inherit;
+  min-width: 0;
 }
 
+/* BRANDING: the logo image stands alone — NO gradient box / badge / shield
+   behind it. Transparent container, original proportions preserved. */
 .brand .logo {
-  font-size: 1.4rem;
-  line-height: 1;
   display: grid;
   place-items: center;
   width: 40px;
   height: 40px;
-  border-radius: 13px;
   flex-shrink: 0;
-  background: var(--grad);
-  box-shadow: 0 8px 22px rgba(109, 123, 255, 0.45);
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  overflow: visible;
   transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+.brand .logo img,
+.brand .logo .logo-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  display: block;
+}
+
 .brand:hover .logo {
-  transform: rotate(-8deg) scale(1.08);
+  transform: scale(1.08);
 }
 
 .brand-text {
@@ -181,14 +180,11 @@
   transform: scale(1.08);
 }
 
-.collapse-btn:active {
-  transform: scale(0.95);
-}
+.collapse-btn:active { transform: scale(0.95); }
 
+/* Collapse button is desktop-only (no collapsing on the mobile drawer) */
 @media (max-width: 880px) {
-  .collapse-btn {
-    display: none;
-  }
+  .collapse-btn { display: none; }
 }
 
 /* ========== SIDEBAR NAVIGATION ========== */
@@ -202,16 +198,9 @@
   scrollbar-width: thin;
 }
 
-.side-nav::-webkit-scrollbar {
-  width: 4px;
-}
+.side-nav::-webkit-scrollbar { width: 4px; }
+.side-nav::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 2px; }
 
-.side-nav::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
-}
-
-/* Navigation links */
 .side-nav a {
   position: relative;
   display: flex;
@@ -225,29 +214,27 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  
   transition: all 0.2s ease;
   cursor: pointer;
-  
-  /* Ensure clickability */
   z-index: 1;
   pointer-events: auto;
+  -webkit-tap-highlight-color: rgba(109, 123, 255, 0.25);
 }
 
 .side-nav a i {
   width: 24px;
   height: 24px;
+  display: grid;
+  place-items: center;
   text-align: center;
   font-size: 1.2rem;
   flex-shrink: 0;
   transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.side-nav a:hover i {
-  transform: scale(1.18) rotate(-4deg);
-}
+.side-nav a:hover i { transform: scale(1.18) rotate(-4deg); }
 
-/* Active state with gradient bar */
+/* Active indicator bar */
 .side-nav a::before {
   content: '';
   position: absolute;
@@ -262,9 +249,7 @@
   z-index: 1;
 }
 
-.side-nav a:hover:not(.active)::before {
-  transform: translateY(-50%) scaleY(1);
-}
+.side-nav a:hover:not(.active)::before { transform: translateY(-50%) scaleY(1); }
 
 .side-nav a:hover {
   background: var(--glass);
@@ -278,9 +263,7 @@
   box-shadow: 0 8px 22px rgba(109, 123, 255, 0.45);
 }
 
-.side-nav a.active i {
-  animation: navPop 0.4s ease;
-}
+.side-nav a.active i { animation: navPop 0.4s ease; }
 
 @keyframes navPop {
   0% { transform: scale(0.7); }
@@ -288,23 +271,12 @@
   100% { transform: scale(1); }
 }
 
-.side-nav a span {
-  transition: opacity 0.2s;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+.side-nav a span { transition: opacity 0.2s; overflow: hidden; text-overflow: ellipsis; }
 
-/* Collapsed state */
-.sidebar.collapsed .side-nav a {
-  padding: 0.85rem;
-  justify-content: center;
-}
+/* Collapsed (desktop) */
+.sidebar.collapsed .side-nav a { padding: 0.85rem; justify-content: center; }
+.sidebar.collapsed .side-nav a span { display: none; }
 
-.sidebar.collapsed .side-nav a span {
-  display: none;
-}
-
-/* Section headers */
 .nav-section {
   font-size: 0.75rem;
   text-transform: uppercase;
@@ -369,10 +341,7 @@
   background: var(--glass-strong);
 }
 
-.sidebar.collapsed .side-user-wrap {
-  padding: 0.4rem;
-  justify-content: center;
-}
+.sidebar.collapsed .side-user-wrap { padding: 0.4rem; justify-content: center; }
 
 .side-user {
   display: flex;
@@ -386,9 +355,7 @@
   transition: all 0.2s ease;
 }
 
-.side-user:hover {
-  color: var(--text);
-}
+.side-user:hover { color: var(--text); }
 
 .side-user .avatar {
   position: relative;
@@ -405,11 +372,8 @@
   box-shadow: 0 6px 16px rgba(109, 123, 255, 0.4);
 }
 
-.side-user-wrap:hover .avatar {
-  transform: scale(1.06);
-}
+.side-user-wrap:hover .avatar { transform: scale(1.06); }
 
-/* Online indicator dot */
 .side-user .avatar::after {
   content: '';
   position: absolute;
@@ -422,14 +386,8 @@
   border: 2px solid var(--bg-1);
 }
 
-.side-user .meta {
-  overflow: hidden;
-  transition: opacity 0.2s;
-}
-
-.sidebar.collapsed .side-user .meta {
-  display: none;
-}
+.side-user .meta { overflow: hidden; transition: opacity 0.2s; }
+.sidebar.collapsed .side-user .meta { display: none; }
 
 .side-user .meta b {
   display: block;
@@ -465,26 +423,19 @@
   transform: rotate(8deg) scale(1.05);
 }
 
-.logout-btn:active {
-  transform: rotate(8deg) scale(0.95);
-}
+.logout-btn:active { transform: rotate(8deg) scale(0.95); }
+.sidebar.collapsed .logout-btn { display: none; }
 
-.sidebar.collapsed .logout-btn {
-  display: none;
-}
-
-/* ========== BACKDROP OVERLAY ========== */
+/* ========== BACKDROP OVERLAY (mobile only, hidden by default) ========== */
 .side-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(1px);
-  -webkit-backdrop-filter: none;
-  
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 999;
   opacity: 0;
   visibility: hidden;
-  
   transition: opacity 0.3s ease, visibility 0.3s ease;
   pointer-events: none;
 }
@@ -495,22 +446,46 @@
   pointer-events: auto;
 }
 
-/* ========== MOBILE SIDEBAR STATES ========== */
+/* ========== TABLET (769px – 1024px) — sidebar stays in-flow, narrower ===== */
+@media (min-width: 881px) and (max-width: 1024px) {
+  .sidebar { width: 260px; }
+  .sidebar.collapsed { width: 88px; }
+}
+
+/* =====================================================================
+   MOBILE  (<= 880px) — sidebar becomes a FIXED off-canvas drawer.
+   This is the ONLY place the sidebar leaves normal flow.
+   ===================================================================== */
 @media (max-width: 880px) {
   .sidebar {
-    width: 280px;
-    /* Start off-screen */
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: min(86vw, 320px);
+    height: 100vh;
+    height: 100dvh;
+    /* Start off-screen to the left */
     transform: translateX(-100%);
     box-shadow: 18px 0 60px rgba(0, 0, 0, 0.55);
     border-radius: 0 22px 22px 0;
+    z-index: 1000;
+    /* Safe-area padding for notched devices */
+    padding-left: max(env(safe-area-inset-left), 1rem);
+    padding-bottom: max(env(safe-area-inset-bottom), 1.5rem);
   }
 
-  /* Sidebar open state */
-  .sidebar.open {
-    transform: translateX(0);
-  }
+  /* Open state slides into view */
+  .sidebar.open { transform: translateX(0); }
 
-  /* Stagger animation for nav items */
+  /* Never collapse on mobile — always full drawer width */
+  .sidebar.collapsed { width: min(86vw, 320px); }
+  .sidebar.collapsed .brand-text { opacity: 1; width: auto; }
+  .sidebar.collapsed .side-nav a { padding: 0.95rem 1rem; justify-content: flex-start; }
+  .sidebar.collapsed .side-nav a span { display: inline; }
+  .sidebar.collapsed .nav-section { opacity: 1; height: auto; padding: 1.2rem 1rem 0.5rem; }
+  .sidebar.collapsed .side-user .meta { display: block; }
+
+  /* Stagger animation for nav items when drawer opens */
   .sidebar .side-nav a,
   .sidebar .side-nav .nav-section {
     opacity: 0;
@@ -524,7 +499,6 @@
     transition: opacity 0.32s ease, transform 0.32s ease;
   }
 
-  /* Stagger delays for smooth cascade */
   .sidebar.open .side-nav > *:nth-child(1) { transition-delay: 0.04s; }
   .sidebar.open .side-nav > *:nth-child(2) { transition-delay: 0.07s; }
   .sidebar.open .side-nav > *:nth-child(3) { transition-delay: 0.10s; }
@@ -537,62 +511,20 @@
   .sidebar.open .side-nav > *:nth-child(10) { transition-delay: 0.31s; }
   .sidebar.open .side-nav > *:nth-child(n+11) { transition-delay: 0.34s; }
 
-  /* Larger tap targets on mobile */
-  .side-nav a {
-    padding: 0.95rem 1rem;
-    min-height: 44px;
-  }
-
-  .sidebar.collapsed {
-    width: 88px;
-  }
-}
-
-/* ========== TABLET RESPONSIVE ========== */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .sidebar {
-    width: 320px;
-  }
-
-  .sidebar.collapsed {
-    width: 88px;
-  }
-}
-
-/* ========== DESKTOP RESPONSIVE ========== */
-@media (min-width: 1025px) {
-  .sidebar {
-    position: sticky;
-    top: 0;
-    transform: translateX(0) !important;
-    width: 300px;
-  }
-
-  .sidebar.collapsed {
-    width: 88px;
-  }
+  /* Touch-friendly tap targets */
+  .side-nav a { padding: 0.95rem 1rem; min-height: 48px; }
 }
 
 /* ========== ACCESSIBILITY ========== */
-/* Reduce motion support */
 @media (prefers-reduced-motion: reduce) {
-  .sidebar::before {
-    animation: none;
-  }
-
-  .side-nav a.active i {
-    animation: none;
-  }
-
+  .sidebar::before { animation: none; }
+  .side-nav a.active i { animation: none; }
   .sidebar,
   .side-overlay,
   .side-nav a,
-  .side-nav .nav-section {
-    transition: none !important;
-  }
+  .side-nav .nav-section { transition: none !important; }
 }
 
-/* Focus visible for keyboard navigation */
 .side-nav a:focus-visible,
 .logout-btn:focus-visible,
 .collapse-btn:focus-visible {
@@ -600,21 +532,12 @@
   outline-offset: 2px;
 }
 
-/* High contrast mode support */
 @media (prefers-contrast: more) {
-  .sidebar {
-    border-right-width: 2px;
-  }
-
-  .side-nav a.active {
-    border: 2px solid var(--accent);
-  }
+  .sidebar { border-right-width: 2px; }
+  .side-nav a.active { border: 2px solid var(--accent); }
 }
 
-/* ========== PRINT STYLES ========== */
 @media print {
   .sidebar,
-  .side-overlay {
-    display: none;
-  }
+  .side-overlay { display: none; }
 }

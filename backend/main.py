@@ -437,6 +437,7 @@ PAGE_ALIASES = {
     "settings": "profile",   # profile page hosts settings UI
     "profile": "profile",
     "analytics": "analytics",
+    "telegram": "telegram",  # Telegram bot info / integration page
 }
 
 

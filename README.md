@@ -85,6 +85,7 @@ JWT auth · password hashing · Pydantic input validation · in-memory **rate li
 | `/chat`, `/chat?id=<id>` | AI chat interface |
 | `/tools`, `/tools#<tab>` | Study tools |
 | `/profile` | Profile & settings |
+| `/telegram` | Telegram bot info & integration page |
 
 ### API — Auth (`/api/auth`)
 | Method | Path | Body |
@@ -213,7 +214,14 @@ uvicorn backend.main:app --reload --port 3000
 
 - **Platform**: Vercel (frontend) + Render/Railway (backend API) · **Status**: ✅ Ready
 - **Tech**: FastAPI + Gunicorn/Uvicorn + Vanilla JS + Chart.js + Groq + MongoDB Atlas (analytics)
-- **Last Updated**: 2026-06-18
+- **Last Updated**: 2026-06-21
+
+### 🩹 Mobile/Navigation/Branding fixes (2026-06-21)
+- **Sidebar layout root-cause fix**: `sidebar-mobile.css` previously set `.sidebar { position: fixed }` as a base rule (all widths) and only restored `sticky` at ≥1025px, while the mobile breakpoint was 880px. This pulled the sidebar out of flow on desktop/tablet, so the flex shell stopped reserving its column and the **dashboard content collapsed / appeared pushed down** (most visible in guest mode). Sidebar layout is now consolidated into a single source of truth (`sidebar-mobile.css`) with **one consistent 880px breakpoint**: sticky/in-flow on desktop, fixed off-canvas drawer on mobile. Duplicate `.sidebar`/`.side-*`/`.side-overlay` rules were removed from `dashboard.css`.
+- **Mobile sidebar now works in guest mode**: `sidebar.js` no longer bails out (`if (!SS.requireAuth()) return;`) before wiring the hamburger. It renders + wires the drawer immediately and performs guest login in the background, refreshing the footer in place (no reload loop).
+- **Drawer UX**: open/close via hamburger, backdrop tap, ESC, nav-item tap; backdrop blur; slide animations; safe-area padding; ≥48px tap targets; `aria-expanded`/`aria-hidden` handled per breakpoint.
+- **Telegram page added**: new `/telegram` page + sidebar nav item + backend route (no more 404).
+- **Branding**: removed gradient/badge boxes painted behind the official logo (sidebar header on app pages and the offline page). The uploaded logo (`/assets/logo.png`) is now shown cleanly with preserved proportions everywhere.
 
 ---
 

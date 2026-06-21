@@ -18,18 +18,40 @@
 (function () {
   'use strict';
 
-  if (!SS.requireAuth()) return;
-
   const aside = document.getElementById('sidebar');
   if (!aside) return;
 
+  /* --------------------------------------------------------------------
+     GUEST-MODE FIX:
+     Previously this file did `if (!SS.requireAuth()) return;` at the very
+     top. In guest mode (no token yet) that returned BEFORE wiring the
+     mobile toggle/overlay, so the hamburger button did nothing until a
+     full page reload completed the guest login. If the guest endpoint was
+     slow or failed, the sidebar stayed dead.
+
+     Now we ALWAYS render the sidebar and wire all interactions first, then
+     kick off guest login in the background (without blocking). If a token
+     arrives later we re-render the user footer in place — no reload needed.
+     -------------------------------------------------------------------- */
+  if (!SS.isAuthed()) {
+    // Fire-and-forget guest login; refresh footer when it resolves.
+    SS.api('/api/auth/guest', { method: 'POST', auth: false })
+      .then((data) => {
+        if (data && data.token) {
+          SS.setSession(data.token, data.user);
+          renderUserFooter(SS.getUser());
+        }
+      })
+      .catch((err) => console.warn('Guest login pending:', err && err.message));
+  }
+
   const active = aside.dataset.active || '';
   const user = SS.getUser();
-  const initial = (user.name || 'U').trim().charAt(0).toUpperCase();
+  const initial = (user.name || 'Guest').trim().charAt(0).toUpperCase();
 
   /* ========== NAVIGATION ITEMS ========== */
   const items = [
-    { id: 'dashboard', href: '/dashboard.html', icon: 'fa-gauge-high', label: 'Dashboard' },
+    { id: 'dashboard', href: '/dashboard', icon: 'fa-gauge-high', label: 'Dashboard' },
     { id: 'chat', href: '/chat', icon: 'fa-comments', label: 'AI Chat' },
     { section: 'Study tools' },
     { id: 'notes', href: '/tools#notes', icon: 'fa-note-sticky', label: 'Notes' },
@@ -39,6 +61,7 @@
     { id: 'uploads', href: '/tools#summarizer', icon: 'fa-file-arrow-up', label: 'File Uploads' },
     { section: 'Personal' },
     { id: 'analytics', href: '/analytics', icon: 'fa-chart-pie', label: 'Analytics' },
+    { id: 'telegram', href: '/telegram', icon: 'fa-paper-plane', label: 'Telegram' },
     { id: 'profile', href: '/profile', icon: 'fa-user', label: 'Profile' },
     { id: 'settings', href: '/profile#settings', icon: 'fa-gear', label: 'Settings' },
   ];
@@ -74,20 +97,7 @@
       </button>
     </div>
     <nav class="side-nav" role="navigation" aria-label="Main navigation">${navHtml}</nav>
-    <div class="side-foot">
-      <div class="side-user-wrap">
-        <a href="/profile" class="side-user" aria-label="View Profile">
-          <span class="avatar" aria-hidden="true">${escapeHtml(initial)}</span>
-          <div class="meta">
-            <b>${escapeHtml(user.name || 'User')}</b>
-            <span>${escapeHtml(user.username || user.email || '')}</span>
-          </div>
-        </a>
-        <button class="logout-btn" id="logoutBtn" title="Logout" aria-label="Logout">
-          <i class="fas fa-right-from-bracket" aria-hidden="true"></i>
-        </button>
-      </div>
-    </div>`;
+    <div class="side-foot" id="sideFoot">${userFooterHtml(user)}</div>`;
 
   /* ========== INJECT SIDEBAR STYLES (if not already present) ========== */
   if (!document.getElementById('sidebar-styles')) {
@@ -146,13 +156,42 @@
     });
   }
 
+  /* ========== USER FOOTER (re-rendered when guest login resolves) ========== */
+  function userFooterHtml(u) {
+    const init = (u.name || 'Guest').trim().charAt(0).toUpperCase();
+    const isGuest = !!u.is_guest || !SS.isAuthed();
+    return `
+      <div class="side-user-wrap">
+        <a href="/profile" class="side-user" aria-label="View Profile">
+          <span class="avatar" aria-hidden="true">${escapeHtml(init)}</span>
+          <div class="meta">
+            <b>${escapeHtml(u.name || (isGuest ? 'Guest' : 'User'))}</b>
+            <span>${escapeHtml(u.username || u.email || (isGuest ? 'Guest mode' : ''))}</span>
+          </div>
+        </a>
+        <button class="logout-btn" id="logoutBtn" title="${isGuest ? 'Exit guest mode' : 'Logout'}" aria-label="${isGuest ? 'Exit guest mode' : 'Logout'}">
+          <i class="fas fa-right-from-bracket" aria-hidden="true"></i>
+        </button>
+      </div>`;
+  }
+
+  function renderUserFooter(u) {
+    const foot = document.getElementById('sideFoot');
+    if (!foot) return;
+    foot.innerHTML = userFooterHtml(u);
+    bindLogout();
+  }
+
   /* ========== LOGOUT FUNCTIONALITY ========== */
-  document.getElementById('logoutBtn')?.addEventListener('click', () => {
-    if (confirm('Are you sure you want to log out?')) {
-      SS.clearSession();
-      window.location.href = '/';
-    }
-  });
+  function bindLogout() {
+    document.getElementById('logoutBtn')?.addEventListener('click', () => {
+      if (confirm('Are you sure you want to log out?')) {
+        SS.clearSession();
+        window.location.href = '/';
+      }
+    });
+  }
+  bindLogout();
 
   /* ========== MOBILE SIDEBAR TOGGLE ========== */
   const toggle = document.getElementById('sidebarToggle');
@@ -161,9 +200,12 @@
   /**
    * Open sidebar with backdrop and prevent body scroll
    */
+  const isMobile = () => window.innerWidth <= 880;
+
   const openSidebar = () => {
     aside.classList.add('open');
     aside.setAttribute('aria-hidden', 'false');
+    if (toggle) toggle.setAttribute('aria-expanded', 'true');
     if (overlay) overlay.classList.add('show');
     document.body.style.overflow = 'hidden';
     document.body.style.touchAction = 'none';
@@ -180,27 +222,31 @@
    */
   const closeSidebar = () => {
     aside.classList.remove('open');
-    aside.setAttribute('aria-hidden', 'true');
+    // Only hide from AT on mobile (off-canvas). On desktop it's always visible.
+    aside.setAttribute('aria-hidden', isMobile() ? 'true' : 'false');
+    if (toggle) toggle.setAttribute('aria-expanded', 'false');
     if (overlay) overlay.classList.remove('show');
     document.body.style.overflow = '';
     document.body.style.touchAction = '';
 
-    // Return focus to toggle button
-    if (toggle) {
+    // Return focus to toggle button (mobile only)
+    if (toggle && isMobile()) {
       setTimeout(() => toggle.focus(), 100);
     }
   };
 
   /* ========== SIDEBAR TOGGLE BUTTON ========== */
   if (toggle) {
+    toggle.setAttribute('aria-controls', 'sidebar');
+    toggle.setAttribute('aria-expanded', 'false');
     toggle.addEventListener('click', (e) => {
       e.stopPropagation();
       aside.classList.contains('open') ? closeSidebar() : openSidebar();
     });
-
-    // Set initial aria-hidden state
-    aside.setAttribute('aria-hidden', 'true');
   }
+
+  // Set initial aria-hidden state (mobile starts hidden, desktop visible)
+  aside.setAttribute('aria-hidden', isMobile() ? 'true' : 'false');
 
   /* ========== BACKDROP CLICK ========== */
   if (overlay) {
@@ -269,18 +315,28 @@
       }
 
       // Close sidebar on mobile after link click
-      if (window.innerWidth <= 880) {
+      if (isMobile()) {
         closeSidebar();
       }
     });
   });
 
   /* ========== WINDOW RESIZE HANDLING ========== */
+  let resizeTimer;
   window.addEventListener('resize', () => {
-    // Close sidebar when resizing to desktop
-    if (window.innerWidth > 880 && aside.classList.contains('open')) {
-      closeSidebar();
-    }
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (!isMobile()) {
+        // On desktop: ensure drawer state is reset and body scroll restored.
+        aside.classList.remove('open');
+        if (overlay) overlay.classList.remove('show');
+        document.body.style.overflow = '';
+        document.body.style.touchAction = '';
+        aside.setAttribute('aria-hidden', 'false');
+      } else if (!aside.classList.contains('open')) {
+        aside.setAttribute('aria-hidden', 'true');
+      }
+    }, 120);
   });
 
   /* ========== PREVENT BODY SCROLL WHEN SIDEBAR OPEN ========== */
