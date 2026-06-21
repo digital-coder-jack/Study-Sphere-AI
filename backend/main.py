@@ -324,14 +324,11 @@ def _page(name: str) -> FileResponse | JSONResponse:
     return JSONResponse({"detail": "Page not found"}, status_code=404)
 
 
-FAVICON_SVG = (
-    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>"
-    "<defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>"
-    "<stop offset='0' stop-color='#6d7bff'/><stop offset='0.5' stop-color='#a855f7'/>"
-    "<stop offset='1' stop-color='#22d3ee'/></linearGradient></defs>"
-    "<rect width='100' height='100' rx='22' fill='url(#g)'/>"
-    "<text x='50' y='68' font-size='56' text-anchor='middle'> <img src="/assets/logo.png" alt="Study Sphere AI Logo" class="logo-img" /></text></svg>"
-)
+from fastapi.responses import FileResponse
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return FileResponse("frontend/assets/logo.png")
 
 
 @app.get("/assets/logo.png")
