@@ -18,8 +18,8 @@ function init() {
 
   // If already logged in, swap "Get started" CTA to Dashboard
   if (window.SS && SS.isAuthed()) {
-    document.querySelectorAll('a[href="/signup"], a[href="/login"]').forEach((a) => {
-      a.setAttribute('href', '/dashboard');
+    document.querySelectorAll('a[href="/signup.html"], a[href="/login.html"]').forEach((a) => {
+      a.setAttribute('href', '/dashboard.html');
     });
   }
 
@@ -46,7 +46,7 @@ async function startAsGuest(e) {
     SS.setSession(data.token, data.user);
     sessionStorage.setItem('ss_show_welcome', 'true');
     SS.toast('Welcome! Let\'s start learning.');
-    setTimeout(() => (window.location.href = '/dashboard'), 500);
+    setTimeout(() => (window.location.href = '/dashboard.html'), 500);
   } catch (err) {
     SS.toast(err.message, 'error');
     btn.disabled = false;
