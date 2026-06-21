@@ -24,10 +24,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       </div>
     `;
     
-    // Insert banner before the topbar
+    // Insert banner right AFTER the topbar so it sits at the top of the
+    // scrollable content (not hidden behind the fixed mobile topbar).
     const content = document.querySelector('.content');
+    const topbar = content ? content.querySelector('.topbar') : null;
     if (content) {
-      content.insertBefore(banner, content.firstChild);
+      if (topbar && topbar.nextSibling) {
+        content.insertBefore(banner, topbar.nextSibling);
+      } else if (topbar) {
+        content.appendChild(banner);
+      } else {
+        content.insertBefore(banner, content.firstChild);
+      }
     }
     
     // Add styles for the banner
