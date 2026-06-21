@@ -72,7 +72,7 @@ async function loadSettings() {
       document.getElementById('compactSidebar').classList.toggle('active', !!data.dashboard.compactSidebar);
       document.getElementById('showWelcome').classList.toggle('active', data.dashboard.showWelcome !== false);
       document.getElementById('showStreak').classList.toggle('active', data.dashboard.showStreak !== false);
-      document.getElementById('defaultPage').value = data.dashboard.defaultPage || 'dashboard';
+      document.getElementById('defaultPage').value = data.dashboard.defaultPage || 'dashboard.html';
     }
 
     // Apply notification settings
@@ -263,7 +263,7 @@ async function saveDashboardSettings() {
   try {
     await SS.api('/api/auth/settings', {
       method: 'PUT',
-      body: { category: 'dashboard', data }
+      body: { category: 'dashboard.html', data }
     });
     showGlobalMsg('Dashboard settings saved!', 'success');
     SS.toast('Dashboard settings updated!');
