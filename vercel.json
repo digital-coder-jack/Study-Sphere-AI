@@ -11,6 +11,21 @@
   ],
   "routes": [
     {
+      "src": "/sw.js",
+      "dest": "api/index.py",
+      "headers": {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Service-Worker-Allowed": "/"
+      }
+    },
+    {
+      "src": "/(css|js|assets)/(.*)",
+      "dest": "api/index.py",
+      "headers": {
+        "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800"
+      }
+    },
+    {
       "src": "/(.*)",
       "dest": "api/index.py"
     }

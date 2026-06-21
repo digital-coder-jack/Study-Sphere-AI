@@ -2,7 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#4F46E5" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="StudySphere" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/assets/logo-192.png" />
   <link rel="icon" type="image/svg+xml" href="/assets/logo.png" />
   <script>
     (function () {
@@ -54,6 +60,15 @@
           <b id="chatTitle">Study Sphere AI</b>
         </div>
         <div class="actions">
+          <div class="model-selector" id="modelSelector" title="Choose AI model">
+            <span class="model-dot" id="modelDot"></span>
+            <select id="modelSelect" aria-label="AI model">
+              <option value="auto">Auto</option>
+              <option value="kimi">Kimi</option>
+              <option value="gemini">Gemini</option>
+              <option value="groq">Groq</option>
+            </select>
+          </div>
           <button class="icon-btn" id="downloadBtn" title="Download chat"><i class="fas fa-download"></i></button>
           <button class="icon-btn" id="deleteBtn" title="Delete chat"><i class="fas fa-trash"></i></button>
         </div>
@@ -79,6 +94,7 @@
   <script src="/js/config.js"></script>
   <script src="/js/analytics-tracker.js"></script>
   <script src="/js/app.js"></script>
+  <script src="/js/pwa.js"></script>
   <script src="/js/chat.js"></script>
 </body>
 </html>

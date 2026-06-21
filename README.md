@@ -6,7 +6,7 @@
 
 **Learn smarter. Explore deeper. Grow faster.**
 
-🤖 AI Powered · 📚 Study Tools · ⚡ Fast (Groq) · 🌍 Web + Telegram
+🤖 Multi-Provider AI · 📚 Study Tools · 📱 Installable PWA · 🌍 Web + Telegram
 
 </div>
 
@@ -15,10 +15,25 @@
 ## 📖 Overview
 
 - **Name**: Study Sphere AI
-- **Goal**: An AI-powered study assistant that works as both a **modern web application** and the original **Telegram bot**, sharing the **same FastAPI backend and SQLite database**.
-- **AI**: Groq Chat Completions — model `llama-3.3-70b-versatile`.
+- **Goal**: An AI-powered study assistant that works as a **modern installable web app (PWA)**, the original **Telegram bot**, sharing the **same FastAPI backend and SQLite database**.
+- **AI**: **Multi-provider with automatic fallback** — **Kimi (Moonshot)** → **Google Gemini** → **Groq**. If one provider fails or is unconfigured, the next is tried automatically; if all fail, a graceful error is returned.
 
-The original Telegram bot is **fully preserved and unchanged in behaviour**. A complete web interface (landing page, auth, dashboard, ChatGPT-style chat, and 6 study tools) has been added alongside it.
+The original Telegram bot is **fully preserved** — it now benefits from the same multi-provider fallback automatically. A complete web interface (landing page, auth, dashboard, ChatGPT-style chat, 6 study tools, settings) is provided alongside it, now as a **Progressive Web App** that installs to Android/desktop.
+
+### 🧠 AI System (new)
+- **Providers**: Kimi (primary), Gemini (secondary), Groq (tertiary) — all free-tier compatible, OpenAI-style chat APIs.
+- **Auto fallback chain**: `Kimi → Gemini → Groq → graceful error`.
+- **Model selector**: choose **Auto / Kimi / Gemini / Groq** in the chat header and in Settings; the choice is **saved per user**.
+- **Active model display**: the chat shows which provider actually answered (badge next to the assistant name).
+- **Response caching** (in-process, TTL configurable via `AI_CACHE_TTL`), **streaming (SSE)**, **conversation memory**, **Markdown + code highlighting**.
+- **Status monitoring**: `GET /api/ai/status` and `/api/health` report which providers are configured.
+- **Security**: API keys (`KIMI_API_KEY`, `GEMINI_API_KEY`, `GROQ_API_KEY`) are read **only** from environment variables and **never** exposed to the frontend — all AI calls go through server-side routes.
+
+### 📱 Progressive Web App (new)
+- `manifest.json` (icons, shortcuts, standalone display, theme/splash colors)
+- Service worker (`/sw.js`) — app-shell caching, **offline page** (`/offline.html`), update notifications, background-sync hook
+- **Install app** button, standalone app mode, adaptive/maskable icons, network status banners
+- Compatible with **PWABuilder** for Android APK generation
 
 ---
 

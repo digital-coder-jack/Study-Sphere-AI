@@ -59,14 +59,20 @@ FRONTEND_DIR = os.path.join(PROJECT_ROOT, "frontend")
 # obvious in the platform logs. Set FAIL_FAST=1 to abort startup instead.
 def _validate_environment() -> None:
     """Validate and report on the environment configuration at boot."""
-    required_for_ai = {
-        "GROQ_API_KEY": "AI chat, notes, quizzes, flashcards, plans, summaries",
+    # AI now uses a multi-provider fallback chain. At least ONE of these must
+    # be set for AI features to work; the chat layer falls back automatically.
+    ai_providers = {
+        "KIMI_API_KEY": "primary AI provider (Moonshot Kimi)",
+        "GEMINI_API_KEY": "secondary AI provider (Google Gemini)",
+        "GROQ_API_KEY": "tertiary AI provider (Groq)",
     }
     recommended = {
         "JWT_SECRET": "stable session signing secret (logins break on restart without it)",
         "ALLOWED_ORIGINS": "comma-separated list of frontend origins allowed by CORS",
     }
     optional = {
+        "KIMI_MODEL": "override default Kimi model (moonshot-v1-8k)",
+        "GEMINI_MODEL": "override default Gemini model (gemini-1.5-flash)",
         "GROQ_MODEL": "override default Groq model (llama-3.3-70b-versatile)",
         "MONGODB_URI_WEB": "MongoDB Atlas URI for web-analytics dashboard",
         "TELEGRAM_BOT_TOKEN": "Telegram bot integration",
@@ -75,13 +81,15 @@ def _validate_environment() -> None:
         "TELEGRAM_ADMIN_ID": "admin id allowed to read analytics dashboard stats",
     }
 
-    missing_required = [k for k in required_for_ai if not os.environ.get(k)]
+    configured_ai = [k for k in ai_providers if os.environ.get(k)]
+    # "Missing required" only if NO AI provider at all is configured.
+    missing_required = list(ai_providers) if not configured_ai else []
     missing_recommended = [k for k in recommended if not os.environ.get(k)]
 
     logger.info("=" * 60)
     logger.info("Study Sphere AI — environment check")
-    for key, why in required_for_ai.items():
-        status = "OK" if os.environ.get(key) else "MISSING"
+    for key, why in ai_providers.items():
+        status = "OK" if os.environ.get(key) else "not set"
         logger.info("  [%s] %-18s — %s", status, key, why)
     for key, why in recommended.items():
         status = "OK" if os.environ.get(key) else "not set"
@@ -93,8 +101,8 @@ def _validate_environment() -> None:
 
     if missing_required:
         logger.warning(
-            "Missing REQUIRED env var(s): %s — AI features will return a "
-            "configuration message until these are set.",
+            "No AI provider configured. Set at least one of %s — AI features "
+            "will return a configuration message until one is set.",
             ", ".join(missing_required),
         )
     if missing_recommended:
@@ -214,10 +222,19 @@ async def track_activity_endpoint(body: TrackActivityIn):
 
 
 @app.post("/api/analytics/track-session-end")
-async def track_session_end_endpoint(body: TrackSessionEndIn):
+async def track_session_end_endpoint(request: Request):
+    # navigator.sendBeacon() sends the body as text/plain, so FastAPI's
+    # automatic JSON model parsing returns 422. Parse the raw body
+    # defensively so beacons (and normal JSON posts) both succeed.
     try:
+        import json as _json
+
+        raw = await request.body()
+        data = _json.loads(raw.decode("utf-8") or "{}")
         web_analytics_db.track_session_end(
-            body.guest_id, body.session_start, body.session_end
+            data.get("guest_id"),
+            data.get("session_start"),
+            data.get("session_end"),
         )
     except Exception:
         logger.exception("track_session_end failed")
@@ -250,12 +267,17 @@ async def get_dashboard_stats_endpoint(current_user: dict = Depends(current_user
 # ---------------------------------------------------------------------------
 @app.get("/api/health")
 async def health() -> dict:
+    from backend import providers
+
+    snapshot = providers.status_snapshot()
     return {
         "status": "ok",
         "app": "Study Sphere AI",
         "storage": "sqlite",
         "db_path": db.DB_PATH,
-        "ai_configured": bool(os.environ.get("GROQ_API_KEY")),
+        "ai_configured": snapshot["any_configured"],
+        "ai_providers": snapshot["providers"],
+        "ai_fallback_order": snapshot["order"],
         "bot_configured": bool(os.environ.get("TELEGRAM_BOT_TOKEN")),
         "mongo_analytics_configured": bool(os.environ.get("MONGODB_URI_WEB")),
         "cors_allowed_origins": ALLOWED_ORIGINS,
@@ -316,6 +338,9 @@ if os.path.isdir(FRONTEND_DIR):
 
 
 def _page(name: str) -> FileResponse | JSONResponse:
+    # Normalise: allow callers to pass either "chat" or "chat.html".
+    if not name.endswith(".html"):
+        name = f"{name}.html"
     file_path = os.path.join(FRONTEND_DIR, name)
 
     if os.path.isfile(file_path):
@@ -324,20 +349,50 @@ def _page(name: str) -> FileResponse | JSONResponse:
     return JSONResponse({"detail": "Page not found"}, status_code=404)
 
 
-from fastapi.responses import FileResponse
-
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():
-    return FileResponse("frontend/assets/logo.png")
-
-
-@app.get("/assets/logo.png")
-@app.get("/assets/logo.png")
-async def favicon():
     fav_path = os.path.join(FRONTEND_DIR, "assets", "logo.png")
-    if os.path.exists(fav_path):
+    if os.path.isfile(fav_path):
         return FileResponse(fav_path)
-    return Response(content=FAVICON_SVG, media_type="image/svg+xml")
+    return Response(status_code=204)
+
+
+@app.get("/assets/logo.png", include_in_schema=False)
+async def logo_png():
+    fav_path = os.path.join(FRONTEND_DIR, "assets", "logo.png")
+    if os.path.isfile(fav_path):
+        return FileResponse(fav_path)
+    return Response(status_code=404)
+
+
+# ---------------------------------------------------------------------------
+# PWA root files (must be served from the site root, not /assets).
+# ---------------------------------------------------------------------------
+@app.get("/manifest.json", include_in_schema=False)
+async def manifest():
+    return _file_or_404("manifest.json", "application/manifest+json")
+
+
+@app.get("/sw.js", include_in_schema=False)
+async def service_worker():
+    # Service worker must be served from root scope with JS mime type.
+    resp = _file_or_404("sw.js", "application/javascript")
+    if isinstance(resp, FileResponse):
+        resp.headers["Service-Worker-Allowed"] = "/"
+        resp.headers["Cache-Control"] = "no-cache"
+    return resp
+
+
+@app.get("/offline.html", include_in_schema=False)
+async def offline_page():
+    return _page("offline.html")
+
+
+def _file_or_404(name: str, media_type: str | None = None):
+    path = os.path.join(FRONTEND_DIR, name)
+    if os.path.isfile(path):
+        return FileResponse(path, media_type=media_type)
+    return JSONResponse({"detail": "Not found"}, status_code=404)
 
 
 @app.get("/")
@@ -358,56 +413,50 @@ async def index():
     )
 
 
-@app.get("/login.html")
-@app.get("/login.html")
-async def login_page():
-    return _page("login.html")
+# ---------------------------------------------------------------------------
+# PAGE ROUTING
+# ---------------------------------------------------------------------------
+# The frontend links use BOTH extensionless URLs (e.g. /chat, /dashboard) and
+# explicit .html URLs (e.g. /chat.html). Previously only the .html variants
+# were registered, so every extensionless link produced a 404. We now serve
+# both forms from a single allow-list of known pages plus generic fallbacks.
+# Map each known route slug to the HTML file that backs it. Most map to a
+# same-named file; "settings" is an alias for the profile page (which hosts
+# the settings UI) so the /settings nav link never 404s.
+PAGE_ALIASES = {
+    "index": "index",
+    "login": "login",
+    "signup": "signup",
+    "forgot": "forgot",
+    "dashboard": "dashboard",
+    "chat": "chat",
+    "tools": "tools",
+    "notes": "tools",        # tools page hosts notes/quiz/flashcards
+    "quiz": "tools",
+    "flashcards": "tools",
+    "settings": "profile",   # profile page hosts settings UI
+    "profile": "profile",
+    "analytics": "analytics",
+}
 
 
-@app.get("/signup.html")
-@app.get("/signup.html")
-async def signup_page():
-    return _page("signup.html")
+def _register_page(slug: str, target: str) -> None:
+    async def _handler(target: str = target):
+        return _page(target)
+
+    # Extensionless route: /chat
+    app.get(f"/{slug}", include_in_schema=False)(_handler)
+    # Explicit .html route: /chat.html
+    app.get(f"/{slug}.html", include_in_schema=False)(_handler)
 
 
-@app.get("/forgot.html")
-@app.get("/forgot.html")
-async def forgot_page():
-    return _page("forgot.html")
-
-
-@app.get("/dashboard.html")
-@app.get("/dashboard.html")
-async def dashboard_page():
-    return _page("dashboard.html")
-
-
-@app.get("/chat.html")
-@app.get("/chat.html")
-async def chat_page():
-    return _page("chat.html")
-
-
-@app.get("/tools.html")
-@app.get("/tools.html")
-async def tools_page():
-    return _page("tools.html")
-
-
-@app.get("/profile.html")
-@app.get("/profile.html")
-async def profile_page():
-    return _page("profile.html")
-
-
-@app.get("/analytics.html")
-@app.get("/analytics.html")
-async def analytics_page():
-    return _page("analytics.html")
+for _slug, _target in PAGE_ALIASES.items():
+    if _slug != "index":  # "/" is already handled by index()
+        _register_page(_slug, _target)
 
 
 # Generic fallback for any other top-level .html file.
-@app.get("/{page}.html")
+@app.get("/{page}.html", include_in_schema=False)
 async def any_page(page: str):
     return _page(f"{page}.html")
 

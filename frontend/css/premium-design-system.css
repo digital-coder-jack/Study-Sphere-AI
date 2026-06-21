@@ -454,3 +454,95 @@ select:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* =====================================================================
+   PWA components — install button, update banner, network status,
+   AI model selector, typing indicator (premium / glassmorphism)
+   ===================================================================== */
+.pwa-install-btn {
+  position: fixed;
+  right: 18px;
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  z-index: 9000;
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .8rem 1.25rem;
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 16px;
+  font-weight: 600;
+  font-size: .92rem;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(135deg, #6d7bff, #a855f7);
+  box-shadow: 0 12px 32px rgba(109, 123, 255, .45);
+  transform: translateY(120%);
+  opacity: 0;
+  transition: transform .35s cubic-bezier(.16,1,.3,1), opacity .35s, box-shadow .2s;
+}
+.pwa-install-btn.show { transform: translateY(0); opacity: 1; }
+.pwa-install-btn:hover { box-shadow: 0 16px 40px rgba(109, 123, 255, .6); transform: translateY(-2px); }
+
+.pwa-update-banner {
+  position: fixed;
+  left: 50%;
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  transform: translate(-50%, 140%);
+  z-index: 9001;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: .75rem 1rem .75rem 1.25rem;
+  border-radius: 14px;
+  background: rgba(17, 23, 58, .92);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, .14);
+  color: #e8ecff;
+  font-size: .9rem;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .45);
+  transition: transform .35s cubic-bezier(.16,1,.3,1);
+}
+.pwa-update-banner.show { transform: translate(-50%, 0); }
+.pwa-update-banner button {
+  border: 0; cursor: pointer; padding: .5rem .9rem; border-radius: 10px;
+  font-weight: 600; color: #fff;
+  background: linear-gradient(135deg, #6d7bff, #a855f7);
+}
+
+.pwa-net-banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 9002;
+  text-align: center; padding: .6rem 1rem; font-size: .85rem; font-weight: 600;
+  color: #fff; transform: translateY(-100%); transition: transform .3s ease;
+}
+.pwa-net-banner.show { transform: translateY(0); }
+.pwa-net-banner.offline { background: linear-gradient(90deg, #f43f5e, #fb7185); }
+.pwa-net-banner.online { background: linear-gradient(90deg, #10b981, #34d399); }
+
+/* ---- Model selector (chat header + settings) ---- */
+.model-selector {
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: .35rem .6rem; border-radius: 12px;
+  background: var(--glass, rgba(255,255,255,.06));
+  border: 1px solid var(--border, rgba(255,255,255,.12));
+  font-size: .85rem;
+}
+.model-selector select {
+  background: transparent; border: 0; color: var(--text, #e8ecff);
+  font: inherit; font-weight: 600; cursor: pointer; outline: none;
+}
+.model-selector select option { background: #11173a; color: #e8ecff; }
+.model-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,.2);
+}
+.model-dot.off { background: #6b7280; box-shadow: none; }
+.model-badge {
+  display: inline-flex; align-items: center; gap: .4rem;
+  font-size: .72rem; font-weight: 600; color: var(--text-dim, #9aa3c7);
+  padding: .15rem .5rem; border-radius: 999px;
+  background: var(--glass, rgba(255,255,255,.06));
+  border: 1px solid var(--border-light, rgba(255,255,255,.08));
+}
+
+.field-hint { display: block; margin-top: .35rem; font-size: .78rem; color: var(--text-muted, #6b7280); }
+.provider-status { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .35rem; }

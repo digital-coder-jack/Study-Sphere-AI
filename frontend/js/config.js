@@ -18,7 +18,11 @@
    the same origin (single-host deploy) — then same-origin requests are used.
    ===================================================================== */
 
-window.SS_API_BASE = "https://REPLACE-WITH-YOUR-BACKEND-URL";
+/* Default: same-origin. On Vercel the FastAPI backend and the static
+   frontend are served from the SAME deployment, so API calls should be
+   same-origin ('' prefix). Only set this to an absolute URL if you split
+   the backend onto a different host (e.g. Render/Railway). */
+window.SS_API_BASE = "";
 
 /* Optional: allow overriding via a <meta name="api-base"> tag or a
    ?api_base=... query string during testing, without editing this file. */
@@ -36,14 +40,8 @@ window.SS_API_BASE = "https://REPLACE-WITH-YOUR-BACKEND-URL";
     if (window.SS_API_BASE) {
       window.SS_API_BASE = String(window.SS_API_BASE).replace(/\/+$/, "");
     }
-    // If the placeholder was never replaced, fall back to same-origin so the
-    // app still works on a single-host deploy and doesn't call a bad URL.
+    // Guard against any stale placeholder value.
     if (window.SS_API_BASE === "https://REPLACE-WITH-YOUR-BACKEND-URL") {
-      console.warn(
-        "[Study Sphere] window.SS_API_BASE is not configured. " +
-          "Edit frontend/js/config.js and set your backend URL. " +
-          "Falling back to same-origin requests."
-      );
       window.SS_API_BASE = "";
     }
   } catch (e) {

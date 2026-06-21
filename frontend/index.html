@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <link rel="icon" type="image/svg+xml" href="/assets/logo.png" />
   <script>
     /* Apply saved theme before paint to avoid a flash of the wrong theme. */
@@ -14,6 +14,12 @@
     })();
   </script>
   <title>Study Sphere AI — Your Intelligent Learning Companion</title>
+  <meta name="theme-color" content="#4F46E5" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="StudySphere" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/assets/logo-192.png" />
   <meta name="description" content="Study Sphere AI: an AI-powered study assistant with chat, notes, quizzes, flashcards, study planner and more. Learn smarter, explore deeper, grow faster." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -409,5 +415,6 @@
   <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
   <script src="/js/config.js"></script>
   <script src="/js/main.js"></script>
+  <script src="/js/pwa.js"></script>
 </body>
 </html>

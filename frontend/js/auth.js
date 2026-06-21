@@ -4,8 +4,8 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   // Already logged in? skip auth pages.
-  if (SS.isAuthed() && (location.pathname.includes('login.html') || location.pathname.includes('signup,html'))) {
-    window.location.href = '/dashboard.html';
+  if (SS.isAuthed() && (location.pathname.includes('login') || location.pathname.includes('signup'))) {
+    window.location.href = '/dashboard';
     return;
   }
 

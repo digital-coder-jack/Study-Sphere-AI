@@ -37,9 +37,26 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from backend import ai, auth, database as db
+from backend import ai, auth, database as db, providers
 
 router = APIRouter(prefix="/api", tags=["chat"])
+
+
+def _user_model(user) -> str:
+    """Return the AI model selection saved in the user's settings.
+
+    Falls back to 'auto' when no valid preference is stored.
+    """
+    try:
+        row = db.get_user_settings(user["id"])
+        if row:
+            ai_settings = json.loads(row["ai_settings"] or "{}")
+            choice = str(ai_settings.get("model", "auto")).lower()
+            if choice in providers.VALID_SELECTIONS:
+                return choice
+    except Exception:
+        pass
+    return "auto"
 
 
 # ---------------------------------------------------------------------------
@@ -55,6 +72,7 @@ class RenameChatIn(BaseModel):
 
 class StreamIn(BaseModel):
     content: str = Field(min_length=1, max_length=8000)
+    model: str | None = None  # optional per-message provider override
 
 
 class TopicIn(BaseModel):
@@ -146,18 +164,31 @@ async def stream_message(chat_id: int, body: StreamIn, user=Depends(auth.current
 
     history = [{"role": m["role"], "content": m["content"]} for m in history_rows]
 
+    # Resolve which provider/model to use: an explicit per-message override
+    # (if valid) wins, otherwise the user's saved preference, otherwise auto.
+    requested = (body.model or "").lower()
+    selection = requested if requested in providers.VALID_SELECTIONS else _user_model(user)
+
     async def event_generator():
         collected = []
+        provider_used = "auto"
         try:
-            async for token in ai.chat_stream(history):
-                collected.append(token)
-                yield f"data: {json.dumps({'token': token})}\n\n"
+            async for event, value in ai.chat_stream(history, selection=selection):
+                if event == "meta":
+                    provider_used = value
+                    yield f"data: {json.dumps({'provider': value})}\n\n"
+                elif event == "token":
+                    collected.append(value)
+                    yield f"data: {json.dumps({'token': value})}\n\n"
+                elif event == "error":
+                    collected.append(value)
+                    yield f"data: {json.dumps({'token': value})}\n\n"
         except Exception:
             yield f"data: {json.dumps({'token': ' [stream interrupted]'})}\n\n"
         finally:
             full = "".join(collected).strip() or "⚠️ No response was generated."
             msg_id = db.add_message(chat_id, "assistant", full)
-            yield f"data: {json.dumps({'done': True, 'message_id': msg_id})}\n\n"
+            yield f"data: {json.dumps({'done': True, 'message_id': msg_id, 'provider': provider_used})}\n\n"
 
     return StreamingResponse(
         event_generator(),
@@ -193,7 +224,7 @@ async def stats(user=Depends(auth.current_user)):
 # ===========================================================================
 @router.post("/tools/notes")
 async def make_notes(body: TopicIn, user=Depends(auth.current_user)):
-    content = await ai.generate_notes(body.topic)
+    content = await ai.generate_notes(body.topic, selection=_user_model(user))
     note_id = db.add_note(user["id"], body.topic, content)
     return {"id": note_id, "topic": body.topic, "content": content}
 
@@ -212,7 +243,7 @@ async def remove_note(note_id: int, user=Depends(auth.current_user)):
 
 @router.post("/tools/quiz")
 async def make_quiz(body: QuizIn, user=Depends(auth.current_user)):
-    questions = await ai.generate_quiz(body.topic, body.num_questions)
+    questions = await ai.generate_quiz(body.topic, body.num_questions, selection=_user_model(user))
     if not questions:
         raise HTTPException(status_code=502, detail="Could not generate a quiz. Try a clearer topic.")
     quiz_id = db.add_quiz(user["id"], body.topic, questions)
@@ -233,7 +264,7 @@ async def remove_quiz(quiz_id: int, user=Depends(auth.current_user)):
 
 @router.post("/tools/flashcards")
 async def make_flashcards(body: FlashIn, user=Depends(auth.current_user)):
-    cards = await ai.generate_flashcards(body.topic, body.num_cards)
+    cards = await ai.generate_flashcards(body.topic, body.num_cards, selection=_user_model(user))
     if not cards:
         raise HTTPException(status_code=502, detail="Could not generate flashcards. Try a clearer topic.")
     return {"topic": body.topic, "cards": cards}
@@ -241,17 +272,60 @@ async def make_flashcards(body: FlashIn, user=Depends(auth.current_user)):
 
 @router.post("/tools/plan")
 async def make_plan(body: PlanIn, user=Depends(auth.current_user)):
-    content = await ai.generate_study_plan(body.goal, body.days)
+    content = await ai.generate_study_plan(body.goal, body.days, selection=_user_model(user))
     return {"goal": body.goal, "days": body.days, "content": content}
 
 
 @router.post("/tools/summarize")
 async def summarize(body: TextIn, user=Depends(auth.current_user)):
-    content = await ai.summarize_text(body.text)
+    content = await ai.summarize_text(body.text, selection=_user_model(user))
     return {"summary": content}
 
 
 @router.post("/tools/homework")
 async def homework(body: QuestionIn, user=Depends(auth.current_user)):
-    content = await ai.homework_help(body.question)
+    content = await ai.homework_help(body.question, selection=_user_model(user))
     return {"answer": content}
+
+
+# ===========================================================================
+# AI MODEL SELECTION + STATUS MONITORING
+# ===========================================================================
+class ModelIn(BaseModel):
+    model: str = Field(min_length=1, max_length=20)
+
+
+@router.get("/ai/models")
+async def ai_models(user=Depends(auth.current_user)):
+    """List selectable providers + the user's current selection."""
+    snapshot = providers.status_snapshot()
+    return {
+        "selected": _user_model(user),
+        "options": ["auto"] + [p["id"] for p in snapshot["providers"]],
+        "providers": snapshot["providers"],
+    }
+
+
+@router.put("/ai/model")
+async def set_ai_model(body: ModelIn, user=Depends(auth.current_user)):
+    """Persist the user's preferred AI provider/model."""
+    choice = body.model.lower()
+    if choice not in providers.VALID_SELECTIONS:
+        raise HTTPException(status_code=400, detail="Unknown model selection.")
+    # Merge into the existing ai_settings blob so other prefs survive.
+    row = db.get_user_settings(user["id"])
+    current = {}
+    if row:
+        try:
+            current = json.loads(row["ai_settings"] or "{}")
+        except Exception:
+            current = {}
+    current["model"] = choice
+    db.update_user_settings(user["id"], "ai_settings", current)
+    return {"selected": choice}
+
+
+@router.get("/ai/status")
+async def ai_status():
+    """Public health/monitoring snapshot of all AI providers (no keys)."""
+    return providers.status_snapshot()

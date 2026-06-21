@@ -26,6 +26,7 @@ import json
 import re
 
 from backend import database as db
+from backend import providers
 from backend.groq_client import groq_chat, groq_chat_stream
 
 SYSTEM_BASE = (
@@ -62,20 +63,27 @@ async def answer_question(user_id: int, question: str) -> tuple[str, str]:
 # ---------------------------------------------------------------------------
 # Chat streaming (used by the web chat interface)
 # ---------------------------------------------------------------------------
-async def chat_stream(history: list[dict]):
+async def chat_stream(history: list[dict], selection: str | None = "auto"):
     """
     history is a list of {role, content}. We prepend the system prompt and
-    stream the assistant reply.
+    stream the assistant reply through the multi-provider layer.
+
+    Yields (event, value) tuples:
+        ("meta",  provider_name)   the provider that handled the stream
+        ("token", text_chunk)      incremental content
+        ("error", message)         if every provider failed
     """
     messages = [{"role": "system", "content": SYSTEM_BASE}] + history
-    async for token in groq_chat_stream(messages, temperature=0.7, max_tokens=1500):
-        yield token
+    async for event, value in providers.chat_stream(
+        messages, selection=selection, temperature=0.7, max_tokens=1500
+    ):
+        yield event, value
 
 
 # ---------------------------------------------------------------------------
 # Study tools
 # ---------------------------------------------------------------------------
-async def generate_notes(topic: str) -> str:
+async def generate_notes(topic: str, selection: str | None = "auto") -> str:
     return await groq_chat(
         [
             {"role": "system", "content": SYSTEM_BASE},
@@ -86,10 +94,11 @@ async def generate_notes(topic: str) -> str:
         ],
         temperature=0.5,
         max_tokens=1500,
+        selection=selection,
     )
 
 
-async def generate_study_plan(goal: str, days: int = 7) -> str:
+async def generate_study_plan(goal: str, days: int = 7, selection: str | None = "auto") -> str:
     return await groq_chat(
         [
             {"role": "system", "content": SYSTEM_BASE},
@@ -100,10 +109,11 @@ async def generate_study_plan(goal: str, days: int = 7) -> str:
         ],
         temperature=0.5,
         max_tokens=1500,
+        selection=selection,
     )
 
 
-async def summarize_text(text: str) -> str:
+async def summarize_text(text: str, selection: str | None = "auto") -> str:
     snippet = text[:12000]  # protect token limits
     return await groq_chat(
         [
@@ -115,10 +125,11 @@ async def summarize_text(text: str) -> str:
         ],
         temperature=0.4,
         max_tokens=1200,
+        selection=selection,
     )
 
 
-async def homework_help(question: str) -> str:
+async def homework_help(question: str, selection: str | None = "auto") -> str:
     return await groq_chat(
         [
             {"role": "system", "content":
@@ -128,6 +139,7 @@ async def homework_help(question: str) -> str:
         ],
         temperature=0.4,
         max_tokens=1500,
+        selection=selection,
     )
 
 
@@ -148,7 +160,7 @@ def _extract_json(raw: str):
         return None
 
 
-async def generate_quiz(topic: str, num_questions: int = 5) -> list[dict]:
+async def generate_quiz(topic: str, num_questions: int = 5, selection: str | None = "auto") -> list[dict]:
     """
     Return a list of {question, options:[...], answer:index} dicts.
     Falls back to an empty list if parsing fails.
@@ -166,6 +178,7 @@ async def generate_quiz(topic: str, num_questions: int = 5) -> list[dict]:
         ],
         temperature=0.6,
         max_tokens=2000,
+        selection=selection,
     )
     data = _extract_json(reply)
     if not isinstance(data, list):
@@ -183,7 +196,7 @@ async def generate_quiz(topic: str, num_questions: int = 5) -> list[dict]:
     return cleaned
 
 
-async def generate_flashcards(topic: str, num_cards: int = 8) -> list[dict]:
+async def generate_flashcards(topic: str, num_cards: int = 8, selection: str | None = "auto") -> list[dict]:
     """Return a list of {front, back} flashcards."""
     reply = await groq_chat(
         [
@@ -196,6 +209,7 @@ async def generate_flashcards(topic: str, num_cards: int = 8) -> list[dict]:
         ],
         temperature=0.6,
         max_tokens=2000,
+        selection=selection,
     )
     data = _extract_json(reply)
     if not isinstance(data, list):

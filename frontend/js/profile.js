@@ -82,14 +82,34 @@ async function loadSettings() {
       document.getElementById('dailyGoalReminders').classList.toggle('active', data.notifications.dailyGoal !== false);
     }
 
-    // Apply AI settings
+    // Apply AI settings. Migrate any legacy model values to 'auto'.
     if (data.ai_settings) {
-      document.getElementById('aiModel').value = data.ai_settings.model || 'gpt-4';
+      let model = (data.ai_settings.model || 'auto').toLowerCase();
+      if (!['auto', 'kimi', 'gemini', 'groq'].includes(model)) model = 'auto';
+      document.getElementById('aiModel').value = model;
       document.getElementById('responseLength').value = data.ai_settings.length || 'medium';
       document.getElementById('studyDifficulty').value = data.ai_settings.difficulty || 'intermediate';
     }
   } catch (err) {
     console.error('Failed to load settings:', err);
+  }
+  // Live provider status (independent of saved settings).
+  loadProviderStatus();
+}
+
+async function loadProviderStatus() {
+  const box = document.getElementById('aiProviderStatus');
+  if (!box) return;
+  try {
+    const data = await SS.api('/api/ai/status', { auth: false });
+    box.innerHTML = (data.providers || []).map((p) =>
+      `<span class="model-badge" title="${p.label}">` +
+      `<span class="model-dot ${p.configured ? '' : 'off'}"></span>` +
+      `${p.label} ${p.configured ? '' : '(offline)'}</span>`
+    ).join(' ');
+    if (!box.innerHTML) box.innerHTML = '<span class="model-badge">No providers</span>';
+  } catch {
+    box.innerHTML = '<span class="model-badge"><span class="model-dot off"></span> Status unavailable</span>';
   }
 }
 

@@ -4,7 +4,7 @@
 
 
 
-const state = { chats: [], currentId: null, streaming: false };
+const state = { chats: [], currentId: null, streaming: false, model: 'auto', providers: [] };
 
 const el = {
   list: document.getElementById('chatList'),
@@ -18,7 +18,43 @@ const el = {
   side: document.getElementById('chatSide'),
   burger: document.getElementById('chatBurger'),
   overlay: document.getElementById('chatOverlay'),
+  modelSelect: document.getElementById('modelSelect'),
+  modelDot: document.getElementById('modelDot'),
 };
+
+/* ---------- Model selector ---------- */
+async function loadModels() {
+  if (!el.modelSelect) return;
+  try {
+    const data = await SS.api('/api/ai/models');
+    state.model = data.selected || 'auto';
+    state.providers = data.providers || [];
+    el.modelSelect.value = state.model;
+    updateModelDot();
+    // Disable options for providers that aren't configured (except Auto).
+    state.providers.forEach((p) => {
+      const opt = el.modelSelect.querySelector(`option[value="${p.id}"]`);
+      if (opt && !p.configured) { opt.disabled = true; opt.textContent += ' (off)'; }
+    });
+  } catch { /* non-critical */ }
+}
+
+function updateModelDot() {
+  if (!el.modelDot) return;
+  const anyOn = state.model === 'auto'
+    ? state.providers.some((p) => p.configured)
+    : state.providers.some((p) => p.id === state.model && p.configured);
+  el.modelDot.classList.toggle('off', !anyOn);
+}
+
+async function saveModel(model) {
+  state.model = model;
+  updateModelDot();
+  try {
+    await SS.api('/api/ai/model', { method: 'PUT', body: { model } });
+    SS.toast('AI model set to ' + (model === 'auto' ? 'Auto (smart fallback)' : model));
+  } catch (err) { SS.toast(err.message, 'error'); }
+}
 
 /* ---------- Markdown ---------- */
 marked.setOptions({
@@ -235,7 +271,7 @@ async function sendMessage() {
   try {
     const res = await SS.api(`/api/chats/${state.currentId}/stream`, {
       method: 'POST',
-      body: { content: text },
+      body: { content: text, model: state.model },
       raw: true,
     });
     if (!res.ok || !res.body) throw new Error('Streaming failed.');
@@ -256,6 +292,14 @@ async function sendMessage() {
         const payload = trimmed.slice(5).trim();
         try {
           const obj = JSON.parse(payload);
+          if (obj.provider) {
+            // Show which provider actually served the response.
+            const msgEl = body.closest('.msg');
+            const r = msgEl && msgEl.querySelector('.role');
+            if (r && obj.provider !== 'auto' && obj.provider !== 'cache') {
+              r.innerHTML = `Study Sphere AI <span class="model-badge">${obj.provider}</span>`;
+            }
+          }
           if (obj.token) {
             full += obj.token;
             body.innerHTML = '';
@@ -337,9 +381,11 @@ el.delBtn.addEventListener('click', () => state.currentId && deleteChat(state.cu
 el.dlBtn.addEventListener('click', downloadChat);
 el.burger.addEventListener('click', () => { el.side.classList.toggle('open'); el.overlay.classList.toggle('show'); });
 el.overlay.addEventListener('click', closeMobileSidebar);
+if (el.modelSelect) el.modelSelect.addEventListener('change', (e) => saveModel(e.target.value));
 
 /* ---------- Boot ---------- */
 (async function boot() {
+  await loadModels();
   await loadChats();
   const params = new URLSearchParams(location.search);
   const id = parseInt(params.get('id'), 10);
