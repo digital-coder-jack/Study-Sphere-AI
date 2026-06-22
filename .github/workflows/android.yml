@@ -1,0 +1,32 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Grant Execute Permission
+        run: chmod +x gradlew
+        working-directory: api/Android
+
+      - name: Build APK
+        run: ./gradlew assembleDebug
+        working-directory: api/Android
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudySphere-APK
+          path: api/Android/app/build/outputs/apk/debug/*.apk
