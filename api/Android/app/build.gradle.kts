@@ -20,11 +20,11 @@ android {
         }
 
         // Default backend URL. Override per build type below.
-        buildConfigField(
-            "String",
-            "API_BASE_URL",
-            "\"https://study-sphere-ai.onrender.com\""
-        )
+       buildConfigField(
+    "String",
+    "API_BASE_URL",
+    "\"https://study-sphere-ai-mwlq-naygww3lm-digital-coder-jacks-projects.vercel.app\""
+)
     }
 
     buildTypes {
