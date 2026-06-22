@@ -35,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.studysphere.ai.data.Chat
 import com.studysphere.ai.ui.DashboardViewModel
+import com.studysphere.ai.ui.components.BrandLogo
 import com.studysphere.ai.ui.components.ErrorBanner
 import com.studysphere.ai.ui.components.GlassCard
 import com.studysphere.ai.ui.components.LoadingBox
@@ -61,17 +62,24 @@ fun DashboardScreen(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item {
-            Text(
-                "Welcome back,",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                userName.ifBlank { "Explorer" },
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                BrandLogo(size = 44.dp)
+                Spacer(Modifier.width(12.dp))
+                Column {
+                    Text(
+                        "Welcome back,",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        userName.ifBlank { "Explorer" },
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+            }
+            Spacer(Modifier.height(8.dp))
             ErrorBanner(state.error)
         }
 

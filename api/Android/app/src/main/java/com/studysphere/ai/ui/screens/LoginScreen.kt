@@ -37,8 +37,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.studysphere.ai.ui.AuthViewModel
+import com.studysphere.ai.ui.components.BrandLogo
 import com.studysphere.ai.ui.components.ErrorBanner
 import com.studysphere.ai.ui.components.GlassCard
 import com.studysphere.ai.ui.components.SpaceBackground
@@ -67,7 +67,8 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Spacer(Modifier.height(40.dp))
-            Text("🌌", fontSize = 56.sp)
+            BrandLogo(size = 96.dp)
+            Spacer(Modifier.height(12.dp))
             Text(
                 "Study Sphere AI",
                 style = MaterialTheme.typography.headlineMedium,

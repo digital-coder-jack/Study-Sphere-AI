@@ -31,8 +31,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.studysphere.ai.ui.AuthViewModel
+import com.studysphere.ai.ui.components.BrandLogo
 import com.studysphere.ai.ui.components.ErrorBanner
 import com.studysphere.ai.ui.components.GlassCard
 import com.studysphere.ai.ui.components.SpaceBackground
@@ -63,7 +63,8 @@ fun SignupScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Spacer(Modifier.height(24.dp))
-            Text("🚀", fontSize = 48.sp)
+            BrandLogo(size = 72.dp)
+            Spacer(Modifier.height(10.dp))
             Text(
                 "Create your account",
                 style = MaterialTheme.typography.headlineSmall,

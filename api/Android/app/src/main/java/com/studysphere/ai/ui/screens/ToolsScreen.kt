@@ -47,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.studysphere.ai.ui.Tool
 import com.studysphere.ai.ui.ToolsViewModel
+import com.studysphere.ai.ui.components.BrandLogo
 import com.studysphere.ai.ui.components.ErrorBanner
 import com.studysphere.ai.ui.components.GlassCard
 import com.studysphere.ai.ui.theme.Cyan
@@ -70,12 +71,16 @@ fun ToolsScreen(vm: ToolsViewModel) {
 
     if (selected == null) {
         Column(Modifier.fillMaxSize().padding(16.dp)) {
-            Text(
-                "Study Tools",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                BrandLogo(size = 40.dp)
+                Spacer(Modifier.size(10.dp))
+                Text(
+                    "Study Tools",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
             Spacer(Modifier.height(12.dp))
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),

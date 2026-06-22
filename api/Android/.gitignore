@@ -1,0 +1,11 @@
+# Android / Gradle build artifacts (machine-specific, never committed)
+*.iml
+.gradle/
+/local.properties
+/.idea
+.DS_Store
+/build
+app/build/
+captures/
+.externalNativeBuild/
+.cxx/

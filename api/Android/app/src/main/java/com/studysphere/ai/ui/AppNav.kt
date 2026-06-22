@@ -19,6 +19,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -35,6 +37,7 @@ import com.studysphere.ai.ui.screens.ProfileScreen
 import com.studysphere.ai.ui.screens.SignupScreen
 import com.studysphere.ai.ui.screens.ToolsScreen
 import com.studysphere.ai.ui.theme.Indigo
+import com.studysphere.ai.ui.theme.MutedText
 
 object Routes {
     const val LOGIN = "login"
@@ -108,7 +111,8 @@ private fun MainShell(factory: VMFactory) {
             containerColor = androidx.compose.ui.graphics.Color.Transparent,
             bottomBar = {
                 NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+                    tonalElevation = 0.dp
                 ) {
                     BOTTOM_ITEMS.forEach { item ->
                         val selected = current?.startsWith(item.route) == true
@@ -124,11 +128,18 @@ private fun MainShell(factory: VMFactory) {
                                 }
                             },
                             icon = { Icon(item.icon, contentDescription = item.label) },
-                            label = { Text(item.label) },
+                            label = {
+                                Text(
+                                    item.label,
+                                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
+                                )
+                            },
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = Indigo,
                                 selectedTextColor = Indigo,
-                                indicatorColor = Indigo.copy(alpha = 0.18f)
+                                unselectedIconColor = MutedText,
+                                unselectedTextColor = MutedText,
+                                indicatorColor = Indigo.copy(alpha = 0.16f)
                             )
                         )
                     }
