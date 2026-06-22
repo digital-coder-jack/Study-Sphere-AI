@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -21,7 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.HelpOutline
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material.icons.filled.Style
 import androidx.compose.material.icons.filled.Summarize
@@ -41,6 +42,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -50,6 +53,9 @@ import com.studysphere.ai.ui.ToolsViewModel
 import com.studysphere.ai.ui.components.BrandLogo
 import com.studysphere.ai.ui.components.ErrorBanner
 import com.studysphere.ai.ui.components.GlassCard
+import com.studysphere.ai.ui.components.MarkdownText
+import com.studysphere.ai.ui.components.TextResultSkeleton
+import com.studysphere.ai.ui.components.rememberHaptics
 import com.studysphere.ai.ui.theme.Cyan
 import com.studysphere.ai.ui.theme.Indigo
 import com.studysphere.ai.ui.theme.Violet
@@ -62,15 +68,17 @@ private val TOOLS = listOf(
     ToolMeta(Tool.FLASHCARDS, "Flashcards", "Flip-to-reveal cards", Icons.Default.Style, Cyan),
     ToolMeta(Tool.PLAN, "Study Plan", "Day-by-day plan", Icons.Default.CalendarMonth, Indigo),
     ToolMeta(Tool.SUMMARIZE, "Summarizer", "Summarize any text", Icons.Default.Summarize, Violet),
-    ToolMeta(Tool.HOMEWORK, "Homework Helper", "Step-by-step answers", Icons.Default.HelpOutline, Cyan),
+    ToolMeta(Tool.HOMEWORK, "Homework Helper", "Step-by-step answers", Icons.AutoMirrored.Filled.HelpOutline, Cyan),
 )
 
 @Composable
 fun ToolsScreen(vm: ToolsViewModel) {
     var selected by remember { mutableStateOf<Tool?>(null) }
 
+    val haptics = rememberHaptics()
+
     if (selected == null) {
-        Column(Modifier.fillMaxSize().padding(16.dp)) {
+        Column(Modifier.fillMaxSize().statusBarsPadding().padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 BrandLogo(size = 40.dp)
                 Spacer(Modifier.size(10.dp))
@@ -92,7 +100,7 @@ fun ToolsScreen(vm: ToolsViewModel) {
                         Modifier
                             .fillMaxWidth()
                             .height(140.dp)
-                            .clickable { vm.reset(); selected = meta.tool }
+                            .clickable { haptics(); vm.reset(); selected = meta.tool }
                     ) {
                         Column(Modifier.padding(16.dp)) {
                             Box(
@@ -116,7 +124,7 @@ fun ToolsScreen(vm: ToolsViewModel) {
             }
         }
     } else {
-        ToolDetail(vm, selected!!, onBack = { selected = null; vm.reset() })
+        ToolDetail(vm, selected!!, onBack = { haptics(); selected = null; vm.reset() })
     }
 }
 
@@ -128,9 +136,12 @@ private fun ToolDetail(vm: ToolsViewModel, tool: Tool, onBack: () -> Unit) {
 
     val meta = TOOLS.first { it.tool == tool }
 
+    val haptics = rememberHaptics()
+
     Column(
         Modifier
             .fillMaxSize()
+            .statusBarsPadding()
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
@@ -176,32 +187,61 @@ private fun ToolDetail(vm: ToolsViewModel, tool: Tool, onBack: () -> Unit) {
         }
 
         Spacer(Modifier.height(16.dp))
-        Button(
-            onClick = {
-                val n = number.toIntOrNull() ?: 5
-                when (tool) {
-                    Tool.NOTES -> vm.notes(topic)
-                    Tool.QUIZ -> vm.quiz(topic, n.coerceIn(1, 15))
-                    Tool.FLASHCARDS -> vm.flashcards(topic, n.coerceIn(1, 20))
-                    Tool.PLAN -> vm.plan(topic, n.coerceIn(1, 60))
-                    Tool.SUMMARIZE -> vm.summarize(topic)
-                    Tool.HOMEWORK -> vm.homework(topic)
-                }
-            },
-            enabled = !state.loading && topic.isNotBlank(),
-            modifier = Modifier.fillMaxWidth().height(50.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Indigo)
+        val canGenerate = !state.loading && topic.isNotBlank()
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+                .clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
+                .background(
+                    if (canGenerate)
+                        Brush.linearGradient(listOf(Indigo, Violet))
+                    else
+                        Brush.linearGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.surfaceContainerHigh,
+                                MaterialTheme.colorScheme.surfaceContainerHigh
+                            )
+                        )
+                )
         ) {
-            if (state.loading) {
-                CircularProgressIndicator(Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
-            } else {
-                Text("Generate", fontWeight = FontWeight.SemiBold)
+            Button(
+                onClick = {
+                    haptics()
+                    val n = number.toIntOrNull() ?: 5
+                    when (tool) {
+                        Tool.NOTES -> vm.notes(topic)
+                        Tool.QUIZ -> vm.quiz(topic, n.coerceIn(1, 15))
+                        Tool.FLASHCARDS -> vm.flashcards(topic, n.coerceIn(1, 20))
+                        Tool.PLAN -> vm.plan(topic, n.coerceIn(1, 60))
+                        Tool.SUMMARIZE -> vm.summarize(topic)
+                        Tool.HOMEWORK -> vm.homework(topic)
+                    }
+                },
+                enabled = canGenerate,
+                modifier = Modifier.fillMaxWidth().height(50.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent
+                ),
+                elevation = null
+            ) {
+                if (state.loading) {
+                    CircularProgressIndicator(Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                } else {
+                    Text("Generate", fontWeight = FontWeight.SemiBold, color = Color.White)
+                }
             }
         }
 
         Spacer(Modifier.height(16.dp))
 
         // Results
+        if (state.loading && state.textResult == null && state.quiz == null && state.flashcards == null) {
+            GlassCard(Modifier.fillMaxWidth()) {
+                TextResultSkeleton(Modifier.padding(16.dp))
+            }
+        }
         state.textResult?.let { ResultCard(it) }
         state.quiz?.let { QuizResult(it) }
         state.flashcards?.let { cards ->
@@ -213,11 +253,10 @@ private fun ToolDetail(vm: ToolsViewModel, tool: Tool, onBack: () -> Unit) {
 @Composable
 private fun ResultCard(text: String) {
     GlassCard(Modifier.fillMaxWidth()) {
-        Text(
-            text,
+        MarkdownText(
+            markdown = text,
             modifier = Modifier.padding(16.dp),
-            color = MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.bodyMedium
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }

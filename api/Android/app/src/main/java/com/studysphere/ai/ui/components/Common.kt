@@ -28,7 +28,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.animation.AnimatedVisibility as AnimatedVisibilityCommon
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -184,6 +188,40 @@ fun ErrorBanner(message: String?) {
                 message ?: "",
                 color = Color(0xFFFCA5A5),
                 style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
+}
+
+/**
+ * A slim, animated "You're offline" banner shown at the top of the shell when
+ * connectivity is lost — premium reliability behaviour like ChatGPT/Gemini.
+ */
+@Composable
+fun OfflineBanner(isOnline: Boolean) {
+    AnimatedVisibilityCommon(
+        visible = !isOnline,
+        enter = expandVertically(),
+        exit = shrinkVertically()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFF3A1F2B))
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                Icons.Default.CloudOff,
+                contentDescription = null,
+                tint = Color(0xFFFCA5A5),
+                modifier = Modifier.size(18.dp)
+            )
+            Text(
+                "You're offline — some features may be unavailable.",
+                color = Color(0xFFFCA5A5),
+                style = MaterialTheme.typography.bodySmall
             )
         }
     }

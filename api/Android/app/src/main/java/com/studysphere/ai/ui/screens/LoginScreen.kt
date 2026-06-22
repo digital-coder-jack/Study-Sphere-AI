@@ -6,8 +6,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -32,6 +35,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -42,7 +48,9 @@ import com.studysphere.ai.ui.components.BrandLogo
 import com.studysphere.ai.ui.components.ErrorBanner
 import com.studysphere.ai.ui.components.GlassCard
 import com.studysphere.ai.ui.components.SpaceBackground
+import com.studysphere.ai.ui.components.rememberHaptics
 import com.studysphere.ai.ui.theme.Indigo
+import com.studysphere.ai.ui.theme.Violet
 
 @Composable
 fun LoginScreen(
@@ -54,6 +62,7 @@ fun LoginScreen(
     var identifier by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var showPw by remember { mutableStateOf(false) }
+    val haptics = rememberHaptics()
 
     if (state.success) onLoggedIn()
 
@@ -61,6 +70,7 @@ fun LoginScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .statusBarsPadding()
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -124,26 +134,38 @@ fun LoginScreen(
                     )
 
                     Spacer(Modifier.height(20.dp))
-                    Button(
-                        onClick = { vm.login(identifier, password) },
-                        enabled = !state.loading,
-                        modifier = Modifier.fillMaxWidth().height(50.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Indigo)
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
+                            .background(Brush.linearGradient(listOf(Indigo, Violet)))
                     ) {
-                        if (state.loading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                color = androidx.compose.ui.graphics.Color.White,
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Text("Log in", fontWeight = FontWeight.SemiBold)
+                        Button(
+                            onClick = { haptics(); vm.login(identifier, password) },
+                            enabled = !state.loading,
+                            modifier = Modifier.fillMaxWidth().height(50.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent
+                            ),
+                            elevation = null
+                        ) {
+                            if (state.loading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    color = Color.White,
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text("Log in", fontWeight = FontWeight.SemiBold, color = Color.White)
+                            }
                         }
                     }
 
                     Spacer(Modifier.height(8.dp))
                     OutlinedButton(
-                        onClick = { vm.guest() },
+                        onClick = { haptics(); vm.guest() },
                         enabled = !state.loading,
                         modifier = Modifier.fillMaxWidth().height(50.dp)
                     ) {

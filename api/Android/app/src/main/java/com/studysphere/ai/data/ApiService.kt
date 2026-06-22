@@ -51,6 +51,13 @@ interface ApiService {
     @DELETE("api/chats/{id}")
     suspend fun deleteChat(@Path("id") id: Int): Map<String, Boolean>
 
+    /* ---------- AI model selection ---------- */
+    @GET("api/ai/models")
+    suspend fun aiModels(): ModelsResponse
+
+    @PUT("api/ai/model")
+    suspend fun setAiModel(@Body body: SetModelRequest): SetModelResponse
+
     /* ---------- Dashboard ---------- */
     @GET("api/stats")
     suspend fun stats(): Stats

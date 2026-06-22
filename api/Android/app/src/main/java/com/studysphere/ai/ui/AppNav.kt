@@ -1,8 +1,15 @@
 package com.studysphere.ai.ui
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Widgets
@@ -29,7 +36,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.studysphere.ai.data.Repository
+import com.studysphere.ai.ui.components.OfflineBanner
 import com.studysphere.ai.ui.components.SpaceBackground
+import com.studysphere.ai.ui.components.rememberHaptics
 import com.studysphere.ai.ui.screens.ChatScreen
 import com.studysphere.ai.ui.screens.DashboardScreen
 import com.studysphere.ai.ui.screens.LoginScreen
@@ -52,7 +61,7 @@ private data class NavItem(val route: String, val label: String, val icon: Image
 
 private val BOTTOM_ITEMS = listOf(
     NavItem(Routes.DASHBOARD, "Home", Icons.Default.Dashboard),
-    NavItem(Routes.CHAT, "Chat", Icons.Default.Chat),
+    NavItem(Routes.CHAT, "Chat", Icons.AutoMirrored.Filled.Chat),
     NavItem(Routes.TOOLS, "Tools", Icons.Default.Widgets),
     NavItem(Routes.PROFILE, "Profile", Icons.Default.Person),
 )
@@ -75,7 +84,14 @@ private fun AuthFlow(factory: VMFactory) {
     val nav = rememberNavController()
     val authVm: AuthViewModel = viewModel(factory = factory)
 
-    NavHost(navController = nav, startDestination = Routes.LOGIN) {
+    NavHost(
+        navController = nav,
+        startDestination = Routes.LOGIN,
+        enterTransition = { slideInHorizontally(tween(300)) { it / 2 } + fadeIn(tween(300)) },
+        exitTransition = { fadeOut(tween(200)) },
+        popEnterTransition = { fadeIn(tween(300)) },
+        popExitTransition = { slideOutHorizontally(tween(300)) { it / 2 } + fadeOut(tween(200)) }
+    ) {
         composable(Routes.LOGIN) {
             LoginScreen(
                 vm = authVm,
@@ -98,6 +114,7 @@ private fun MainShell(factory: VMFactory) {
     val nav = rememberNavController()
     val backStack by nav.currentBackStackEntryAsState()
     val current = backStack?.destination?.route
+    val haptic = rememberHaptics()
 
     val dashboardVm: DashboardViewModel = viewModel(factory = factory)
     val chatVm: ChatViewModel = viewModel(factory = factory)
@@ -105,13 +122,15 @@ private fun MainShell(factory: VMFactory) {
     val profileVm: ProfileViewModel = viewModel(factory = factory)
 
     val userState by profileVm.state.collectAsState()
+    val networkMonitor = LocalNetworkMonitor.current
+    val isOnline by networkMonitor.isOnline.collectAsState(initial = networkMonitor.currentlyOnline())
 
     SpaceBackground {
         Scaffold(
             containerColor = androidx.compose.ui.graphics.Color.Transparent,
             bottomBar = {
                 NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
                     tonalElevation = 0.dp
                 ) {
                     BOTTOM_ITEMS.forEach { item ->
@@ -120,6 +139,7 @@ private fun MainShell(factory: VMFactory) {
                             selected = selected,
                             onClick = {
                                 if (!selected) {
+                                    haptic()
                                     nav.navigate(item.route) {
                                         popUpTo(Routes.DASHBOARD) { saveState = true }
                                         launchSingleTop = true
@@ -146,39 +166,56 @@ private fun MainShell(factory: VMFactory) {
                 }
             }
         ) { padding ->
-            NavHost(
-                navController = nav,
-                startDestination = Routes.DASHBOARD,
-                modifier = Modifier.padding(padding)
-            ) {
-                composable(Routes.DASHBOARD) {
-                    DashboardScreen(
-                        vm = dashboardVm,
-                        userName = userState.user?.name ?: "",
-                        onOpenChat = { id -> nav.navigate("${Routes.CHAT}?chatId=$id") },
-                        onNewChat = { nav.navigate(Routes.CHAT) }
-                    )
-                }
-                composable(
-                    route = "${Routes.CHAT}?chatId={chatId}",
-                    arguments = listOf(navArgument("chatId") {
-                        type = NavType.IntType; defaultValue = -1
-                    })
-                ) { entry ->
-                    val chatId = entry.arguments?.getInt("chatId") ?: -1
-                    ChatScreen(vm = chatVm, initialChatId = if (chatId > 0) chatId else null)
-                }
-                composable(Routes.CHAT) {
-                    ChatScreen(vm = chatVm, initialChatId = null)
-                }
-                composable(Routes.TOOLS) {
-                    ToolsScreen(vm = toolsVm)
-                }
-                composable(Routes.PROFILE) {
-                    ProfileScreen(
-                        vm = profileVm,
-                        onLoggedOut = { /* token flow flips AppRoot to AuthFlow */ }
-                    )
+            Column(Modifier.padding(padding)) {
+                OfflineBanner(isOnline = isOnline)
+                NavHost(
+                    navController = nav,
+                    startDestination = Routes.DASHBOARD,
+                    enterTransition = { fadeIn(tween(220)) + slideInHorizontally(tween(260)) { it / 6 } },
+                    exitTransition = { fadeOut(tween(160)) },
+                    popEnterTransition = { fadeIn(tween(220)) },
+                    popExitTransition = { fadeOut(tween(160)) }
+                ) {
+                    composable(Routes.DASHBOARD) {
+                        DashboardScreen(
+                            vm = dashboardVm,
+                            userName = userState.user?.name ?: "",
+                            onOpenChat = { id -> nav.navigate("${Routes.CHAT}?chatId=$id") },
+                            onNewChat = {
+                                nav.navigate(Routes.CHAT) {
+                                    popUpTo(Routes.DASHBOARD) { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            },
+                            onOpenTools = {
+                                nav.navigate(Routes.TOOLS) {
+                                    popUpTo(Routes.DASHBOARD) { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                        )
+                    }
+                    composable(
+                        route = "${Routes.CHAT}?chatId={chatId}",
+                        arguments = listOf(navArgument("chatId") {
+                            type = NavType.IntType; defaultValue = -1
+                        })
+                    ) { entry ->
+                        val chatId = entry.arguments?.getInt("chatId") ?: -1
+                        ChatScreen(vm = chatVm, initialChatId = if (chatId > 0) chatId else null)
+                    }
+                    composable(Routes.CHAT) {
+                        ChatScreen(vm = chatVm, initialChatId = null)
+                    }
+                    composable(Routes.TOOLS) {
+                        ToolsScreen(vm = toolsVm)
+                    }
+                    composable(Routes.PROFILE) {
+                        ProfileScreen(
+                            vm = profileVm,
+                            onLoggedOut = { /* token flow flips AppRoot to AuthFlow */ }
+                        )
+                    }
                 }
             }
         }

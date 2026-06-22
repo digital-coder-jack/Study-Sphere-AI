@@ -29,11 +29,22 @@ object StreamClient {
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    fun streamMessage(chatId: Int, content: String, token: String?): Flow<StreamEvent> =
+    fun streamMessage(
+        chatId: Int,
+        content: String,
+        token: String?,
+        model: String? = null
+    ): Flow<StreamEvent> =
         callbackFlow {
             val url = ApiClient.baseUrl() + "api/chats/$chatId/stream"
             val mediaType = "application/json".toMediaType()
-            val payload = json.encodeToString(StreamRequest.serializer(), StreamRequest(content))
+            // Only send an override when a concrete provider is chosen ("auto"
+            // lets the backend pick via the fallback chain, matching the web app).
+            val override = model?.takeIf { it.isNotBlank() && it != "auto" }
+            val payload = json.encodeToString(
+                StreamRequest.serializer(),
+                StreamRequest(content, override)
+            )
 
             val reqBuilder = Request.Builder()
                 .url(url)

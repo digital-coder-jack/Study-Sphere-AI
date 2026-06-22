@@ -90,7 +90,31 @@ data class NewChatRequest(val title: String? = null)
 data class RenameChatRequest(val title: String)
 
 @Serializable
-data class StreamRequest(val content: String)
+data class StreamRequest(
+    val content: String,
+    val model: String? = null // optional per-message provider override
+)
+
+/* ---------- AI model selection (matches /api/ai/models + /api/ai/model) ---------- */
+@Serializable
+data class AiProvider(
+    val id: String = "",
+    val name: String = "",
+    val configured: Boolean = false
+)
+
+@Serializable
+data class ModelsResponse(
+    val selected: String = "auto",
+    val options: List<String> = listOf("auto"),
+    val providers: List<AiProvider> = emptyList()
+)
+
+@Serializable
+data class SetModelRequest(val model: String)
+
+@Serializable
+data class SetModelResponse(val selected: String = "auto")
 
 /* ---------- Dashboard stats ---------- */
 @Serializable

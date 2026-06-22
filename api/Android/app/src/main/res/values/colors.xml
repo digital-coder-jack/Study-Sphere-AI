@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="space_bg">#080B16</color>
+    <color name="brand_indigo">#6D7BFF</color>
     <color name="ic_launcher_background">#6D7BFF</color>
 </resources>

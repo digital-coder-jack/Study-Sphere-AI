@@ -68,8 +68,18 @@ class Repository(private val session: SessionStore) {
         ApiClient.api.renameChat(id, RenameChatRequest(title)).chat
     suspend fun deleteChat(id: Int) = ApiClient.api.deleteChat(id)
 
-    fun streamMessage(chatId: Int, content: String, token: String?): Flow<StreamEvent> =
-        StreamClient.streamMessage(chatId, content, token)
+    fun streamMessage(
+        chatId: Int,
+        content: String,
+        token: String?,
+        model: String? = null
+    ): Flow<StreamEvent> =
+        StreamClient.streamMessage(chatId, content, token, model)
+
+    /* ---------- AI model selection ---------- */
+    suspend fun aiModels() = ApiClient.api.aiModels()
+    suspend fun setAiModel(model: String) =
+        ApiClient.api.setAiModel(SetModelRequest(model)).selected
 
     /* ---------- Dashboard ---------- */
     suspend fun stats() = ApiClient.api.stats()
