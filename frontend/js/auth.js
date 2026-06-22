@@ -5,7 +5,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   // Already logged in? skip auth pages.
   if (SS.isAuthed() && (location.pathname.includes('login') || location.pathname.includes('signup'))) {
-    window.location.href = '/dashboard';
+    window.location.href = '/dashboard.html';
     return;
   }
 
@@ -110,7 +110,7 @@ async function handleLogin(e) {
     SS.setSession(data.token, data.user);
     sessionStorage.setItem('ss_show_welcome', 'true');
     SS.toast('Welcome back, ' + data.user.name + '!');
-    setTimeout(() => (window.location.href = '/dashboard'), 500);
+    setTimeout(() => (window.location.href = '/dashboard.html'), 500);
   } catch (err) {
     msg(err.message);
     busy(btn, false);
