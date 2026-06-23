@@ -63,19 +63,24 @@ async def answer_question(user_id: int, question: str) -> tuple[str, str]:
 # ---------------------------------------------------------------------------
 # Chat streaming (used by the web chat interface)
 # ---------------------------------------------------------------------------
-async def chat_stream(history: list[dict], selection: str | None = "auto"):
+async def chat_stream(history: list[dict], selection: str | None = "auto", cancel_event=None):
     """
     history is a list of {role, content}. We prepend the system prompt and
     stream the assistant reply through the multi-provider layer.
 
+    ``cancel_event`` (asyncio.Event) lets the caller cooperatively stop the
+    stream — used to cancel a previous request before starting a new one.
+
     Yields (event, value) tuples:
-        ("meta",  provider_name)   the provider that handled the stream
-        ("token", text_chunk)      incremental content
-        ("error", message)         if every provider failed
+        ("meta",      provider_name)       the provider that handled the stream
+        ("token",     text_chunk)          incremental content
+        ("cancelled", reason)              stream was cancelled/superseded
+        ("error",     {type, message})     if every provider failed
     """
     messages = [{"role": "system", "content": SYSTEM_BASE}] + history
     async for event, value in providers.chat_stream(
-        messages, selection=selection, temperature=0.7, max_tokens=1500
+        messages, selection=selection, temperature=0.7, max_tokens=1500,
+        cancel_event=cancel_event,
     ):
         yield event, value
 

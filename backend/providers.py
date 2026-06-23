@@ -24,6 +24,7 @@ never exposed to the frontend.
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 import logging
@@ -236,32 +237,52 @@ async def chat(
 # ---------------------------------------------------------------------------
 # Streaming completion with automatic fallback
 # ---------------------------------------------------------------------------
+# Total wall-clock budget for one streamed reply, and the maximum gap allowed
+# between two tokens (detects a silently stalled upstream connection).
+_STREAM_TOTAL_TIMEOUT = int(os.environ.get("AI_STREAM_TIMEOUT", "120"))
+_STREAM_IDLE_TIMEOUT = int(os.environ.get("AI_STREAM_IDLE_TIMEOUT", "30"))
+
+
 async def chat_stream(
     messages: list[dict],
     *,
     selection: str | None = "auto",
     temperature: float = 0.7,
     max_tokens: int = 1024,
+    cancel_event: "asyncio.Event | None" = None,
 ) -> AsyncGenerator[tuple[str, str], None]:
     """
     Async generator yielding (event, value) tuples:
-       ("meta",  provider_name)   emitted once when a provider starts streaming
-       ("token", text_chunk)      incremental content
-       ("error", message)         only if every provider failed before output
+       ("meta",     provider_name)   emitted once when a provider starts streaming
+       ("token",    text_chunk)      incremental content
+       ("cancelled", reason)         the stream was cancelled / superseded
+       ("error",    {type,message})  structured failure (network/timeout/http/none)
 
-    Fallback only happens BEFORE the first token of a provider is emitted;
-    once a provider has started producing output we stay with it.
+    Behaviour guarantees:
+      * Fallback to the next provider only happens BEFORE the first token of a
+        provider is emitted; once output started we stay with it.
+      * If ``cancel_event`` is set at any point, streaming stops promptly and a
+        ("cancelled", ...) event is emitted instead of more tokens.
+      * A per-token idle timeout and an overall timeout protect against a
+        silently stalled upstream connection.
     """
     order = resolve_order(selection)
     if not order:
-        yield ("error", _NOT_CONFIGURED)
+        yield ("error", {"type": "not_configured", "message": _NOT_CONFIGURED})
         return
 
-    last_error = None
+    if cancel_event is not None and cancel_event.is_set():
+        yield ("cancelled", "cancelled before start")
+        return
+
+    deadline = time.monotonic() + _STREAM_TOTAL_TIMEOUT
+    last_error: dict | None = None
+
     for name in order:
         produced = False
         try:
-            async with httpx.AsyncClient(timeout=120) as client:
+            timeout = httpx.Timeout(connect=15.0, read=_STREAM_IDLE_TIMEOUT, write=15.0, pool=15.0)
+            async with httpx.AsyncClient(timeout=timeout) as client:
                 async with client.stream(
                     "POST",
                     PROVIDERS[name]["url"],
@@ -270,11 +291,42 @@ async def chat_stream(
                 ) as resp:
                     if resp.status_code != 200:
                         body = await resp.aread()
-                        last_error = f"{name}:{resp.status_code}"
+                        last_error = {
+                            "type": "http",
+                            "message": f"{name} returned {resp.status_code}",
+                            "status": resp.status_code,
+                        }
                         logger.warning("Stream %s failed (%s); falling back.", name, body[:200])
                         continue
 
-                    async for line in resp.aiter_lines():
+                    line_iter = resp.aiter_lines().__aiter__()
+                    while True:
+                        # Cooperative cancellation check between every chunk.
+                        if cancel_event is not None and cancel_event.is_set():
+                            yield ("cancelled", "superseded by a newer request")
+                            return
+                        if time.monotonic() > deadline:
+                            if produced:
+                                yield ("token", "\n\n⚠️ Response timed out.")
+                                return
+                            last_error = {"type": "timeout", "message": f"{name} exceeded time budget"}
+                            break
+
+                        try:
+                            # Idle-timeout each line read so a stalled socket
+                            # cannot hang the whole request forever.
+                            line = await asyncio.wait_for(
+                                line_iter.__anext__(), timeout=_STREAM_IDLE_TIMEOUT
+                            )
+                        except StopAsyncIteration:
+                            break
+                        except asyncio.TimeoutError:
+                            if produced:
+                                yield ("token", "\n\n⚠️ The response stalled and was stopped.")
+                                return
+                            last_error = {"type": "timeout", "message": f"{name} stalled"}
+                            break
+
                         line = line.strip()
                         if not line or not line.startswith("data:"):
                             continue
@@ -294,8 +346,17 @@ async def chat_stream(
             if produced:
                 logger.info("AI stream served by '%s'", name)
                 return
+        except (httpx.ConnectError, httpx.ConnectTimeout) as exc:
+            last_error = {"type": "network", "message": f"Could not reach {name}: {type(exc).__name__}"}
+            logger.warning("Stream %s network error (%s); falling back.", name, last_error)
+        except httpx.ReadTimeout as exc:
+            last_error = {"type": "timeout", "message": f"{name} read timed out"}
+            logger.warning("Stream %s read timeout; falling back.", name)
+            if produced:
+                yield ("token", "\n\n⚠️ The connection timed out.")
+                return
         except Exception as exc:  # noqa: BLE001
-            last_error = f"{name}:{type(exc).__name__}"
+            last_error = {"type": "network", "message": f"{name}: {type(exc).__name__}"}
             logger.warning("Stream %s error (%s); falling back.", name, last_error)
             if produced:
                 # Already streamed partial output; surface interruption inline.
@@ -303,4 +364,4 @@ async def chat_stream(
                 return
 
     logger.error("All AI providers failed to stream. Last error: %s", last_error)
-    yield ("error", _ALL_FAILED)
+    yield ("error", last_error or {"type": "unavailable", "message": _ALL_FAILED})

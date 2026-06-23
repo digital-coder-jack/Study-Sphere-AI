@@ -67,7 +67,7 @@ const SS = (() => {
   }
 
   /* ---------- API ---------- */
-  async function api(path, { method = 'GET', body, auth = true, raw = false } = {}) {
+  async function api(path, { method = 'GET', body, auth = true, raw = false, signal } = {}) {
     const headers = {};
     if (body && !(body instanceof FormData)) headers['Content-Type'] = 'application/json';
     if (auth && getToken()) headers['Authorization'] = 'Bearer ' + getToken();
@@ -76,13 +76,16 @@ const SS = (() => {
       method,
       headers,
       body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined),
+      // Pass through an AbortController signal so callers (e.g. chat streaming)
+      // can cancel in-flight requests safely.
+      signal,
     });
 
     if (res.status === 401 && auth) {
       try {
         const data = await api('/api/auth/guest', { method: 'POST', auth: false });
         setSession(data.token, data.user);
-        return api(path, { method, body, auth, raw });
+        return api(path, { method, body, auth, raw, signal });
       } catch (err) {
         console.error('Failed to refresh session:', err);
         throw new Error('Connection error. Please refresh the page.');

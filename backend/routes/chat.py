@@ -38,8 +38,14 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from backend import ai, auth, database as db, providers
+from backend.stream_manager import stream_manager
 
 router = APIRouter(prefix="/api", tags=["chat"])
+
+
+def _sse(payload: dict) -> str:
+    """Serialise a dict into a single Server-Sent-Events 'data:' frame."""
+    return f"data: {json.dumps(payload, separators=(',', ':'))}\n\n"
 
 
 def _user_model(user) -> str:
@@ -141,17 +147,54 @@ async def remove_chat(chat_id: int, user=Depends(auth.current_user)):
     return {"deleted": True}
 
 
-@router.post("/chats/{chat_id}/stream")
-async def stream_message(chat_id: int, body: StreamIn, user=Depends(auth.current_user)):
-    """
-    Save the user message, then stream the assistant reply as Server-Sent
-    Events. Each SSE 'data:' line carries a JSON object:
-        {"token": "..."}   incremental text
-        {"done": true, "message_id": N}  end of stream
+@router.post("/chats/{chat_id}/cancel")
+async def cancel_stream(chat_id: int, user=Depends(auth.current_user)):
+    """Explicitly cancel the active stream for this chat, if any.
+
+    Idempotent: returns ``cancelled: false`` if nothing was running. Used by
+    the client's "Stop" button. A brand-new /stream request cancels the
+    previous one automatically, so this is only for explicit user stops.
     """
     chat = db.get_chat(user["id"], chat_id)
     if chat is None:
         raise HTTPException(status_code=404, detail="Chat not found.")
+    key = stream_manager.make_key(user["id"], chat_id)
+    cancelled = await stream_manager.cancel(key)
+    return {"cancelled": cancelled}
+
+
+@router.post("/chats/{chat_id}/stream")
+async def stream_message(chat_id: int, body: StreamIn, user=Depends(auth.current_user)):
+    """
+    Save the user message, then stream the assistant reply as Server-Sent
+    Events.
+
+    Safety guarantees (see backend/stream_manager.py):
+      * Only ONE active stream per (user, chat). Starting a new one ALWAYS
+        cancels the previous in-flight stream first — no overlapping streams,
+        no race conditions.
+      * A placeholder assistant row is created up front; tokens are written
+        to it and it is finalised at the end, so state updates ALWAYS target
+        the LATEST assistant message (never a stale row), and history stays
+        a clean user→assistant pair even if the client disconnects.
+
+    SSE frame shapes (each a single `data:` JSON object):
+        {"event":"start",     "message_id":N, "generation":G}
+        {"event":"provider",  "provider":"kimi"}
+        {"event":"token",     "token":"..."}
+        {"event":"cancelled", "reason":"...", "message_id":N}
+        {"event":"error",     "error":{"type":"timeout","message":"..."}}
+        {"event":"done",      "message_id":N, "provider":"kimi"}
+    """
+    chat = db.get_chat(user["id"], chat_id)
+    if chat is None:
+        raise HTTPException(status_code=404, detail="Chat not found.")
+
+    key = stream_manager.make_key(user["id"], chat_id)
+
+    # ---- Atomically supersede any in-flight stream and claim this slot. ----
+    # begin() signals the previous generator's cancel_event before returning.
+    generation, cancel_event = await stream_manager.begin(key)
 
     # Persist the user's message.
     db.add_message(chat_id, "user", body.content)
@@ -164,31 +207,73 @@ async def stream_message(chat_id: int, body: StreamIn, user=Depends(auth.current
 
     history = [{"role": m["role"], "content": m["content"]} for m in history_rows]
 
+    # Create the assistant placeholder row NOW so every later update targets
+    # exactly this message id (the latest assistant message). Bind it to the
+    # active generation; if we were already superseded, bail out cleanly.
+    assistant_id = db.add_message(chat_id, "assistant", "")
+    if not await stream_manager.attach_message(key, generation, assistant_id):
+        db.delete_message(assistant_id)
+
+        async def _superseded():
+            yield _sse({"event": "cancelled", "reason": "superseded", "message_id": assistant_id})
+
+        return StreamingResponse(_superseded(), media_type="text/event-stream")
+
     # Resolve which provider/model to use: an explicit per-message override
     # (if valid) wins, otherwise the user's saved preference, otherwise auto.
     requested = (body.model or "").lower()
     selection = requested if requested in providers.VALID_SELECTIONS else _user_model(user)
 
     async def event_generator():
-        collected = []
+        collected: list[str] = []
         provider_used = "auto"
+        final_event = "done"
+        error_payload = None
         try:
-            async for event, value in ai.chat_stream(history, selection=selection):
+            yield _sse({"event": "start", "message_id": assistant_id, "generation": generation})
+
+            async for event, value in ai.chat_stream(
+                history, selection=selection, cancel_event=cancel_event
+            ):
                 if event == "meta":
                     provider_used = value
-                    yield f"data: {json.dumps({'provider': value})}\n\n"
+                    yield _sse({"event": "provider", "provider": value})
                 elif event == "token":
                     collected.append(value)
-                    yield f"data: {json.dumps({'token': value})}\n\n"
+                    yield _sse({"event": "token", "token": value})
+                elif event == "cancelled":
+                    final_event = "cancelled"
+                    yield _sse({"event": "cancelled", "reason": value, "message_id": assistant_id})
+                    break
                 elif event == "error":
-                    collected.append(value)
-                    yield f"data: {json.dumps({'token': value})}\n\n"
-        except Exception:
-            yield f"data: {json.dumps({'token': ' [stream interrupted]'})}\n\n"
+                    final_event = "error"
+                    error_payload = value if isinstance(value, dict) else {"type": "error", "message": str(value)}
+                    yield _sse({"event": "error", "error": error_payload})
+        except Exception as exc:  # noqa: BLE001
+            final_event = "error"
+            error_payload = {"type": "internal", "message": "stream interrupted"}
+            yield _sse({"event": "error", "error": error_payload})
         finally:
-            full = "".join(collected).strip() or "⚠️ No response was generated."
-            msg_id = db.add_message(chat_id, "assistant", full)
-            yield f"data: {json.dumps({'done': True, 'message_id': msg_id, 'provider': provider_used})}\n\n"
+            # Finalise the SAME placeholder row — update only the latest
+            # assistant message, keeping persisted state consistent.
+            full = "".join(collected).strip()
+            if final_event == "cancelled":
+                # Keep whatever was produced; mark interruption if empty.
+                db.update_message(assistant_id, full or "⏹️ Generation stopped.")
+            elif final_event == "error" and not full:
+                msg = (error_payload or {}).get("message") if isinstance(error_payload, dict) else None
+                db.update_message(assistant_id, f"⚠️ {msg or 'No response was generated.'}")
+            else:
+                db.update_message(assistant_id, full or "⚠️ No response was generated.")
+
+            # Release the slot only if we are still the active generation.
+            await stream_manager.finish(key, generation)
+
+            yield _sse({
+                "event": final_event,
+                "message_id": assistant_id,
+                "provider": provider_used,
+            })
 
     return StreamingResponse(
         event_generator(),

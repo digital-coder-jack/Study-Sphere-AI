@@ -434,6 +434,32 @@ def list_messages(chat_id: int) -> list[sqlite3.Row]:
         ).fetchall()
 
 
+def update_message(message_id: int, content: str) -> bool:
+    """Overwrite the content of an existing message.
+
+    Used to finalise the streaming assistant placeholder row so that state
+    updates only ever touch the LATEST assistant message (the placeholder
+    created when the stream began), never a stale one.
+    """
+    with closing(get_connection()) as conn:
+        cur = conn.execute(
+            "UPDATE messages SET content = ? WHERE id = ?",
+            (content, message_id),
+        )
+        conn.commit()
+        return cur.rowcount > 0
+
+
+def delete_message(message_id: int) -> bool:
+    """Delete a single message (e.g. an empty placeholder after a hard error)."""
+    with closing(get_connection()) as conn:
+        cur = conn.execute(
+            "DELETE FROM messages WHERE id = ?", (message_id,)
+        )
+        conn.commit()
+        return cur.rowcount > 0
+
+
 def count_messages(user_id: int) -> int:
     with closing(get_connection()) as conn:
         row = conn.execute(

@@ -4,7 +4,17 @@
 
 
 
-const state = { chats: [], currentId: null, streaming: false, model: 'auto', providers: [] };
+const state = {
+  chats: [],
+  currentId: null,
+  streaming: false,
+  model: 'auto',
+  providers: [],
+  // --- Streaming control (prevents overlapping streams + safe cancel) ---
+  controller: null,      // AbortController for the in-flight fetch
+  activeBody: null,      // DOM node of the LATEST assistant message body
+  streamChatId: null,    // chat id the current stream belongs to
+};
 
 const el = {
   list: document.getElementById('chatList'),
@@ -195,6 +205,10 @@ function renderChatList() {
 
 /* ---------- Open / create / delete ---------- */
 async function openChat(id) {
+  // Switching chats while a stream is running would orphan the stream; stop it.
+  if (state.streaming && state.streamChatId !== id) {
+    await cancelActiveStream('navigated-away');
+  }
   try {
     const data = await SS.api(`/api/chats/${id}`);
     state.currentId = id;
@@ -242,10 +256,48 @@ async function deleteChat(id) {
   }
 }
 
+/* ---------- Stop / cancel the active stream ----------
+   Guarantees only one active stream client-side too: we abort the in-flight
+   fetch AND tell the server to cancel the job, so partial output is kept and
+   no zombie stream keeps writing to the latest assistant message. */
+async function cancelActiveStream(reason = 'user') {
+  const chatId = state.streamChatId;
+  if (state.controller) {
+    try { state.controller.abort(); } catch { /* noop */ }
+  }
+  if (chatId != null) {
+    // Best-effort server-side cancel (idempotent).
+    try { await SS.api(`/api/chats/${chatId}/cancel`, { method: 'POST', body: {} }); }
+    catch { /* non-critical */ }
+  }
+}
+
+/* Toggle the composer button between "send" and "stop" states. */
+function setStreamingUI(on) {
+  state.streaming = on;
+  if (!el.send) return;
+  if (on) {
+    el.send.classList.add('streaming');
+    el.send.title = 'Stop generating';
+    el.send.innerHTML = '<i class="fas fa-stop"></i>';
+  } else {
+    el.send.classList.remove('streaming');
+    el.send.title = 'Send';
+    el.send.innerHTML = '<i class="fas fa-paper-plane"></i>';
+  }
+  el.send.disabled = false;
+}
+
 /* ---------- Send + stream ---------- */
 async function sendMessage() {
+  // If a stream is already running, the button acts as a STOP button.
+  if (state.streaming) {
+    await cancelActiveStream('user');
+    return;
+  }
+
   const text = el.input.value.trim();
-  if (!text || state.streaming) return;
+  if (!text) return;
 
   // Track AI chat usage
   if (window.trackAIChat) window.trackAIChat();
@@ -256,23 +308,33 @@ async function sendMessage() {
     if (!state.currentId) return;
   }
 
+  // Rule: always cancel any previous streaming job before starting a new one.
+  await cancelActiveStream('superseded');
+
   el.input.value = '';
   autoGrow();
   appendMessage('user', text);
 
-  // Assistant placeholder with typing dots.
+  // Assistant placeholder with typing dots. This becomes the ONLY node we
+  // ever mutate for this stream (the "latest assistant message").
   const body = appendMessage('assistant', '');
   body.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
 
-  state.streaming = true;
-  el.send.disabled = true;
+  const controller = new AbortController();
+  state.controller = controller;
+  state.activeBody = body;
+  state.streamChatId = state.currentId;
+  setStreamingUI(true);
 
   let full = '';
+  let firstToken = true;
+  let cancelled = false;
   try {
     const res = await SS.api(`/api/chats/${state.currentId}/stream`, {
       method: 'POST',
       body: { content: text, model: state.model },
       raw: true,
+      signal: controller.signal,
     });
     if (!res.ok || !res.body) throw new Error('Streaming failed.');
 
@@ -290,28 +352,51 @@ async function sendMessage() {
         const trimmed = line.trim();
         if (!trimmed.startsWith('data:')) continue;
         const payload = trimmed.slice(5).trim();
-        try {
-          const obj = JSON.parse(payload);
-          if (obj.provider) {
-            // Show which provider actually served the response.
+        let obj;
+        try { obj = JSON.parse(payload); } catch { continue; }
+
+        // Structured event protocol (see backend/routes/chat.py).
+        switch (obj.event) {
+          case 'provider': {
             const msgEl = body.closest('.msg');
             const r = msgEl && msgEl.querySelector('.role');
-            if (r && obj.provider !== 'auto' && obj.provider !== 'cache') {
-              r.innerHTML = `Study Sphere AI <span class="model-badge">${obj.provider}</span>`;
+            if (r && obj.provider && obj.provider !== 'auto' && obj.provider !== 'cache') {
+              r.innerHTML = `Study Sphere AI <span class="model-badge">${escapeHtml(obj.provider)}</span>`;
             }
+            break;
           }
-          if (obj.token) {
-            full += obj.token;
+          case 'token': {
+            if (firstToken) { body.innerHTML = ''; firstToken = false; }
+            full += obj.token || '';
             body.innerHTML = '';
             body.appendChild(renderMarkdown(full));
             scrollToBottom();
+            break;
           }
-          if (obj.done) { /* persisted server-side */ }
-        } catch { /* ignore partial */ }
+          case 'cancelled': {
+            cancelled = true;
+            break;
+          }
+          case 'error': {
+            const e = obj.error || {};
+            const msg = friendlyError(e);
+            full = full || '';
+            body.innerHTML = '';
+            body.appendChild(renderMarkdown((full ? full + '\n\n' : '') + '⚠️ ' + msg));
+            break;
+          }
+          case 'done':
+          case 'start':
+          default:
+            break;
+        }
       }
     }
 
-    if (!full.trim()) {
+    if (cancelled && !full.trim()) {
+      body.innerHTML = '';
+      body.appendChild(renderMarkdown('⏹️ Generation stopped.'));
+    } else if (!cancelled && !full.trim()) {
       body.innerHTML = '';
       body.appendChild(renderMarkdown('⚠️ No response was generated. Please try again.'));
     }
@@ -319,12 +404,39 @@ async function sendMessage() {
     // Refresh the chat list so the auto-title appears.
     refreshTitle();
   } catch (err) {
-    body.innerHTML = '';
-    body.appendChild(renderMarkdown('⚠️ ' + err.message));
+    if (err && err.name === 'AbortError') {
+      // We aborted on purpose (stop button / superseded). Keep partial output.
+      if (!full.trim()) {
+        body.innerHTML = '';
+        body.appendChild(renderMarkdown('⏹️ Generation stopped.'));
+      }
+    } else {
+      body.innerHTML = '';
+      body.appendChild(renderMarkdown('⚠️ ' + (err.message || 'Network error. Please try again.')));
+    }
   } finally {
-    state.streaming = false;
-    el.send.disabled = false;
-    el.input.focus();
+    // Only clear streaming UI if THIS stream is still the active one
+    // (a superseding stream may have already taken over).
+    if (state.controller === controller) {
+      state.controller = null;
+      state.activeBody = null;
+      state.streamChatId = null;
+      setStreamingUI(false);
+      el.input.focus();
+    }
+  }
+}
+
+/* Map a structured backend error to a user-friendly sentence. */
+function friendlyError(e) {
+  const type = (e && e.type) || 'error';
+  switch (type) {
+    case 'timeout': return 'The AI took too long to respond. Please try again.';
+    case 'network': return 'Could not reach the AI service. Check your connection and retry.';
+    case 'http': return 'The AI service returned an error. Please try again shortly.';
+    case 'not_configured': return e.message || 'AI is not configured yet.';
+    case 'unavailable': return 'All AI providers are busy right now. Please try again in a moment.';
+    default: return (e && e.message) || 'Something went wrong. Please try again.';
   }
 }
 
