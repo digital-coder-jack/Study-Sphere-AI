@@ -1,0 +1,21 @@
+# Node
+node_modules/
+npm-debug.log*
+.env
+
+# Web build
+web/dist/
+web/.vite/
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+android/captures/
+*.iml
+.DS_Store
+
+# Misc
+*.log
