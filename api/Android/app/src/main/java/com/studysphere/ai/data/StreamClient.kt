@@ -117,7 +117,10 @@ object StreamClient {
         }
 
         // Holder so awaitClose can cancel whatever call is currently active.
-        @Volatile var activeCall: Call? = null
+        object StreamClient {
+
+    @Volatile
+    private var activeCall: Call? = null
 
         // ---- Retry loop ----
         var attempt = 0
@@ -132,7 +135,14 @@ object StreamClient {
             // Result of a single attempt: true = finished (terminal emitted or success),
             // false = retryable transient failure.
             val attemptOutcome: AttemptResult = try {
-                call.execute().use { response ->
+
+    val call = buildCall()   // ✅ FIX 1: DEFINE CALL HERE
+    activeCall = call        // optional but correct
+
+    val call = buildCall()
+activeCall = call
+
+call.execute().use { response ->
                     when {
                         response.code == 401 || response.code == 403 -> {
                             emitTerminal(StreamEvent.Error("Unauthorized (${response.code})", retryable = false))
