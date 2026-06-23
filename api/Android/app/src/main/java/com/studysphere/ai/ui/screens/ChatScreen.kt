@@ -133,30 +133,32 @@ fun ChatScreen(
             if (state.messages.isEmpty()) {
                 EmptyChat(onSuggestion = { vm.send(it) })
             } else {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(18.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 12.dp)
-                ) {
-                    items(state.messages, key = { it.id.toString() + it.role + it.content.length }) { msg ->
-                        MessageRow(
-                            msg = msg,
-                            streaming = state.streaming,
-                            val lastMsg = state.messages.lastOrNull()
-                            isLastAssistant =
-    msg.role == "assistant" &&
-    lastMsg?.id == msg.id,
-                            onRegenerate = { haptic(); vm.regenerateLast() },
-                            onEdit = { editing = msg; input = msg.content }
-                        )
-                    }
-                }
-            }
+               LazyColumn(
+    state = listState,
+    modifier = Modifier
+        .weight(1f)
+        .fillMaxWidth()
+        .padding(horizontal = 12.dp),
+    verticalArrangement = Arrangement.spacedBy(18.dp),
+    contentPadding = PaddingValues(vertical = 12.dp)
+) {
 
+    items(state.messages, key = { it.id }) { msg ->
+
+        val lastMsg = state.messages.lastOrNull()
+
+        MessageRow(
+            msg = msg,
+            streaming = state.streaming,
+            isLastAssistant =
+                msg.role == "assistant" &&
+                lastMsg?.id == msg.id,
+
+            onRegenerate = { haptic(); vm.regenerateLast() },
+            onEdit = { editing = msg; input = msg.content }
+        )
+    }
+}
             ChatInputBar(
                 value = input,
                 onValueChange = { input = it },
