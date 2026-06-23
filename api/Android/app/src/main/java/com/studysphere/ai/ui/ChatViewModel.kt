@@ -9,6 +9,7 @@ import com.studysphere.ai.data.StreamEvent
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update          // ← required for atomic CAS updates
 import kotlinx.coroutines.launch
 
 data class ChatUiState(
@@ -19,7 +20,6 @@ data class ChatUiState(
     val streaming: Boolean = false,
     val loading: Boolean = false,
     val error: String? = null,
-    // Premium assistant additions:
     val model: String = "auto",
     val modelOptions: List<String> = listOf("auto"),
     val pinnedChatIds: Set<Int> = emptySet(),
@@ -29,7 +29,7 @@ data class ChatUiState(
         get() {
             val filtered = if (searchQuery.isBlank()) chats
             else chats.filter { it.title.contains(searchQuery, ignoreCase = true) }
-            // Pinned chats float to the top, preserving recency order within groups.
+            // Pinned chats float to the top, preserving recency order within each group.
             return filtered.sortedByDescending { it.id in pinnedChatIds }
         }
 }
@@ -41,83 +41,106 @@ class ChatViewModel(private val repo: Repository) : ViewModel() {
 
     init { loadModelOptions() }
 
+    // ─── Chat list ────────────────────────────────────────────────────────────
+
     fun loadChats() {
         viewModelScope.launch {
             try {
-                _state.value = _state.value.copy(chats = repo.listChats())
+                val chats = repo.listChats()
+                _state.update { it.copy(chats = chats) }
             } catch (e: Exception) {
-                _state.value = _state.value.copy(error = friendly(e))
+                _state.update { it.copy(error = friendly(e)) }
             }
         }
     }
+
+    // ─── Model selection ──────────────────────────────────────────────────────
 
     private fun loadModelOptions() {
         viewModelScope.launch {
             try {
                 val res = repo.aiModels()
-                _state.value = _state.value.copy(
-                    model = res.selected.ifBlank { "auto" },
-                    modelOptions = res.options.ifEmpty { listOf("auto") }
-                )
+                _state.update {
+                    it.copy(
+                        model = res.selected.ifBlank { "auto" },
+                        modelOptions = res.options.ifEmpty { listOf("auto") }
+                    )
+                }
             } catch (_: Exception) {
-                // Non-fatal — default to "auto" with the fallback chain.
+                // Non-fatal — defaults already set in ChatUiState.
             }
         }
     }
 
     fun selectModel(model: String) {
-        _state.value = _state.value.copy(model = model)
+        _state.update { it.copy(model = model) }
         viewModelScope.launch {
             try { repo.setAiModel(model) } catch (_: Exception) { /* best-effort persist */ }
         }
     }
 
+    // ─── Search / pin ─────────────────────────────────────────────────────────
+
     fun setSearchQuery(q: String) {
-        _state.value = _state.value.copy(searchQuery = q)
+        _state.update { it.copy(searchQuery = q) }
     }
 
     fun togglePin(chatId: Int) {
-        val pins = _state.value.pinnedChatIds.toMutableSet()
-        if (!pins.add(chatId)) pins.remove(chatId)
-        _state.value = _state.value.copy(pinnedChatIds = pins)
+        // FIX: entire read-modify-write is inside update {} so it cannot race.
+        _state.update { current ->
+            val pins = current.pinnedChatIds.toMutableSet()
+            if (!pins.add(chatId)) pins.remove(chatId)
+            current.copy(pinnedChatIds = pins)
+        }
     }
+
+    // ─── Chat lifecycle ───────────────────────────────────────────────────────
 
     fun openChat(chatId: Int) {
         viewModelScope.launch {
-            _state.value = _state.value.copy(loading = true, error = null)
+            _state.update { it.copy(loading = true, error = null) }
             try {
                 val detail = repo.getChat(chatId)
-                _state.value = _state.value.copy(
-                    loading = false,
-                    currentChatId = detail.chat.id,
-                    currentTitle = detail.chat.title,
-                    messages = detail.messages
-                )
+                _state.update {
+                    it.copy(
+                        loading = false,
+                        currentChatId = detail.chat.id,
+                        currentTitle = detail.chat.title,
+                        messages = detail.messages
+                    )
+                }
             } catch (e: Exception) {
-                _state.value = _state.value.copy(loading = false, error = friendly(e))
+                _state.update { it.copy(loading = false, error = friendly(e)) }
             }
         }
     }
 
     fun startNewChat() {
-        _state.value = _state.value.copy(
-            currentChatId = null,
-            currentTitle = "New Chat",
-            messages = emptyList(),
-            error = null
-        )
+        _state.update {
+            it.copy(
+                currentChatId = null,
+                currentTitle = "New Chat",
+                messages = emptyList(),
+                error = null
+            )
+        }
     }
 
     fun deleteChat(chatId: Int) {
         viewModelScope.launch {
             try {
                 repo.deleteChat(chatId)
-                if (_state.value.currentChatId == chatId) startNewChat()
-                val pins = _state.value.pinnedChatIds.toMutableSet().apply { remove(chatId) }
-                _state.value = _state.value.copy(pinnedChatIds = pins)
+                // FIX: capture wasCurrentChat BEFORE mutating state so we don't
+                // read a value we just changed.
+                val wasCurrentChat = _state.value.currentChatId == chatId
+                _state.update { current ->
+                    val pins = current.pinnedChatIds.toMutableSet().apply { remove(chatId) }
+                    current.copy(pinnedChatIds = pins)
+                }
+                if (wasCurrentChat) startNewChat()
                 loadChats()
             } catch (e: Exception) {
-                _state.value = _state.value.copy(error = friendly(e))
+                _state.update { it.copy(error = friendly(e)) }
             }
         }
     }
@@ -127,42 +150,53 @@ class ChatViewModel(private val repo: Repository) : ViewModel() {
         viewModelScope.launch {
             try {
                 val chat = repo.renameChat(chatId, title.trim())
-                if (_state.value.currentChatId == chatId) {
-                    _state.value = _state.value.copy(currentTitle = chat.title)
+                _state.update { current ->
+                    if (current.currentChatId == chatId) current.copy(currentTitle = chat.title)
+                    else current
                 }
                 loadChats()
             } catch (e: Exception) {
-                _state.value = _state.value.copy(error = friendly(e))
+                _state.update { it.copy(error = friendly(e)) }
             }
         }
     }
 
-    /** Send a message — creating a chat first if needed — and stream the reply. */
+    // ─── Messaging ────────────────────────────────────────────────────────────
+
+    /**
+     * Send a message — creating a chat first if needed — and stream the reply.
+     */
     fun send(content: String) {
         if (content.isBlank() || _state.value.streaming) return
         viewModelScope.launch {
             try {
-                var chatId = _state.value.currentChatId
-                if (chatId == null) {
+                // Resolve or create a chat ID before touching the message list.
+                val chatId = _state.value.currentChatId ?: run {
                     val chat = repo.newChat()
-                    chatId = chat.id
-                    _state.value = _state.value.copy(
-                        currentChatId = chat.id,
-                        currentTitle = chat.title
+                    _state.update {
+                        it.copy(currentChatId = chat.id, currentTitle = chat.title)
+                    }
+                    chat.id
+                }
+
+                // FIX: append both bubbles AND set streaming=true in a single atomic
+                // update so the UI never sees a partial state (e.g. streaming=false
+                // while the assistant bubble already exists).
+                val userMsg = ChatMessage(id = -1, role = "user", content = content)
+                val assistantMsg = ChatMessage(id = -2, role = "assistant", content = "")
+                _state.update {
+                    it.copy(
+                        // FIX: read it.messages inside the lambda — not _state.value.messages
+                        // from an outer scope — to guarantee we append to the latest list.
+                        messages = it.messages + userMsg + assistantMsg,
+                        streaming = true,
+                        error = null
                     )
                 }
 
-                val userMsg = ChatMessage(id = -1, role = "user", content = content)
-                val assistantMsg = ChatMessage(id = -2, role = "assistant", content = "")
-                _state.value = _state.value.copy(
-                    messages = _state.value.messages + userMsg + assistantMsg,
-                    streaming = true,
-                    error = null
-                )
-
                 streamReply(chatId, content)
             } catch (e: Exception) {
-                _state.value = _state.value.copy(streaming = false, error = friendly(e))
+                _state.update { it.copy(streaming = false, error = friendly(e)) }
             }
         }
     }
@@ -173,18 +207,29 @@ class ChatViewModel(private val repo: Repository) : ViewModel() {
      */
     fun regenerateLast() {
         if (_state.value.streaming) return
-        val msgs = _state.value.messages
-        val lastUser = msgs.lastOrNull { it.role == "user" } ?: return
-        val chatId = _state.value.currentChatId ?: return
+        // Snapshot outside the coroutine; these values are immutable data.
+        val currentState = _state.value
+        val lastUser = currentState.messages.lastOrNull { it.role == "user" } ?: return
+        val chatId = currentState.currentChatId ?: return
+
         viewModelScope.launch {
-            // Drop the trailing assistant message, replace with an empty bubble.
-            val trimmed = msgs.toMutableList()
-            if (trimmed.isNotEmpty() && trimmed.last().role == "assistant") {
-                trimmed.removeAt(trimmed.lastIndex)
+            // FIX: added try-catch — without it, any exception thrown by streamReply
+            // (e.g. from repo.currentToken()) would leave streaming=true forever and
+            // swallow the error silently.
+            try {
+                // FIX: atomic swap of the trailing assistant bubble.
+                _state.update { current ->
+                    val trimmed = current.messages.toMutableList()
+                    if (trimmed.isNotEmpty() && trimmed.last().role == "assistant") {
+                        trimmed.removeAt(trimmed.lastIndex)
+                    }
+                    trimmed.add(ChatMessage(id = -2, role = "assistant", content = ""))
+                    current.copy(messages = trimmed, streaming = true, error = null)
+                }
+                streamReply(chatId, lastUser.content)
+            } catch (e: Exception) {
+                _state.update { it.copy(streaming = false, error = friendly(e)) }
             }
-            trimmed.add(ChatMessage(id = -2, role = "assistant", content = ""))
-            _state.value = _state.value.copy(messages = trimmed, streaming = true, error = null)
-            streamReply(chatId, lastUser.content)
         }
     }
 
@@ -194,14 +239,22 @@ class ChatViewModel(private val repo: Repository) : ViewModel() {
      */
     fun editAndResend(newContent: String) {
         if (newContent.isBlank() || _state.value.streaming) return
-        val msgs = _state.value.messages.toMutableList()
-        val lastUserIdx = msgs.indexOfLast { it.role == "user" }
-        if (lastUserIdx < 0) { send(newContent); return }
-        // Remove everything from the last user message onward.
-        while (msgs.size > lastUserIdx) msgs.removeAt(msgs.lastIndex)
-        _state.value = _state.value.copy(messages = msgs)
+        val lastUserIdx = _state.value.messages.indexOfLast { it.role == "user" }
+        if (lastUserIdx < 0) {
+            send(newContent)
+            return
+        }
+        // FIX: trim happens atomically inside update {}; the subsequent send() will
+        // then read the already-trimmed list when it appends the new bubbles.
+        _state.update { current ->
+            val trimmed = current.messages.toMutableList()
+            while (trimmed.size > lastUserIdx) trimmed.removeAt(trimmed.lastIndex)
+            current.copy(messages = trimmed)
+        }
         send(newContent)
     }
+
+    // ─── Internal streaming ───────────────────────────────────────────────────
 
     private suspend fun streamReply(chatId: Int, content: String) {
         val token = repo.currentToken()
@@ -214,33 +267,43 @@ class ChatViewModel(private val repo: Repository) : ViewModel() {
                         updateLastAssistant(sb.toString())
                     }
                     is StreamEvent.Done -> {
-                        _state.value = _state.value.copy(streaming = false)
+                        _state.update { it.copy(streaming = false) }
                         loadChats()
                     }
                     is StreamEvent.Error -> {
                         if (sb.isEmpty()) updateLastAssistant("⚠️ ${event.message}")
-                        _state.value = _state.value.copy(streaming = false)
+                        _state.update { it.copy(streaming = false) }
                     }
                 }
             }
         } finally {
-            if (_state.value.streaming) {
-                _state.value = _state.value.copy(streaming = false)
-            }
+            // FIX: conditional update avoids emitting a spurious state change when
+            // Done/Error already cleared the flag. Coroutine cancellation is also
+            // covered — streaming will always be false when this scope exits.
+            _state.update { if (it.streaming) it.copy(streaming = false) else it }
         }
     }
 
+    /**
+     * Atomically patch the last assistant bubble's text.
+     * FIX: using update {} prevents a torn read-modify-write on every streaming
+     * token, which was the highest-frequency race in the original code.
+     */
     private fun updateLastAssistant(text: String) {
-        val msgs = _state.value.messages.toMutableList()
-        val idx = msgs.indexOfLast { it.role == "assistant" }
-        if (idx >= 0) {
-            msgs[idx] = msgs[idx].copy(content = text)
-            _state.value = _state.value.copy(messages = msgs)
+        _state.update { current ->
+            val msgs = current.messages.toMutableList()
+            val idx = msgs.indexOfLast { it.role == "assistant" }
+            if (idx >= 0) {
+                msgs[idx] = msgs[idx].copy(content = text)
+                current.copy(messages = msgs)
+            } else current   // guard: no-op if the bubble is somehow missing
         }
     }
+
+    // ─── Misc ─────────────────────────────────────────────────────────────────
 
     fun clearError() {
-        _state.value = _state.value.copy(error = null)
+        _state.update { it.copy(error = null) }
     }
 
     private fun friendly(e: Exception): String {
