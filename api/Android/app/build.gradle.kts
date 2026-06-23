@@ -23,7 +23,7 @@ android {
        buildConfigField(
     "String",
     "API_BASE_URL",
-    "\"https://study-sphere-ai-mwlq-88afofaix-digital-coder-jacks-projects.vercel.app\""
+    "\"https://study-sphere-ai-mwlq.vercel.app\""
 )
     }
 
