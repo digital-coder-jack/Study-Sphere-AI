@@ -146,9 +146,10 @@ fun ChatScreen(
                         MessageRow(
                             msg = msg,
                             streaming = state.streaming,
-                            isLastAssistant = msg.role == "assistant" &&
-                                state.messages.lastOrNull()?.role == "assistant" &&
-                                state.messages.last() === msg,
+                            val lastMsg = state.messages.lastOrNull()
+                            isLastAssistant =
+    msg.role == "assistant" &&
+    lastMsg?.id == msg.id,
                             onRegenerate = { haptic(); vm.regenerateLast() },
                             onEdit = { editing = msg; input = msg.content }
                         )
