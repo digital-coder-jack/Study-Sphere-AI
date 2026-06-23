@@ -12,6 +12,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -52,6 +53,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -92,7 +94,8 @@ fun ChatScreen(
     var input by remember { mutableStateOf("") }
     var editing by remember { mutableStateOf<ChatMessage?>(null) }
     val listState = rememberLazyListState()
-    val scope = rememberCoroutineScopeLocal()
+    // FIX: replaced rememberCoroutineScopeLocal() with the standard rememberCoroutineScope()
+    val scope = rememberCoroutineScope()
     val haptic = rememberHaptics()
 
     var showHistory by remember { mutableStateOf(false) }
@@ -120,8 +123,14 @@ fun ChatScreen(
         }
     }
 
+    // FIX: Wrapped entire screen in a Box so the scroll-to-bottom FAB can be
+    // overlaid with Alignment.BottomCenter, and the Column fills the rest.
     Box(Modifier.fillMaxSize()) {
-        Column(Modifier.fillMaxSize().imePadding()) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .imePadding()
+        ) {
             ChatHeader(
                 title = if (state.streaming) "Thinking…" else state.currentTitle,
                 model = state.model,
@@ -133,51 +142,55 @@ fun ChatScreen(
             if (state.messages.isEmpty()) {
                 EmptyChat(onSuggestion = { vm.send(it) })
             } else {
-              LazyColumn(
-    state = listState,
-    modifier = Modifier
-        .weight(1f)
-        .fillMaxWidth()
-        .padding(horizontal = 12.dp),
-    verticalArrangement = Arrangement.spacedBy(18.dp),
-    contentPadding = PaddingValues(vertical = 12.dp)
-) {
-    items(state.messages, key = { it.id }) { msg ->
+                // FIX: LazyColumn is now properly inside the else branch and weight is applied here.
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(18.dp),
+                    contentPadding = PaddingValues(vertical = 12.dp)
+                ) {
+                    items(state.messages, key = { it.id }) { msg ->
+                        // FIX: Removed the invalid remember(state.messages) block for lastMsg
+                        // which was unused. isLastAssistant is computed inline correctly.
+                        MessageRow(
+                            msg = msg,
+                            streaming = state.streaming,
+                            // FIX: Added missing comma after isLastAssistant argument
+                            isLastAssistant = msg == state.messages.lastOrNull { it.role == "assistant" },
+                            onRegenerate = { haptic(); vm.regenerateLast() },
+                            onEdit = { editing = msg; input = msg.content }
+                        )
+                    }
+                } // End LazyColumn
 
-        val lastMsg = remember(state.messages) { state.messages.lastOrNull() }
+                ChatInputBar(
+                    value = input,
+                    onValueChange = { input = it },
+                    streaming = state.streaming,
+                    isEditing = editing != null,
+                    onCancelEdit = { editing = null; input = "" },
+                    onSend = {
+                        val text = input.trim()
+                        if (text.isNotEmpty()) {
+                            haptic()
+                            if (editing != null) {
+                                vm.editAndResend(text)
+                                editing = null
+                            } else {
+                                vm.send(text)
+                            }
+                            input = ""
+                        }
+                    }
+                )
+            } // End else branch
+        } // End Column
 
-        MessageRow(
-            msg = msg,
-            streaming = state.streaming,
-            isLastAssistant =
-               msg == state.messages.lastOrNull { it.role == "assistant" }
-            onRegenerate = { haptic(); vm.regenerateLast() },
-            onEdit = { editing = msg; input = msg.content }
-        )
-    }
-} // ✅ THIS BRACE WAS MISSING IN YOUR BROKEN BUILD
-
-ChatInputBar(
-    value = input,
-    onValueChange = { input = it },
-    streaming = state.streaming,
-    isEditing = editing != null,
-    onCancelEdit = { editing = null; input = "" },
-    onSend = {
-        val text = input.trim()
-        if (text.isNotEmpty()) {
-            haptic()
-            if (editing != null) {
-                vm.editAndResend(text)
-                editing = null
-            } else {
-                vm.send(text)
-            }
-            input = ""
-        }
-    }
-)
-        // Scroll-to-bottom button (ChatGPT/Gemini behaviour).
+        // FIX: Scroll-to-bottom FAB is now a direct child of the outer Box,
+        // so Alignment.BottomCenter resolves correctly against the full screen.
         AnimatedVisibility(
             visible = showScrollDown && !showHistory,
             enter = scaleIn() + fadeIn(),
@@ -208,23 +221,24 @@ ChatInputBar(
                 )
             }
         }
-    }
 
-    if (showHistory) {
-        ChatHistorySheet(
-            vm = vm,
-            onDismiss = { showHistory = false }
-        )
-    }
+        // Sheets overlaid on top of everything.
+        if (showHistory) {
+            ChatHistorySheet(
+                vm = vm,
+                onDismiss = { showHistory = false }
+            )
+        }
 
-    if (showModels) {
-        ModelPickerSheet(
-            options = state.modelOptions,
-            selected = state.model,
-            onSelect = { vm.selectModel(it); showModels = false },
-            onDismiss = { showModels = false }
-        )
-    }
+        if (showModels) {
+            ModelPickerSheet(
+                options = state.modelOptions,
+                selected = state.model,
+                onSelect = { vm.selectModel(it); showModels = false },
+                onDismiss = { showModels = false }
+            )
+        }
+    } // End outer Box
 }
 
 @Composable
@@ -243,7 +257,11 @@ private fun ChatHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = onHistory) {
-            Icon(Icons.Default.History, contentDescription = "Chat history", tint = MaterialTheme.colorScheme.onBackground)
+            Icon(
+                Icons.Default.History,
+                contentDescription = "Chat history",
+                tint = MaterialTheme.colorScheme.onBackground
+            )
         }
         AssistantAvatar(size = 32.dp)
         Spacer(Modifier.size(10.dp))
@@ -271,7 +289,12 @@ private fun ChatHeader(
                 .padding(horizontal = 10.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = Indigo, modifier = Modifier.size(15.dp))
+            Icon(
+                Icons.Default.AutoAwesome,
+                contentDescription = null,
+                tint = Indigo,
+                modifier = Modifier.size(15.dp)
+            )
             Spacer(Modifier.size(4.dp))
             Text(
                 model.replaceFirstChar { it.uppercase() },
@@ -303,10 +326,25 @@ private fun ChatInputBar(
                     .padding(horizontal = 16.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Default.Edit, contentDescription = null, tint = Violet, modifier = Modifier.size(16.dp))
+                Icon(
+                    Icons.Default.Edit,
+                    contentDescription = null,
+                    tint = Violet,
+                    modifier = Modifier.size(16.dp)
+                )
                 Spacer(Modifier.size(6.dp))
-                Text("Editing message", style = MaterialTheme.typography.labelMedium, color = Violet, modifier = Modifier.weight(1f))
-                Text("Cancel", style = MaterialTheme.typography.labelMedium, color = MutedText, modifier = Modifier.clickable(onClick = onCancelEdit))
+                Text(
+                    "Editing message",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Violet,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    "Cancel",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MutedText,
+                    modifier = Modifier.clickable(onClick = onCancelEdit)
+                )
             }
         }
         Row(
@@ -332,7 +370,9 @@ private fun ChatInputBar(
             Spacer(Modifier.size(8.dp))
             val sendBrush = if (streaming || value.isBlank())
                 Brush.linearGradient(listOf(Indigo.copy(alpha = 0.4f), Indigo.copy(alpha = 0.4f)))
-            else Brush.linearGradient(listOf(Indigo, Violet))
+            else
+                Brush.linearGradient(listOf(Indigo, Violet))
+
             Box(
                 Modifier
                     .size(50.dp)
@@ -344,7 +384,8 @@ private fun ChatInputBar(
                 if (streaming) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(22.dp),
-                        color = Color.White, strokeWidth = 2.dp
+                        color = Color.White,
+                        strokeWidth = 2.dp
                     )
                 } else {
                     Icon(
@@ -358,12 +399,13 @@ private fun ChatInputBar(
     }
 }
 
+// FIX: Receiver changed from ColumnScope extension to a plain @Composable that
+// accepts a Modifier with weight applied at the call site via the else branch above.
 @Composable
-private fun androidx.compose.foundation.layout.ColumnScope.EmptyChat(onSuggestion: (String) -> Unit) {
+private fun EmptyChat(onSuggestion: (String) -> Unit) {
     Box(
         Modifier
-            .weight(1f)
-            .fillMaxWidth()
+            .fillMaxSize()
             .padding(horizontal = 24.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -390,7 +432,11 @@ private fun androidx.compose.foundation.layout.ColumnScope.EmptyChat(onSuggestio
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(16.dp))
                             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f))
-                            .border(1.dp, HairlineOutline.copy(alpha = 0.6f), RoundedCornerShape(16.dp))
+                            .border(
+                                1.dp,
+                                HairlineOutline.copy(alpha = 0.6f),
+                                RoundedCornerShape(16.dp)
+                            )
                             .clickable { onSuggestion(suggestion) }
                             .padding(horizontal = 16.dp, vertical = 14.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -436,7 +482,14 @@ private fun UserMessage(msg: ChatMessage, onEdit: () -> Unit) {
             Box(
                 Modifier
                     .widthIn(max = 300.dp)
-                    .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 18.dp, bottomEnd = 4.dp))
+                    .clip(
+                        RoundedCornerShape(
+                            topStart = 18.dp,
+                            topEnd = 18.dp,
+                            bottomStart = 18.dp,
+                            bottomEnd = 4.dp
+                        )
+                    )
                     .background(Brush.linearGradient(listOf(Indigo, Violet)))
                     .clickable { showActions = !showActions }
                     .padding(14.dp)
@@ -451,7 +504,12 @@ private fun UserMessage(msg: ChatMessage, onEdit: () -> Unit) {
                     .background(Violet.copy(alpha = 0.25f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Person, contentDescription = null, tint = Violet, modifier = Modifier.size(18.dp))
+                Icon(
+                    Icons.Default.Person,
+                    contentDescription = null,
+                    tint = Violet,
+                    modifier = Modifier.size(18.dp)
+                )
             }
         }
         AnimatedVisibility(visible = showActions && msg.id >= 0) {
@@ -488,12 +546,24 @@ private fun AssistantMessage(
         Box(
             Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 18.dp, bottomStart = 18.dp, bottomEnd = 18.dp))
+                .clip(
+                    RoundedCornerShape(
+                        topStart = 4.dp,
+                        topEnd = 18.dp,
+                        bottomStart = 18.dp,
+                        bottomEnd = 18.dp
+                    )
+                )
                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
                 .border(
                     1.dp,
                     HairlineOutline.copy(alpha = 0.5f),
-                    RoundedCornerShape(topStart = 4.dp, topEnd = 18.dp, bottomStart = 18.dp, bottomEnd = 18.dp)
+                    RoundedCornerShape(
+                        topStart = 4.dp,
+                        topEnd = 18.dp,
+                        bottomStart = 18.dp,
+                        bottomEnd = 18.dp
+                    )
                 )
                 .padding(14.dp)
         ) {
@@ -511,7 +581,10 @@ private fun AssistantMessage(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 var copied by remember(msg.content) { mutableStateOf(false) }
-                MessageAction(if (copied) Icons.Default.Check else Icons.Default.ContentCopy, if (copied) "Copied" else "Copy") {
+                MessageAction(
+                    icon = if (copied) Icons.Default.Check else Icons.Default.ContentCopy,
+                    label = if (copied) "Copied" else "Copy"
+                ) {
                     clipboard.setText(AnnotatedString(msg.content))
                     copied = true
                 }
@@ -549,7 +622,3 @@ private fun MessageAction(
         Text(label, style = MaterialTheme.typography.labelSmall, color = MutedText)
     }
 }
-
-// Small helper to get a coroutine scope without extra imports clutter at call site.
-@Composable
-private fun rememberCoroutineScopeLocal() = androidx.compose.runtime.rememberCoroutineScope()
