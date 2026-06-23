@@ -133,7 +133,7 @@ fun ChatScreen(
             if (state.messages.isEmpty()) {
                 EmptyChat(onSuggestion = { vm.send(it) })
             } else {
-               LazyColumn(
+              LazyColumn(
     state = listState,
     modifier = Modifier
         .weight(1f)
@@ -142,45 +142,41 @@ fun ChatScreen(
     verticalArrangement = Arrangement.spacedBy(18.dp),
     contentPadding = PaddingValues(vertical = 12.dp)
 ) {
-
     items(state.messages, key = { it.id }) { msg ->
 
-        val lastMsg = state.messages.lastOrNull()
+        val lastMsg = remember(state.messages) { state.messages.lastOrNull() }
 
         MessageRow(
             msg = msg,
             streaming = state.streaming,
             isLastAssistant =
-                msg.role == "assistant" &&
-                lastMsg?.id == msg.id,
-
+               msg == state.messages.lastOrNull { it.role == "assistant" }
             onRegenerate = { haptic(); vm.regenerateLast() },
             onEdit = { editing = msg; input = msg.content }
         )
     }
-}
-            ChatInputBar(
-                value = input,
-                onValueChange = { input = it },
-                streaming = state.streaming,
-                isEditing = editing != null,
-                onCancelEdit = { editing = null; input = "" },
-                onSend = {
-                    val text = input.trim()
-                    if (text.isNotEmpty()) {
-                        haptic()
-                        if (editing != null) {
-                            vm.editAndResend(text)
-                            editing = null
-                        } else {
-                            vm.send(text)
-                        }
-                        input = ""
-                    }
-                }
-            )
-        }
+} // ✅ THIS BRACE WAS MISSING IN YOUR BROKEN BUILD
 
+ChatInputBar(
+    value = input,
+    onValueChange = { input = it },
+    streaming = state.streaming,
+    isEditing = editing != null,
+    onCancelEdit = { editing = null; input = "" },
+    onSend = {
+        val text = input.trim()
+        if (text.isNotEmpty()) {
+            haptic()
+            if (editing != null) {
+                vm.editAndResend(text)
+                editing = null
+            } else {
+                vm.send(text)
+            }
+            input = ""
+        }
+    }
+)
         // Scroll-to-bottom button (ChatGPT/Gemini behaviour).
         AnimatedVisibility(
             visible = showScrollDown && !showHistory,
