@@ -54,7 +54,7 @@ PROVIDERS: dict[str, dict] = {
         "env": "GEMINI_API_KEY",
         # Gemini exposes an OpenAI-compatible endpoint:
         "url": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
-        "default_model": os.environ.get("GEMINI_MODEL", "gemini-1.5-flash"),
+        "default_model": os.environ.get("GEMINI_MODEL", "gemini-2.5-flash"),
     },
     "groq": {
         "label": "Groq",
