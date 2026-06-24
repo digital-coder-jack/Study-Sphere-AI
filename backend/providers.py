@@ -289,8 +289,14 @@ async def chat_stream(
                     json=_payload(name, messages, temperature, max_tokens, stream=True),
                     headers=_headers(name),
                 ) as resp:
-                    if resp.status_code != 200:
-    body = await resp.aread()
+       ...
+async with client.stream(...) as resp:
+    if ?????:
+        body = await resp.aread()
+        ...
+        continue
+
+    ...
 
     print("========== ERROR ==========")
     print("Provider:", name)
