@@ -330,12 +330,19 @@ async function sendMessage() {
   let firstToken = true;
   let cancelled = false;
   try {
-    const res = await SS.api(`/api/chats/${state.currentId}/stream`, {
-      method: 'POST',
-      body: { content: text, model: state.model },
-      raw: true,
-      signal: controller.signal,
-    });
+    const res = await fetch(`/api/chats/${state.currentId}/stream`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: 'Bearer ' + SS.getToken(),
+  },
+  body: JSON.stringify({
+    content: text,
+    model: state.model
+  }),
+  signal: controller.signal,
+  credentials: 'include'
+});
     if (!res.ok || !res.body) throw new Error('Streaming failed.');
 
     const reader = res.body.getReader();
