@@ -92,7 +92,7 @@ const SS = (() => {
       }
     }
     if (raw) return res;
-
+if (res.status === 401 && auth && !raw) {
     let data = null;
     try { data = await res.json(); } catch { /* no body */ }
     if (!res.ok) {
