@@ -290,7 +290,6 @@ function setStreamingUI(on) {
 
 /* ---------- Send + stream ---------- */
 async function sendMessage() {
-  // If a stream is already running, the button acts as a STOP button.
   if (state.streaming) {
     await cancelActiveStream('user');
     return;
@@ -299,24 +298,17 @@ async function sendMessage() {
   const text = el.input.value.trim();
   if (!text) return;
 
-  // Track AI chat usage
-  if (window.trackAIChat) window.trackAIChat();
-
-  // Make sure we have a chat.
   if (!state.currentId) {
     await newChat();
     if (!state.currentId) return;
   }
 
-  // Rule: always cancel any previous streaming job before starting a new one.
   await cancelActiveStream('superseded');
 
   el.input.value = '';
   autoGrow();
   appendMessage('user', text);
 
-  // Assistant placeholder with typing dots. This becomes the ONLY node we
-  // ever mutate for this stream (the "latest assistant message").
   const body = appendMessage('assistant', '');
   body.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
 
@@ -328,6 +320,7 @@ async function sendMessage() {
 
   let full = '';
   let firstToken = true;
+  let buffer = '';
   let cancelled = false;
 
   try {
@@ -342,36 +335,81 @@ async function sendMessage() {
         model: state.model,
       }),
       signal: controller.signal,
-      credentials: 'include',
     });
 
-    if (!res.ok || !res.body) throw new Error('Streaming failed.');
+    if (!res.ok || !res.body) throw new Error('Streaming failed');
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
-    let buffer = '';
 
-    // Single streaming loop — read chunks, split SSE frames, parse JSON.
     while (true) {
       const { value, done } = await reader.read();
       if (done) break;
 
       buffer += decoder.decode(value, { stream: true });
 
-      // SSE frames are separated by double-newlines.
       const frames = buffer.split('\n\n');
-      buffer = frames.pop(); // Keep incomplete trailing frame in the buffer.
+      buffer = frames.pop();
 
       for (const frame of frames) {
-        // Each frame may contain multiple lines; find the data: line.
-        for (const line of frame.split('\n')) {
-          const trimmed = line.trim();
-          if (!trimmed.startsWith('data:')) continue;
+        const lines = frame.split('\n');
 
-          const payload = trimmed.slice(5).trim();
+        for (const line of lines) {
+          if (!line.startsWith('data:')) continue;
+
           let obj;
-          try { obj = JSON.parse(payload); } catch { continue; }
+          try {
+            obj = JSON.parse(line.slice(5).trim());
+          } catch {
+            continue;
+          }
 
+          switch (obj.event) {
+            case 'token':
+              if (firstToken) {
+                body.innerHTML = '';
+                firstToken = false;
+              }
+              full += obj.token || '';
+              body.innerHTML = '';
+              body.appendChild(renderMarkdown(full));
+              scrollToBottom();
+              break;
+
+            case 'cancelled':
+              cancelled = true;
+              break;
+
+            case 'error':
+              body.innerHTML = '';
+              body.appendChild(renderMarkdown('⚠️ ' + friendlyError(obj.error)));
+              break;
+          }
+        }
+      }
+    }
+
+    if (!full.trim()) {
+      body.innerHTML = '';
+      body.appendChild(renderMarkdown('⚠️ No response generated'));
+    }
+
+    refreshTitle();
+
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      body.innerHTML = renderMarkdown('⏹️ Stopped');
+    } else {
+      body.innerHTML = renderMarkdown('⚠️ ' + err.message);
+    }
+  } finally {
+    if (state.controller === controller) {
+      state.controller = null;
+      state.streaming = false;
+      setStreamingUI(false);
+    }
+  }
+}
           // Structured event protocol (see backend/routes/chat.py).
           switch (obj.event) {
             case 'provider': {
