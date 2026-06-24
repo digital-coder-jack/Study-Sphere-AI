@@ -347,14 +347,41 @@ async function sendMessage() {
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
-    let buffer = '';
+    buffer += decoder.decode(value, { stream: true });
 
-    while (true) {
+const lines = buffer.split('\n');
+buffer = lines.pop();
+
+for (const line of lines) {
+  const trimmed = line.trim();
+  if (!trimmed.startsWith('data:')) continue;
+
+  const payload = trimmed.slice(5).trim();
+
+  let obj;
+  try {
+    obj = JSON.parse(payload);
+  } catch {
+    continue;
+  }
       const { value, done } = await reader.read();
       if (done) break;
       buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n\n');
-      buffer = lines.pop();
+      const lines = buffer.split('\n');
+buffer = lines.pop();
+
+for (const line of lines) {
+  const trimmed = line.trim();
+  if (!trimmed.startsWith('data:')) continue;
+
+  const payload = trimmed.slice(5).trim();
+
+  let obj;
+  try {
+    obj = JSON.parse(payload);
+  } catch {
+    continue;
+  }
       for (const line of lines) {
         const trimmed = line.trim();
         if (!trimmed.startsWith('data:')) continue;
