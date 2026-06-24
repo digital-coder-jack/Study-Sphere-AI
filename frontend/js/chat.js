@@ -329,100 +329,84 @@ async function sendMessage() {
   let full = '';
   let firstToken = true;
   let cancelled = false;
+
   try {
     const res = await fetch(`/api/chats/${state.currentId}/stream`, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    Authorization: 'Bearer ' + SS.getToken(),
-  },
-  body: JSON.stringify({
-    content: text,
-    model: state.model
-  }),
-  signal: controller.signal,
-  credentials: 'include'
-});
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + SS.getToken(),
+      },
+      body: JSON.stringify({
+        content: text,
+        model: state.model,
+      }),
+      signal: controller.signal,
+      credentials: 'include',
+    });
+
     if (!res.ok || !res.body) throw new Error('Streaming failed.');
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
-    buffer += decoder.decode(value, { stream: true });
+    let buffer = '';
 
-const lines = buffer.split('\n');
-buffer = lines.pop();
-
-for (const line of lines) {
-  const trimmed = line.trim();
-  if (!trimmed.startsWith('data:')) continue;
-
-  const payload = trimmed.slice(5).trim();
-
-  let obj;
-  try {
-    obj = JSON.parse(payload);
-  } catch {
-    continue;
-  }
+    // Single streaming loop — read chunks, split SSE frames, parse JSON.
+    while (true) {
       const { value, done } = await reader.read();
       if (done) break;
+
       buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-buffer = lines.pop();
 
-for (const line of lines) {
-  const trimmed = line.trim();
-  if (!trimmed.startsWith('data:')) continue;
+      // SSE frames are separated by double-newlines.
+      const frames = buffer.split('\n\n');
+      buffer = frames.pop(); // Keep incomplete trailing frame in the buffer.
 
-  const payload = trimmed.slice(5).trim();
+      for (const frame of frames) {
+        // Each frame may contain multiple lines; find the data: line.
+        for (const line of frame.split('\n')) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith('data:')) continue;
 
-  let obj;
-  try {
-    obj = JSON.parse(payload);
-  } catch {
-    continue;
-  }
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed.startsWith('data:')) continue;
-        const payload = trimmed.slice(5).trim();
-        let obj;
-        try { obj = JSON.parse(payload); } catch { continue; }
+          const payload = trimmed.slice(5).trim();
+          let obj;
+          try { obj = JSON.parse(payload); } catch { continue; }
 
-        // Structured event protocol (see backend/routes/chat.py).
-        switch (obj.event) {
-          case 'provider': {
-            const msgEl = body.closest('.msg');
-            const r = msgEl && msgEl.querySelector('.role');
-            if (r && obj.provider && obj.provider !== 'auto' && obj.provider !== 'cache') {
-              r.innerHTML = `Study Sphere AI <span class="model-badge">${escapeHtml(obj.provider)}</span>`;
+          // Structured event protocol (see backend/routes/chat.py).
+          switch (obj.event) {
+            case 'provider': {
+              const msgEl = body.closest('.msg');
+              const r = msgEl && msgEl.querySelector('.role');
+              if (r && obj.provider && obj.provider !== 'auto' && obj.provider !== 'cache') {
+                r.innerHTML = `Study Sphere AI <span class="model-badge">${escapeHtml(obj.provider)}</span>`;
+              }
+              break;
             }
-            break;
+            case 'token': {
+              if (firstToken) { body.innerHTML = ''; firstToken = false; }
+              full += obj.token || '';
+              body.innerHTML = '';
+              body.appendChild(renderMarkdown(full));
+              scrollToBottom();
+              break;
+            }
+            case 'cancelled': {
+              cancelled = true;
+              break;
+            }
+            case 'error': {
+              const e = obj.error || {};
+              const msg = friendlyError(e);
+              full = full || '';
+              body.innerHTML = '';
+              body.appendChild(renderMarkdown((full ? full + '\n\n' : '') + '⚠️ ' + msg));
+              break;
+            }
+            case 'done':
+            case 'start':
+            default:
+              break;
           }
-          case 'token': {
-            if (firstToken) { body.innerHTML = ''; firstToken = false; }
-            full += obj.token || '';
-            body.innerHTML = '';
-            body.appendChild(renderMarkdown(full));
-            scrollToBottom();
-            break;
-          }
-          case 'cancelled': {
-            cancelled = true;
-            break;
-          }
-          case 'error': {
-            const e = obj.error || {};
-            const msg = friendlyError(e);
-            full = full || '';
-            body.innerHTML = '';
-            body.appendChild(renderMarkdown((full ? full + '\n\n' : '') + '⚠️ ' + msg));
-            break;
-          }
-          case 'done':
-          case 'start':
-          default:
-            break;
         }
       }
     }
