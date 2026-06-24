@@ -7,11 +7,10 @@ response caching and unified streaming.
 
 Providers (all free-tier compatible, OpenAI-compatible chat APIs):
   * Kimi    (Moonshot AI)   -> primary       KIMI_API_KEY
-  * Gemini  (Google)        -> secondary     GEMINI_API_KEY
-  * Groq    (Llama / etc.)  -> tertiary       GROQ_API_KEY
+  * Groq    (Llama / etc.)  -> secondary     GROQ_API_KEY
 
 Fallback chain (Auto mode):
-  Kimi -> Gemini -> Groq -> graceful error
+  Kimi -> Groq -> graceful error
 
 If the user pins a specific provider, that provider is tried first and
 the remaining providers are used as fallbacks (unless STRICT_PROVIDER
@@ -40,21 +39,13 @@ logger = logging.getLogger("study-sphere.providers")
 # Provider definitions
 # ---------------------------------------------------------------------------
 # Each provider speaks the OpenAI /chat/completions wire format (Kimi and
-# Groq natively; Gemini via its OpenAI-compatibility endpoint), so a single
-# request/response code path handles all three.
+# Groq natively), so a single request/response code path handles both.
 PROVIDERS: dict[str, dict] = {
     "kimi": {
         "label": "Kimi (Moonshot)",
         "env": "KIMI_API_KEY",
         "url": "https://api.moonshot.ai/v1/chat/completions",
         "default_model": os.environ.get("KIMI_MODEL", "moonshot-v1-8k"),
-    },
-    "gemini": {
-        "label": "Google Gemini",
-        "env": "GEMINI_API_KEY",
-        # Gemini exposes an OpenAI-compatible endpoint:
-        "url": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
-        "default_model": os.environ.get("GEMINI_MODEL", "gemini-2.5-flash"),
     },
     "groq": {
         "label": "Groq",
@@ -65,9 +56,9 @@ PROVIDERS: dict[str, dict] = {
 }
 
 # Canonical fallback order for Auto mode.
-DEFAULT_ORDER = ["kimi", "gemini", "groq"]
+DEFAULT_ORDER = ["kimi", "groq"]
 
-VALID_SELECTIONS = ["auto", "kimi", "gemini", "groq"]
+VALID_SELECTIONS = ["auto", "kimi", "groq"]
 
 
 def provider_key(name: str) -> str:
@@ -172,8 +163,8 @@ def _payload(name: str, messages, temperature, max_tokens, stream=False) -> dict
 
 
 _NOT_CONFIGURED = (
-    "🤖 AI is not configured yet. Set at least one of KIMI_API_KEY, "
-    "GEMINI_API_KEY or GROQ_API_KEY to enable AI features."
+    "🤖 AI is not configured yet. Set at least one of KIMI_API_KEY or "
+    "GROQ_API_KEY to enable AI features."
 )
 _ALL_FAILED = (
     "⚠️ All AI providers are currently unavailable. Please try again in a "
