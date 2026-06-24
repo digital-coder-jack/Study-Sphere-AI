@@ -149,7 +149,18 @@ function appendMessage(role, content) {
   const stream = ensureStream();
   const msg = document.createElement('div');
   msg.className = `msg ${role}`;
-  const avatar = role === 'user' ? userInitial() : '<img src="/assets/logo.png" alt="Study Sphere AI Logo" class="logo-img" />';
+  const avatar = role === 'user' ? function userInitial() {
+  try {
+    const user = (window.SS && typeof SS.getUser === 'function')
+      ? SS.getUser()
+      : JSON.parse(localStorage.getItem('ss_user') || '{}');
+
+    const name = user.name || 'U';
+    return name.trim().charAt(0).toUpperCase();
+  } catch {
+    return 'U';
+  }
+}: '<img src="/assets/logo.png" alt="Study Sphere AI Logo" class="logo-img" />';
   msg.innerHTML = `
     <div class="avatar">${avatar}</div>
     <div class="bubble"><div class="role">${role === 'user' ? 'You' : 'Study Sphere AI'}</div><div class="body"></div></div>`;
@@ -340,55 +351,70 @@ async function sendMessage() {
     if (!res.ok || !res.body) throw new Error('Streaming failed');
 
     const reader = res.body.getReader();
-    const decoder = new TextDecoder();
+const decoder = new TextDecoder();
+let buffer = '';
 
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
+while (true) {
+  const { value, done } = await reader.read();
+  if (done) break;
 
-      buffer += decoder.decode(value, { stream: true });
+  buffer += decoder.decode(value, { stream: true });
 
-      const frames = buffer.split('\n\n');
-      buffer = frames.pop();
+  const frames = buffer.split('\n\n');
+  buffer = frames.pop();
 
-      for (const frame of frames) {
-        const lines = frame.split('\n');
+  for (const frame of frames) {
+    const lines = frame.split('\n');
 
-        for (const line of lines) {
-          if (!line.startsWith('data:')) continue;
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith('data:')) continue;
 
-          let obj;
-          try {
-            obj = JSON.parse(line.slice(5).trim());
-          } catch {
-            continue;
+      const payload = trimmed.slice(5).trim();
+
+      let obj;
+      try {
+        obj = JSON.parse(payload);
+      } catch {
+        continue;
+      }
+
+      switch (obj.event) {
+        case 'provider': {
+          const msgEl = body.closest('.msg');
+          const r = msgEl?.querySelector('.role');
+          if (r && obj.provider && obj.provider !== 'auto' && obj.provider !== 'cache') {
+            r.innerHTML = `Study Sphere AI <span class="model-badge">${escapeHtml(obj.provider)}</span>`;
           }
+          break;
+        }
 
-          switch (obj.event) {
-            case 'token':
-              if (firstToken) {
-                body.innerHTML = '';
-                firstToken = false;
-              }
-              full += obj.token || '';
-              body.innerHTML = '';
-              body.appendChild(renderMarkdown(full));
-              scrollToBottom();
-              break;
-
-            case 'cancelled':
-              cancelled = true;
-              break;
-
-            case 'error':
-              body.innerHTML = '';
-              body.appendChild(renderMarkdown('⚠️ ' + friendlyError(obj.error)));
-              break;
+        case 'token': {
+          if (firstToken) {
+            body.innerHTML = '';
+            firstToken = false;
           }
+          full += obj.token || '';
+          body.innerHTML = '';
+          body.appendChild(renderMarkdown(full));
+          scrollToBottom();
+          break;
+        }
+
+        case 'cancelled':
+          cancelled = true;
+          break;
+
+        case 'error': {
+          const msg = friendlyError(obj.error || {});
+          body.innerHTML = '';
+          body.appendChild(renderMarkdown('⚠️ ' + msg));
+          break;
         }
       }
     }
-
+  }
+}
     if (!full.trim()) {
       body.innerHTML = '';
       body.appendChild(renderMarkdown('⚠️ No response generated'));
@@ -544,6 +570,7 @@ el.input.addEventListener('input', autoGrow);
 el.input.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
+    e.stopPropagation();
     sendMessage();
   }
 });
