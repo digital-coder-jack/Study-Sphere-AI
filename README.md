@@ -102,7 +102,18 @@ cd android
 
 ## CI/CD
 
-GitHub Actions workflows live in `.github/workflows/`:
+> **Note:** The ready-to-use GitHub Actions workflow files are stored in
+> [`docs/ci-workflows/`](docs/ci-workflows/). To activate them, copy them into
+> `.github/workflows/` (this must be done by a user/token with the `workflows`
+> permission — automated App pushes cannot create workflow files directly):
+>
+> ```bash
+> mkdir -p .github/workflows
+> cp docs/ci-workflows/*.yml .github/workflows/
+> git add .github/workflows && git commit -m "Enable CI workflows" && git push
+> ```
+
+GitHub Actions workflows (`docs/ci-workflows/`):
 
 - `backend.yml` — install, lint, test
 - `frontend.yml` — install, lint, build (fails on type errors)
