@@ -99,7 +99,8 @@ data class StreamRequest(
 @Serializable
 data class AiProvider(
     val id: String = "",
-    val name: String = "",
+    @SerialName("label")
+    val name: String = "",          // ← backend sends "label" not "name", this fixes it
     val configured: Boolean = false
 )
 
@@ -107,7 +108,9 @@ data class AiProvider(
 data class ModelsResponse(
     val selected: String = "auto",
     val options: List<String> = listOf("auto"),
-    val providers: List<AiProvider> = emptyList()
+    val providers: List<AiProvider> = emptyList(),
+    @SerialName("display_names")
+    val displayNames: Map<String, String> = emptyMap()  // ← ADD THIS
 )
 
 @Serializable
