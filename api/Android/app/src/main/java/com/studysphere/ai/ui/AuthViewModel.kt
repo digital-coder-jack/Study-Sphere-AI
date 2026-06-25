@@ -68,7 +68,6 @@ class AuthViewModel(private val repo: Repository) : ViewModel() {
     fun guest() = run { repo.guest() }
 
   private fun friendly(e: Exception): String {
-    // Extract the real backend error body first
     if (e is retrofit2.HttpException) {
         val code = e.code()
         val detail = try {
@@ -76,7 +75,7 @@ class AuthViewModel(private val repo: Repository) : ViewModel() {
             if (!body.isNullOrBlank()) {
                 org.json.JSONObject(body).optString("detail", null)
             } else null
-        } catch (_: Exception) { null }
+        } catch (ignored: Exception) { null }
 
         return when (code) {
             400 -> detail ?: "Invalid request. Please check your details."
@@ -88,6 +87,7 @@ class AuthViewModel(private val repo: Repository) : ViewModel() {
             else -> detail ?: "Request failed ($code)."
         }
     }
+    
     return when {
         e.message?.contains("Unable to resolve host", true) == true ||
         e.message?.contains("timeout", true) == true ||
@@ -96,3 +96,4 @@ class AuthViewModel(private val repo: Repository) : ViewModel() {
         else -> e.message ?: "Something went wrong."
     }
 }
+   
