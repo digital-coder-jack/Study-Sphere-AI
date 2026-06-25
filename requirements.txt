@@ -1,5 +1,5 @@
 # =====================================================================
-#  Study Sphere AI  -  Python dependencies (backend API)
+#  AI Notebook  -  Python dependencies (backend API)
 #  Powers BOTH the Telegram bot and the full web application backend.
 # =====================================================================
 

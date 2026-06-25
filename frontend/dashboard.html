@@ -16,11 +16,11 @@
       } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
     })();
   </script>
-  <title>Dashboard · Study Sphere AI</title>
+  <title>Dashboard · AI Notebook</title>
   <meta name="theme-color" content="#4F46E5" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="StudySphere" />
+  <meta name="apple-mobile-web-app-title" content="AI Notebook" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" href="/assets/logo-192.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -71,7 +71,7 @@
           <h3><i class="fas fa-chart-line"></i> Daily activity (last 7 days)</h3>
           <div class="chart-wrap"><canvas id="activityChart"></canvas></div>
         </div>
-        <div class="panel glass">
+        <div class="panel glass" id="history">
           <h3><i class="fas fa-clock-rotate-left"></i> Recent chats</h3>
           <div class="recent-list" id="recentChats">
             <div class="recent-item skeleton" style="height:54px"></div>

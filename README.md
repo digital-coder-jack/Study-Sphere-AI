@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🌌 Study Sphere AI
+# 🌌 AI Notebook
 
 ### ✨ Your Intelligent Learning Companion — now a full Web App + Telegram Bot
 
@@ -14,7 +14,7 @@
 
 ## 📖 Overview
 
-- **Name**: Study Sphere AI
+- **Name**: AI Notebook
 - **Goal**: An AI-powered study assistant that works as a **modern installable web app (PWA)**, the original **Telegram bot**, sharing the **same FastAPI backend and SQLite database**.
 - **AI**: **Multi-provider with automatic fallback** — **Kimi (Moonshot)** → **Google Gemini** → **Groq**. If one provider fails or is unconfigured, the next is tried automatically; if all fail, a graceful error is returned.
 
@@ -135,7 +135,7 @@ JWT auth · password hashing · Pydantic input validation · in-memory **rate li
 ## 📂 Project Structure
 
 ```
-StudySphereAI/  (repo root)
+AINotebook/  (repo root)
 ├── api/
 │   ├── index.py          # Vercel entry → backend.main:app
 │   └── main.py           # Compatibility shim (old webhook path still works)
@@ -206,9 +206,9 @@ uvicorn backend.main:app --reload --port 3000
    - **Build command**: `pip install -r requirements.txt`
    - **Start command**: `gunicorn backend.main:app -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:$PORT --timeout 120`
    - **Health check**: `/api/health`
-2. Copy the backend URL (e.g. `https://study-sphere-ai.onrender.com`).
+2. Copy the backend URL (e.g. `https://ai-notebook.onrender.com`).
 3. **Frontend** → edit `frontend/js/config.js`, set
-   `window.SS_API_BASE = "https://study-sphere-ai.onrender.com";` and redeploy on Vercel.
+   `window.SS_API_BASE = "https://ai-notebook.onrender.com";` and redeploy on Vercel.
 4. On the backend, set `ALLOWED_ORIGINS=https://<your-app>.vercel.app`.
 5. **Telegram bot** (optional): visit `https://<backend-url>/api/set-webhook` once.
 
@@ -235,6 +235,6 @@ uvicorn backend.main:app --reload --port 3000
 
 <div align="center">
 
-### 🌌 Study Sphere AI — Learn • Explore • Grow
+### 🌌 AI Notebook — Learn • Explore • Grow
 
 </div>

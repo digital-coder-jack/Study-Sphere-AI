@@ -1,5 +1,5 @@
 /* =====================================================================
-   Study Sphere AI  -  dashboard.js
+   AI Notebook  -  dashboard.js
    ===================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {

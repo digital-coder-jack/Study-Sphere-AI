@@ -1,6 +1,6 @@
 """
 =====================================================================
- STUDY SPHERE AI  -  backend/database.py
+ AI NOTEBOOK  -  backend/database.py
 =====================================================================
 Shared SQLite data-access layer used by BOTH the Telegram bot and the
 web application. A single database file means the bot and the website
@@ -40,20 +40,20 @@ from datetime import datetime, timezone
 # Resolution order:
 #   1. DB_PATH env var  -> use it verbatim (set this to a MOUNTED DISK path in
 #                          production so data survives restarts/redeploys, e.g.
-#                          Render disk mounted at /data -> DB_PATH=/data/study_sphere.db
-#                          Railway volume mounted at /data -> DB_PATH=/data/study_sphere.db).
+#                          Render disk mounted at /data -> DB_PATH=/data/ai_notebook.db
+#                          Railway volume mounted at /data -> DB_PATH=/data/ai_notebook.db).
 #   2. Vercel           -> /tmp (only writable location; note: EPHEMERAL).
-#   3. Local/dev        -> study_sphere.db beside the project.
+#   3. Local/dev        -> ai_notebook.db beside the project.
 #
 # The parent directory is created automatically if it does not exist.
 IS_VERCEL = os.environ.get("VERCEL") == "1"
 _DEFAULT_LOCAL = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "study_sphere.db",
+    "ai_notebook.db",
 )
 DB_PATH = os.environ.get(
     "DB_PATH",
-    "/tmp/study_sphere.db" if IS_VERCEL else _DEFAULT_LOCAL,
+    "/tmp/ai_notebook.db" if IS_VERCEL else _DEFAULT_LOCAL,
 )
 
 # Ensure the directory holding the DB file exists (e.g. a mounted /data disk).
@@ -63,7 +63,7 @@ try:
 except OSError:
     # If we cannot create it (read-only FS), fall back to /tmp so the app
     # still boots rather than crash-looping.
-    DB_PATH = "/tmp/study_sphere.db"
+    DB_PATH = "/tmp/ai_notebook.db"
     try:
         os.makedirs("/tmp", exist_ok=True)
     except OSError:

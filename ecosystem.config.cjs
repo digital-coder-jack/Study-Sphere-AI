@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'study-sphere',
+      name: 'ai-notebook',
       script: 'uvicorn',
       args: 'backend.main:app --host 0.0.0.0 --port 3000',
       cwd: '/home/user/webapp',

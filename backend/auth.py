@@ -1,6 +1,6 @@
 """
 =====================================================================
- STUDY SPHERE AI  -  backend/auth.py
+ AI NOTEBOOK  -  backend/auth.py
 =====================================================================
 Security utilities for the web application:
 
@@ -177,14 +177,14 @@ async def current_user(
 def _create_guest_user():
     """Create a disposable guest account and return the user dict."""
     suffix = secrets.token_hex(5)
-    email = f"guest_{suffix}@guest.studysphere"
+    email = f"guest_{suffix}@guest.ainotebook"
     password = secrets.token_urlsafe(24)
     pw_hash = hash_password(password)
     
     user_id = db.create_user(f"Guest {suffix[:4].upper()}", email, pw_hash)
     if user_id is None:
         suffix = secrets.token_hex(6)
-        email = f"guest_{suffix}@guest.studysphere"
+        email = f"guest_{suffix}@guest.ainotebook"
         user_id = db.create_user(f"Guest {suffix[:4].upper()}", email, pw_hash)
         if user_id is None:
             raise HTTPException(status_code=500, detail="Could not start a guest session.")

@@ -1,5 +1,5 @@
 /* =====================================================================
-   Study Sphere AI  -  main.js  (landing page only)
+   AI Notebook  -  main.js  (landing page only)
    Loads app.js first via a dynamic injection so SS is available.
    ===================================================================== */
 

@@ -1,5 +1,5 @@
 /* =====================================================================
-   Study Sphere AI  -  sidebar-mobile.css   (SINGLE SOURCE OF TRUTH)
+   AI Notebook  -  sidebar-mobile.css   (SINGLE SOURCE OF TRUTH)
    Premium mobile-first sidebar with correct desktop layout.
 
    ROOT-CAUSE FIX (2026-06-21):
@@ -273,6 +273,22 @@
 
 .side-nav a span { transition: opacity 0.2s; overflow: hidden; text-overflow: ellipsis; }
 
+/* Primary "New Chat" call-to-action — solid gradient pill at the top */
+.side-nav a.nav-primary {
+  background: var(--grad);
+  color: #fff;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  box-shadow: 0 8px 22px rgba(109, 123, 255, 0.35);
+}
+.side-nav a.nav-primary::before { display: none; }
+.side-nav a.nav-primary:hover {
+  transform: translateX(0) translateY(-2px);
+  filter: brightness(1.07);
+  color: #fff;
+}
+.side-nav a.nav-primary.active { box-shadow: 0 10px 26px rgba(109, 123, 255, 0.5); }
+
 /* Collapsed (desktop) */
 .sidebar.collapsed .side-nav a { padding: 0.85rem; justify-content: center; }
 .sidebar.collapsed .side-nav a span { display: none; }
@@ -324,6 +340,37 @@
   gap: 0.6rem;
   flex-shrink: 0;
 }
+
+/* Dark / light mode toggle inside the footer */
+.side-theme {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border-radius: 14px;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.22s ease;
+}
+.side-theme i {
+  width: 22px;
+  display: grid;
+  place-items: center;
+  font-size: 1.05rem;
+}
+.side-theme:hover {
+  background: var(--glass-strong);
+  color: var(--text);
+  border-color: rgba(109, 123, 255, 0.45);
+}
+.side-theme span { transition: opacity 0.2s; white-space: nowrap; overflow: hidden; }
+.sidebar.collapsed .side-theme { justify-content: center; padding: 0.7rem; }
+.sidebar.collapsed .side-theme span { display: none; }
 
 .side-user-wrap {
   display: flex;
@@ -484,6 +531,8 @@
   .sidebar.collapsed .side-nav a span { display: inline; }
   .sidebar.collapsed .nav-section { opacity: 1; height: auto; padding: 1.2rem 1rem 0.5rem; }
   .sidebar.collapsed .side-user .meta { display: block; }
+  .sidebar.collapsed .side-theme { justify-content: flex-start; padding: 0.7rem 0.9rem; }
+  .sidebar.collapsed .side-theme span { display: inline; }
 
   /* Stagger animation for nav items when drawer opens */
   .sidebar .side-nav a,

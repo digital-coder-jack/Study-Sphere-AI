@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#4F46E5" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="StudySphere" />
+  <meta name="apple-mobile-web-app-title" content="AI Notebook" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" href="/assets/logo-192.png" />
   <link rel="icon" type="image/svg+xml" href="/assets/logo.png" />
@@ -18,7 +18,7 @@
       } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
     })();
   </script>
-  <title>AI Chat · Study Sphere AI</title>
+  <title>AI Chat · AI Notebook</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css" />
@@ -41,7 +41,7 @@
     <!-- Conversation sidebar -->
     <aside class="chat-side" id="chatSide">
       <div class="chat-side-head">
-        <a class="brand" href="/dashboard"><span class="logo"><img src="/assets/logo.png" alt="Logo" /></span><span>Study<span class="grad-text">Sphere</span></span></a>
+        <a class="brand" href="/dashboard"><span class="logo"><img src="/assets/logo.png" alt="Logo" /></span><span>AI <span class="grad-text">Notebook</span></span></a>
         <button class="btn block" id="newChatBtn"><i class="fas fa-plus"></i> New chat</button>
       </div>
       <div class="chat-list" id="chatList"></div>
@@ -57,7 +57,7 @@
         <div class="title">
           <button class="icon-btn chat-burger" id="chatBurger"><i class="fas fa-bars"></i></button>
           <i class="fas fa-robot" style="color:var(--accent)"></i>
-          <b id="chatTitle">Study Sphere AI</b>
+          <b id="chatTitle">AI Notebook</b>
         </div>
         <div class="actions">
           <div class="model-selector" id="modelSelector" title="Choose AI model">
@@ -82,7 +82,7 @@
           <textarea id="input" rows="1" placeholder="Ask anything… (Shift+Enter for a new line)"></textarea>
           <button class="send-btn" id="sendBtn" title="Send"><i class="fas fa-paper-plane"></i></button>
         </div>
-        <p class="hint">Study Sphere AI can make mistakes. Verify important information.</p>
+        <p class="hint">AI Notebook can make mistakes. Verify important information.</p>
       </div>
     </section>
   </div>

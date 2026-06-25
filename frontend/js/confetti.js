@@ -1,5 +1,5 @@
 /* =====================================================================
-   Study Sphere AI  -  confetti.js
+   AI Notebook  -  confetti.js
    Premium welcome celebration with confetti and modal
    ===================================================================== */
 
@@ -20,7 +20,7 @@
     modal.innerHTML = `
       <div class="welcome-modal glass">
         <div class="welcome-icon">🎉</div>
-        <h2>Welcome to Study Sphere AI, ${name}!</h2>
+        <h2>Welcome to AI Notebook, ${name}!</h2>
         <p>Your intelligent learning companion is ready. Let's start your journey to success!</p>
         <button class="btn" id="closeWelcome">Let's Go <i class="fas fa-rocket"></i></button>
       </div>

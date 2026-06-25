@@ -1,6 +1,6 @@
 """
 =====================================================================
- STUDY SPHERE AI  -  backend/groq_client.py  (compatibility shim)
+ AI NOTEBOOK  -  backend/groq_client.py  (compatibility shim)
 =====================================================================
 This module used to call Groq directly. AI calls are now routed through
 the multi-provider layer in `backend.providers` (Kimi -> Gemini -> Groq

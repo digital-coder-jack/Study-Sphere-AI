@@ -1,6 +1,6 @@
 """
 =====================================================================
- STUDY SPHERE AI  -  backend/main.py
+ AI NOTEBOOK  -  backend/main.py
 =====================================================================
 The single FastAPI application that powers BOTH:
 
@@ -44,7 +44,7 @@ logging.basicConfig(
     level=logging.INFO,
 )
 logging.getLogger("httpx").setLevel(logging.WARNING)
-logger = logging.getLogger("study-sphere")
+logger = logging.getLogger("ai-notebook")
 
 # Resolve the frontend directory (works locally and on Vercel).
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -85,7 +85,7 @@ def _validate_environment() -> None:
     missing_recommended = [k for k in recommended if not os.environ.get(k)]
 
     logger.info("=" * 60)
-    logger.info("Study Sphere AI — environment check")
+    logger.info("AI Notebook — environment check")
     for key, why in ai_providers.items():
         status = "OK" if os.environ.get(key) else "not set"
         logger.info("  [%s] %-18s — %s", status, key, why)
@@ -118,7 +118,7 @@ def _validate_environment() -> None:
 
 _validate_environment()
 
-app = FastAPI(title="Study Sphere AI", docs_url=None, redoc_url=None)
+app = FastAPI(title="AI Notebook", docs_url=None, redoc_url=None)
 
 # ---------------------------------------------------------------------------
 # CORS — the frontend now lives on a DIFFERENT origin (Vercel) than this API
@@ -270,7 +270,7 @@ async def health() -> dict:
     snapshot = providers.status_snapshot()
     return {
         "status": "ok",
-        "app": "Study Sphere AI",
+        "app": "AI Notebook",
         "storage": "sqlite",
         "db_path": db.DB_PATH,
         "ai_configured": snapshot["any_configured"],
@@ -287,7 +287,7 @@ async def api_root_status() -> dict:
     """Friendly JSON status at the API base."""
     return {
         "status": "ok",
-        "service": "Study Sphere AI — backend API",
+        "service": "AI Notebook — backend API",
         "health": "/api/health",
     }
 
@@ -404,7 +404,7 @@ async def index():
     return JSONResponse(
         {
             "status": "ok",
-            "service": "Study Sphere AI — backend API",
+            "service": "AI Notebook — backend API",
             "health": "/api/health",
             "note": "Frontend is hosted separately (e.g. Vercel).",
         }
@@ -436,6 +436,13 @@ PAGE_ALIASES = {
     "profile": "profile",
     "analytics": "analytics",
     "telegram": "telegram",  # Telegram bot info / integration page
+    # Modern AI-workspace sidebar destinations. These map onto the existing
+    # pages so every nav item resolves instead of 404-ing.
+    "history": "dashboard",  # recent chat history lives on the dashboard
+    "models": "chat",        # model picker lives in the chat composer
+    "projects": "tools",     # planner/projects workspace
+    "prompts": "tools",      # saved prompts (flashcards workspace)
+    "files": "tools",        # file uploads / summarizer workspace
 }
 
 

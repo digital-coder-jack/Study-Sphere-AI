@@ -1,0 +1,134 @@
+package com.ainotebook.app.data
+
+import kotlinx.coroutines.flow.Flow
+
+/**
+ * Thin repository wrapping [ApiClient] + [SessionStore]. Holds the session
+ * lifecycle so view models stay free of networking details.
+ *
+ * All network calls are suspend (main-safe via ApiClient's dispatcher);
+ * [streamMessage] intentionally returns a cold [Flow] and is NOT suspend.
+ */
+class Repository(private val session: SessionStore) {
+
+    val tokenFlow get() = session.tokenFlow
+    val userFlow get() = session.userFlow
+
+    suspend fun currentToken(): String? = session.token()
+
+    /* ---------- Auth ---------- */
+    suspend fun login(identifier: String, password: String): User {
+        val res = ApiClient.api.login(LoginRequest(identifier, password))
+        session.save(res.token, res.user)
+        return res.user
+    }
+
+    suspend fun signup(
+        name: String, username: String, email: String,
+        password: String, confirm: String
+    ): User {
+        val res = ApiClient.api.signup(
+            SignupRequest(name, username, email, password, confirm)
+        )
+        session.save(res.token, res.user)
+        return res.user
+    }
+
+    suspend fun guest(): User {
+        val res = ApiClient.api.guest()
+        // Persist the guest flag locally in case the backend omits it,
+        // but keep every other field exactly as the server returned it.
+        val guestUser = res.user.copy(is_guest = true)
+        session.save(res.token, guestUser)
+        return guestUser
+    }
+
+    suspend fun me(): User {
+        val res = ApiClient.api.me()
+        session.saveUser(res.user)
+        return res.user
+    }
+
+    suspend fun updateProfile(name: String): User {
+        val res = ApiClient.api.updateProfile(ProfileRequest(name))
+        session.saveUser(res.user)
+        return res.user
+    }
+
+    suspend fun changePassword(current: String, new: String): String =
+        ApiClient.api.changePassword(ChangePasswordRequest(current, new)).message
+
+    /**
+     * Deletes the account server-side, then ALWAYS clears the local session.
+     * The session is cleared in a `finally` block so a failed/partial network
+     * call can never leave a stale token or user behind.
+     */
+    suspend fun deleteAccount(): String {
+        return try {
+            ApiClient.api.deleteAccount().message
+        } finally {
+            session.clear()
+        }
+    }
+
+    /** Clears the local session. Resilient: never propagates a clear failure. */
+    suspend fun logout() {
+        session.clear()
+    }
+
+    /* ---------- Chats ---------- */
+    suspend fun listChats() = ApiClient.api.listChats().chats
+
+    suspend fun newChat(title: String? = null) =
+        ApiClient.api.newChat(NewChatRequest(title)).chat
+
+    suspend fun getChat(id: Int) = ApiClient.api.getChat(id)
+
+    suspend fun renameChat(id: Int, title: String) =
+        ApiClient.api.renameChat(id, RenameChatRequest(title)).chat
+
+    suspend fun deleteChat(id: Int) = ApiClient.api.deleteChat(id)
+
+    /**
+     * Streams an assistant reply for [chatId]. Returns a cold [Flow] so the
+     * caller controls collection/cancellation. If [token] is null, the stored
+     * session token is used to keep streaming consistent with REST calls.
+     */
+    suspend fun streamMessage(
+        chatId: Int,
+        content: String,
+        token: String? = null,
+        model: String? = null
+    ): Flow<StreamEvent> {
+        val authToken = token ?: session.token()
+        return StreamClient.streamMessage(chatId, content, authToken, model)
+    }
+
+    /* ---------- AI model selection ---------- */
+    suspend fun aiModels() = ApiClient.api.aiModels()
+
+    suspend fun setAiModel(model: String) =
+        ApiClient.api.setAiModel(SetModelRequest(model)).selected
+
+    /* ---------- Dashboard ---------- */
+    suspend fun stats() = ApiClient.api.stats()
+
+    /* ---------- Study tools ---------- */
+    suspend fun generateNotes(topic: String) =
+        ApiClient.api.generateNotes(TopicRequest(topic))
+
+    suspend fun generateQuiz(topic: String, n: Int) =
+        ApiClient.api.generateQuiz(QuizRequest(topic, n))
+
+    suspend fun generateFlashcards(topic: String, n: Int) =
+        ApiClient.api.generateFlashcards(FlashRequest(topic, n))
+
+    suspend fun generatePlan(goal: String, days: Int) =
+        ApiClient.api.generatePlan(PlanRequest(goal, days))
+
+    suspend fun summarize(text: String) =
+        ApiClient.api.summarize(TextRequest(text))
+
+    suspend fun homework(question: String) =
+        ApiClient.api.homework(QuestionRequest(question))
+}

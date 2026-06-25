@@ -217,10 +217,10 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# --- Study Sphere AI runtime files ---
-study_sphere.db
-study_sphere.db-shm
-study_sphere.db-wal
+# --- AI Notebook runtime files ---
+ai_notebook.db
+ai_notebook.db-shm
+ai_notebook.db-wal
 *.db
 *.db-shm
 *.db-wal

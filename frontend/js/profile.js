@@ -1,5 +1,5 @@
 /* =====================================================================
-   Study Sphere AI  -  profile.js  (settings & account management)
+   AI Notebook  -  profile.js  (settings & account management)
    ===================================================================== */
 
 let currentSettings = {};

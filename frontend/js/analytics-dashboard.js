@@ -1,5 +1,5 @@
 /* =====================================================================
-   Study Sphere AI  -  analytics-dashboard.js
+   AI Notebook  -  analytics-dashboard.js
    Admin Analytics Dashboard Logic
    ===================================================================== */
 

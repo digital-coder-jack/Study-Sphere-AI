@@ -1,6 +1,6 @@
 """
 =====================================================================
- STUDY SPHERE AI  -  api/main.py  (compatibility shim)
+ AI NOTEBOOK  -  api/main.py  (compatibility shim)
 =====================================================================
 The original project shipped the entire Telegram bot inside this single
 file. The bot has now been refactored into reusable modules under

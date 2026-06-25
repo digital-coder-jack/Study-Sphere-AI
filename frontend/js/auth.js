@@ -1,5 +1,5 @@
 /* =====================================================================
-   Study Sphere AI  -  auth.js  (login / signup / forgot)
+   AI Notebook  -  auth.js  (login / signup / forgot)
    ===================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {

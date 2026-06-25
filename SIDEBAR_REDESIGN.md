@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the comprehensive redesign of the Study Sphere AI mobile dashboard sidebar to meet modern SaaS standards (Notion, Linear, Vercel, ChatGPT, GitHub). The refactor addresses all critical UX issues and implements premium mobile-first interactions.
+This document describes the comprehensive redesign of the AI Notebook mobile dashboard sidebar to meet modern SaaS standards (Notion, Linear, Vercel, ChatGPT, GitHub). The refactor addresses all critical UX issues and implements premium mobile-first interactions.
 
 ## Problems Fixed
 

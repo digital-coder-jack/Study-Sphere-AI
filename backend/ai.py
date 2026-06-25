@@ -1,6 +1,6 @@
 """
 =====================================================================
- STUDY SPHERE AI  -  backend/ai.py
+ AI NOTEBOOK  -  backend/ai.py
 =====================================================================
 High-level AI study features built on top of groq_client.
 
@@ -30,7 +30,7 @@ from backend import providers
 from backend.groq_client import groq_chat, groq_chat_stream
 
 SYSTEM_BASE = (
-    "You are Study Sphere AI, a friendly and knowledgeable study assistant for "
+    "You are AI Notebook, a friendly and knowledgeable study assistant for "
     "students. Explain clearly, use simple language, and format answers in clean "
     "Markdown with headings, bullet points and code blocks where helpful."
 )
@@ -50,7 +50,7 @@ async def answer_question(user_id: int, question: str) -> tuple[str, str]:
     answer = await groq_chat(
         [
             {"role": "system", "content":
-                "You are Study Sphere, a friendly study assistant. Answer clearly "
+                "You are AI Notebook, a friendly study assistant. Answer clearly "
                 "and concisely for students. Keep answers under 300 words."},
             {"role": "user", "content": question},
         ],

@@ -1,6 +1,6 @@
 workflows:
   android-apk:
-    name: Study Sphere APK Build
+    name: AI Notebook APK Build
 
     environment:
       java: 17

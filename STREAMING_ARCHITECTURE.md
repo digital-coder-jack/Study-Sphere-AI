@@ -1,6 +1,6 @@
 # Reliable Chat Streaming Architecture (ChatGPT/Gemini-style)
 
-This document describes the streaming chat subsystem of **Study Sphere AI** and
+This document describes the streaming chat subsystem of **AI Notebook** and
 the guarantees it provides. It maps each requirement to concrete code.
 
 | File | Role |

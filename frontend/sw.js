@@ -1,5 +1,5 @@
 /* =====================================================================
-   Study Sphere AI  -  sw.js  (Progressive Web App service worker)
+   AI Notebook  -  sw.js  (Progressive Web App service worker)
    ---------------------------------------------------------------------
    Strategy:
      * App shell (HTML/CSS/JS/icons) -> stale-while-revalidate cache.

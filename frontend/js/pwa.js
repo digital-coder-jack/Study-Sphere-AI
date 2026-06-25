@@ -1,5 +1,5 @@
 /* =====================================================================
-   Study Sphere AI  -  pwa.js
+   AI Notebook  -  pwa.js
    ---------------------------------------------------------------------
    - Registers the service worker.
    - Captures the `beforeinstallprompt` event and shows a custom
@@ -83,7 +83,7 @@
       if (!deferredPrompt) return;
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') notify('Installing Study Sphere AI…');
+      if (outcome === 'accepted') notify('Installing AI Notebook…');
       deferredPrompt = null;
       btn.remove();
     });
@@ -92,7 +92,7 @@
   }
 
   window.addEventListener('appinstalled', () => {
-    notify('Study Sphere AI installed! 🎉');
+    notify('AI Notebook installed! 🎉');
     const btn = document.getElementById('pwaInstallBtn');
     if (btn) btn.remove();
   });

@@ -1,6 +1,6 @@
 """
 =====================================================================
- STUDY SPHERE AI  -  backend/routes/users.py
+ AI NOTEBOOK  -  backend/routes/users.py
 =====================================================================
 Authentication & user-profile API.
 
@@ -144,7 +144,7 @@ async def guest():
     random email/password the guest never needs to know.
     """
     suffix = secrets.token_hex(5)
-    email = f"guest_{suffix}@guest.studysphere"
+    email = f"guest_{suffix}@guest.ainotebook"
     # A long random password the guest never needs to know.
     password = secrets.token_urlsafe(24)
     pw_hash = auth.hash_password(password)
@@ -153,7 +153,7 @@ async def guest():
     # Extremely unlikely collision; retry once with a fresh suffix.
     if user_id is None:
         suffix = secrets.token_hex(6)
-        email = f"guest_{suffix}@guest.studysphere"
+        email = f"guest_{suffix}@guest.ainotebook"
         user_id = db.create_user(f"Guest {suffix[:4].upper()}", email, pw_hash)
         if user_id is None:
             raise HTTPException(status_code=500, detail="Could not start a guest session. Please try again.")

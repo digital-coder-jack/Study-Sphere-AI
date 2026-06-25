@@ -1,6 +1,6 @@
 """
 =====================================================================
- STUDY SPHERE AI  -  backend/providers.py
+ AI NOTEBOOK  -  backend/providers.py
 =====================================================================
 Multi-provider AI layer with automatic fallback, load balancing,
 response caching and unified streaming.
@@ -33,7 +33,7 @@ from typing import AsyncGenerator
 
 import httpx
 
-logger = logging.getLogger("study-sphere.providers")
+logger = logging.getLogger("ai-notebook.providers")
 
 # ---------------------------------------------------------------------------
 # Provider definitions
@@ -42,13 +42,13 @@ logger = logging.getLogger("study-sphere.providers")
 # Groq natively), so a single request/response code path handles both.
 PROVIDERS: dict[str, dict] = {
     "kimi": {
-        "label": "Study Sphere Pro",
+        "label": "AI Notebook Pro",
         "env": "KIMI_API_KEY",
         "url": "https://api.moonshot.ai/v1/chat/completions",
         "default_model": os.environ.get("KIMI_MODEL", "moonshot-v1-8k"),
     },
     "groq": {
-        "label": "Study Sphere Lite",
+        "label": "AI Notebook Lite",
         "env": "GROQ_API_KEY",
         "url": "https://api.groq.com/openai/v1/chat/completions",
         "default_model": os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile"),

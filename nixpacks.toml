@@ -1,5 +1,5 @@
 # =====================================================================
-#  Study Sphere AI  -  Nixpacks build config (Railway / Nixpacks)
+#  AI Notebook  -  Nixpacks build config (Railway / Nixpacks)
 # =====================================================================
 [phases.setup]
 nixPkgs = ["python312", "gcc"]

@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.studysphere.ai"
+    namespace = "com.ainotebook.app"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.studysphere.ai"
+        applicationId = "com.ainotebook.app"
         minSdk = 24
         targetSdk = 34
         versionCode = 2
@@ -19,22 +19,21 @@ android {
             useSupportLibrary = true
         }
 
-        // Default backend URL. Override per build type below.
-       buildConfigField(
-    "String",
-    "API_BASE_URL",
-    "\"https://study-sphere-ai-mwlq.vercel.app\""
-)
+        // Default backend URL. Override with the `apiBaseUrl` Gradle property
+        // (e.g. -PapiBaseUrl=https://your-backend.example.com) or per build
+        // type below. Falls back to the current production deployment.
+        val apiBaseUrl = (project.findProperty("apiBaseUrl") as String?)
+            ?: "https://study-sphere-ai-mwlq.vercel.app"
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
     }
 
     buildTypes {
         debug {
             // Point debug builds at your local/dev backend if you like.
-            buildConfigField(
-                "String",
-                "API_BASE_URL",
-                "\"https://study-sphere-ai-mwlq.vercel.app\""
-            )
+            val debugApiBaseUrl = (project.findProperty("apiBaseUrlDebug") as String?)
+                ?: (project.findProperty("apiBaseUrl") as String?)
+                ?: "https://study-sphere-ai-mwlq.vercel.app"
+            buildConfigField("String", "API_BASE_URL", "\"$debugApiBaseUrl\"")
         }
         release {
             isMinifyEnabled = false

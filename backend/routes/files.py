@@ -1,6 +1,6 @@
 """
 =====================================================================
- STUDY SPHERE AI  -  backend/routes/files.py
+ AI NOTEBOOK  -  backend/routes/files.py
 =====================================================================
 File upload + text extraction + AI summarisation.
 

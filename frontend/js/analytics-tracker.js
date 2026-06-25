@@ -1,5 +1,5 @@
 /* =====================================================================
-   Study Sphere AI  -  analytics-tracker.js
+   AI Notebook  -  analytics-tracker.js
    Client-side analytics tracking with guest ID management
    ===================================================================== */
 

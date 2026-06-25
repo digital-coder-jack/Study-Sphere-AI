@@ -1,5 +1,5 @@
 """
-Vercel serverless entry point for Study Sphere AI.
+Vercel serverless entry point for AI Notebook.
 
 Vercel's @vercel/python runtime imports the `app` object from this file.
 All real logic lives in backend.main; this file only wires it up and makes

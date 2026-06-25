@@ -1,5 +1,5 @@
 /* =====================================================================
-   Study Sphere AI  -  tools.js  (notes, quiz, flashcards, planner,
+   AI Notebook  -  tools.js  (notes, quiz, flashcards, planner,
    summarizer, homework helper)
    ===================================================================== */
 

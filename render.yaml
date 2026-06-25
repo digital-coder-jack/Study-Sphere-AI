@@ -1,5 +1,5 @@
 # =====================================================================
-#  Study Sphere AI  -  Render deployment blueprint
+#  AI Notebook  -  Render deployment blueprint
 #  Docs: https://render.com/docs/blueprint-spec
 #
 #  Deploy: push this repo to GitHub, then in Render:
@@ -8,7 +8,7 @@
 # =====================================================================
 services:
   - type: web
-    name: study-sphere-ai
+    name: ai-notebook
     runtime: python
     plan: starter            # "free" works too, but free has no persistent disk
     region: oregon           # change if you prefer another region
@@ -22,13 +22,13 @@ services:
     # (Free plan does NOT support disks — remove this block on the free plan;
     #  data will then be ephemeral and reset on each deploy.)
     disk:
-      name: study-sphere-data
+      name: ai-notebook-data
       mountPath: /data
       sizeGB: 1
 
     envVars:
       - key: DB_PATH
-        value: /data/study_sphere.db          # lives on the persistent disk
+        value: /data/ai_notebook.db          # lives on the persistent disk
       - key: PYTHON_VERSION
         value: 3.12.7
       - key: WEB_CONCURRENCY

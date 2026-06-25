@@ -1,4 +1,4 @@
-# 🚀 Study Sphere AI — Backend Deployment & Recovery Guide
+# 🚀 AI Notebook — Backend Deployment & Recovery Guide
 
 This guide fixes the **`404 Not Found /api/...`** errors that appeared after the
 Railway backend was deleted, and brings the backend back online as a
@@ -31,7 +31,7 @@ Nothing in the frontend logic or the database structure was rewritten.
 | `GROQ_API_KEY` | **Yes (for AI)** | Groq API key — powers chat, notes, quiz, flashcards, plans, summaries. Without it, AI endpoints return a "not configured" message. |
 | `ALLOWED_ORIGINS` | **Yes (prod)** | Comma-separated frontend origins allowed by CORS, e.g. `https://your-app.vercel.app`. `*.vercel.app` preview URLs and `localhost` are always allowed automatically. |
 | `JWT_SECRET` | **Strongly recommended** | Stable secret for signing login tokens. Without it, logins break across restarts/instances. (Render `render.yaml` auto-generates one.) |
-| `DB_PATH` | Recommended (prod) | Absolute path to the SQLite file on a **persistent disk** (e.g. `/data/study_sphere.db`). Without a persistent disk, data resets on each redeploy. |
+| `DB_PATH` | Recommended (prod) | Absolute path to the SQLite file on a **persistent disk** (e.g. `/data/ai_notebook.db`). Without a persistent disk, data resets on each redeploy. |
 | `MONGODB_URI_WEB` | Optional | MongoDB Atlas connection string for the **web-analytics dashboard**. Analytics is disabled gracefully if unset. |
 | `GROQ_MODEL` | Optional | Override the default model `llama-3.3-70b-versatile`. |
 | `JWT_TTL_SECONDS` | Optional | Token lifetime (default `604800` = 7 days). |
@@ -70,7 +70,7 @@ Nothing in the frontend logic or the database structure was rewritten.
 1. Push this repo to GitHub.
 2. Render → **New + → Blueprint** → select the repo → **Apply**.
 3. Render reads `render.yaml`: it creates the web service, a 1 GB disk mounted
-   at `/data`, sets `DB_PATH=/data/study_sphere.db`, and auto-generates `JWT_SECRET`.
+   at `/data`, sets `DB_PATH=/data/ai_notebook.db`, and auto-generates `JWT_SECRET`.
 4. In the dashboard, fill the secret vars marked *sync:false*:
    `GROQ_API_KEY`, `ALLOWED_ORIGINS`, and (optional) `MONGODB_URI_WEB`,
    `TELEGRAM_BOT_TOKEN`, etc.
@@ -81,14 +81,14 @@ Nothing in the frontend logic or the database structure was rewritten.
 3. **Start:** the gunicorn command above.
 4. **Health check path:** `/api/health`.
 5. Add a **Disk** (Settings → Disks): mount path `/data`, size 1 GB, then set
-   `DB_PATH=/data/study_sphere.db`.
+   `DB_PATH=/data/ai_notebook.db`.
 6. Add the environment variables from section 1.
 
 > **Free plan note:** Render's free tier has **no persistent disk**, so omit the
 > disk and leave `DB_PATH` unset (SQLite will live in ephemeral storage and reset
 > on redeploy). Use a paid plan or migrate to a hosted DB for durable data.
 
-Your backend URL will look like `https://study-sphere-ai.onrender.com`.
+Your backend URL will look like `https://ai-notebook.onrender.com`.
 
 ---
 
@@ -102,11 +102,11 @@ Your backend URL will look like `https://study-sphere-ai.onrender.com`.
 3. **Variables** tab → add the env vars from section 1
    (`GROQ_API_KEY`, `ALLOWED_ORIGINS`, `JWT_SECRET`, …).
 4. For persistent data: add a **Volume**, mount it at `/data`, and set
-   `DB_PATH=/data/study_sphere.db`.
+   `DB_PATH=/data/ai_notebook.db`.
 5. Railway sets `$PORT` automatically; the start command already uses it.
 
 Your backend URL will look like
-`https://study-sphere-ai-production.up.railway.app`.
+`https://ai-notebook-production.up.railway.app`.
 
 ---
 
@@ -115,7 +115,7 @@ Your backend URL will look like
 Edit **one file** — `frontend/js/config.js`:
 
 ```js
-window.SS_API_BASE = "https://study-sphere-ai.onrender.com"; // NO trailing slash
+window.SS_API_BASE = "https://ai-notebook.onrender.com"; // NO trailing slash
 ```
 
 Commit & redeploy the frontend on Vercel. That's it — every API call

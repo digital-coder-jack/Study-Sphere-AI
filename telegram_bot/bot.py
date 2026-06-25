@@ -1,6 +1,6 @@
 """
 =====================================================================
- STUDY SPHERE AI  -  telegram_bot/bot.py
+ AI NOTEBOOK  -  telegram_bot/bot.py
 =====================================================================
 The Telegram bot, refactored to import the SHARED backend.database and
 backend.ai modules. Its behaviour is IDENTICAL to the original bot:
@@ -42,19 +42,25 @@ logging.basicConfig(
     level=logging.INFO,
 )
 logging.getLogger("httpx").setLevel(logging.WARNING)
-logger = logging.getLogger("study-sphere-bot")
+logger = logging.getLogger("ai-notebook-bot")
 
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 
 if not TELEGRAM_BOT_TOKEN:
     logger.warning("TELEGRAM_BOT_TOKEN is not set! The bot cannot start without it.")
 
+# Public web app URL. Configurable via env var so the bot can be pointed at
+# any deployment without code changes.
+WEB_APP_URL = os.environ.get(
+    "WEB_APP_URL", "https://study-sphere-ai-fc1f.vercel.app/"
+)
+
 
 # ---------------------------------------------------------------------------
 # Command text
 # ---------------------------------------------------------------------------
-WELCOME_TEXT = """\
-👋 <b>Welcome to Study Sphere Bot!</b>
+WELCOME_TEXT = f"""\
+👋 <b>Welcome to AI Notebook Bot!</b>
 
 I help you build your own study Q&amp;A library and answer
 anything else with AI. 📚🤖
@@ -72,13 +78,13 @@ anything else with AI. 📚🤖
 I'll check your saved answers first, and if I don't find one,
 I'll ask the AI for you!
 
-🌐 <b>New:</b> Study Sphere now has a full web app too — notes,
+🌐 <b>New:</b> AI Notebook now has a full web app too — notes,
 quizzes, flashcards, a ChatGPT-style assistant and more.
-https://study-sphere-ai-fc1f.vercel.app/
+{WEB_APP_URL}
 """
 
 HELP_TEXT = """\
-📖 <b>How Study Sphere Bot works</b>
+📖 <b>How AI Notebook Bot works</b>
 
 <b>1️⃣ Save your own answers</b>
 <code>/add What is photosynthesis? | The process plants use to convert light into energy.</code>

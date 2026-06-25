@@ -1,5 +1,5 @@
 /* =====================================================================
-   Study Sphere AI  -  app.js  (shared helpers, loaded on every page)
+   AI Notebook  -  app.js  (shared helpers, loaded on every page)
    - API client with JWT
    - auth/session helpers
    - toasts, ripple effects, particles config, mobile nav

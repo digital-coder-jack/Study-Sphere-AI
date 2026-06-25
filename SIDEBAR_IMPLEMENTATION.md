@@ -247,4 +247,4 @@ For issues or questions about the sidebar redesign:
 
 ## Conclusion
 
-The sidebar redesign brings Study Sphere AI in line with modern SaaS applications, providing a premium mobile-first experience without any layout disruption or interaction issues. All accessibility and performance best practices have been implemented to ensure the best possible user experience across all devices.
+The sidebar redesign brings AI Notebook in line with modern SaaS applications, providing a premium mobile-first experience without any layout disruption or interaction issues. All accessibility and performance best practices have been implemented to ensure the best possible user experience across all devices.

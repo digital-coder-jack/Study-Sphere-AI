@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "StudySphereAI"
+rootProject.name = "AINotebook"
 include(":app")

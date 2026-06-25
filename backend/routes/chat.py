@@ -1,6 +1,6 @@
 """
 =====================================================================
- STUDY SPHERE AI  -  backend/routes/chat.py
+ AI NOTEBOOK  -  backend/routes/chat.py
 =====================================================================
 AI chat interface + study tools + dashboard statistics.
 
@@ -389,8 +389,8 @@ async def ai_models(user=Depends(auth.current_user)):
         "providers": snapshot["providers"],
         "display_names": {                      # ← ADD THESE 5 LINES
             "auto": "Auto",
-            "kimi": "Study Sphere Pro",
-            "groq": "Study Sphere Lite",
+            "kimi": "AI Notebook Pro",
+            "groq": "AI Notebook Lite",
         }
     }
 

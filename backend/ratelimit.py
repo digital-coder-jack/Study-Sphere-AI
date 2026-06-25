@@ -1,6 +1,6 @@
 """
 =====================================================================
- STUDY SPHERE AI  -  backend/ratelimit.py
+ AI NOTEBOOK  -  backend/ratelimit.py
 =====================================================================
 A lightweight in-memory rate limiter (token bucket per client IP) that
 protects the /api/* endpoints from abuse.

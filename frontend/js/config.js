@@ -1,5 +1,5 @@
 /* =====================================================================
-   Study Sphere AI  -  config.js   (MUST load before app.js & trackers)
+   AI Notebook  -  config.js   (MUST load before app.js & trackers)
    ---------------------------------------------------------------------
    This is the SINGLE place to point the frontend at your backend API.
 
@@ -9,8 +9,8 @@
    HOW TO SET IT
    -------------
    After you deploy the backend you will get a public URL, e.g.
-       https://study-sphere-ai.onrender.com
-       https://study-sphere-ai-production.up.railway.app
+       https://ai-notebook.onrender.com
+       https://ai-notebook-production.up.railway.app
 
    Put that URL below (NO trailing slash). That's the only change needed.
 

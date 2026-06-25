@@ -1,6 +1,6 @@
 {
-  "name": "Study Sphere AI",
-  "short_name": "StudySphere",
+  "name": "AI Notebook",
+  "short_name": "AI Notebook",
   "description": "Your premium AI-powered study companion — chat, notes, quizzes, flashcards and more.",
   "id": "/",
   "start_url": "/dashboard?source=pwa",

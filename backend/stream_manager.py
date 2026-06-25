@@ -1,6 +1,6 @@
 """
 =====================================================================
- STUDY SPHERE AI  -  backend/stream_manager.py
+ AI NOTEBOOK  -  backend/stream_manager.py
 =====================================================================
 Reliable, race-free streaming control plane.
 
@@ -40,7 +40,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 
-logger = logging.getLogger("study-sphere.stream")
+logger = logging.getLogger("ai-notebook.stream")
 
 
 @dataclass

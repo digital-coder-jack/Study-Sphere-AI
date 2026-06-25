@@ -7,10 +7,10 @@
 -keepclasseswithmembers class kotlinx.serialization.json.** {
     kotlinx.serialization.KSerializer serializer(...);
 }
--keep,includedescriptorclasses class com.studysphere.ai.**$$serializer { *; }
--keepclassmembers class com.studysphere.ai.** {
+-keep,includedescriptorclasses class com.ainotebook.app.**$$serializer { *; }
+-keepclassmembers class com.ainotebook.app.** {
     *** Companion;
 }
--keepclasseswithmembers class com.studysphere.ai.** {
+-keepclasseswithmembers class com.ainotebook.app.** {
     kotlinx.serialization.KSerializer serializer(...);
 }
