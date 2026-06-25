@@ -300,7 +300,6 @@ private fun ChatHeader(
                 maxLines = 1
             )
         }
-        // Model selector chip.
         Row(
             Modifier
                 .clip(RoundedCornerShape(20.dp))
@@ -317,7 +316,12 @@ private fun ChatHeader(
             )
             Spacer(Modifier.size(4.dp))
             Text(
-                model.replaceFirstChar { it.uppercase() },
+                when (model) {                                    // ✅ correct place
+                    "kimi" -> "Study Sphere Pro"
+                    "groq" -> "Study Sphere Lite"
+                    "auto" -> "Auto"
+                    else   -> model.replaceFirstChar { it.uppercase() }
+                },
                 style = MaterialTheme.typography.labelMedium,
                 color = Indigo,
                 fontWeight = FontWeight.SemiBold
@@ -328,7 +332,6 @@ private fun ChatHeader(
         }
     }
 }
-
 @Composable
 private fun ChatInputBar(
     value: String,
