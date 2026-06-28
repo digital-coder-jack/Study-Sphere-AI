@@ -99,6 +99,29 @@
     <nav class="side-nav" role="navigation" aria-label="Main navigation">${navHtml}</nav>
     <div class="side-foot" id="sideFoot">${footerHtml(user)}</div>`;
 
+  /* ========== RIPPLE EFFECT ON NAV LINKS ========== */
+  /* Inject a radial ripple span at the click point; CSS animates the
+     expand + fade (see .side-nav a .ripple in sidebar-mobile.css). */
+  (function attachNavRipples() {
+    const reduceMotion = window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) return;
+
+    aside.querySelectorAll('.side-nav a').forEach((link) => {
+      link.addEventListener('click', (e) => {
+        const rect = link.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const span = document.createElement('span');
+        span.className = 'ripple';
+        span.style.width = span.style.height = size + 'px';
+        span.style.left = (e.clientX - rect.left - size / 2) + 'px';
+        span.style.top = (e.clientY - rect.top - size / 2) + 'px';
+        link.appendChild(span);
+        setTimeout(() => span.remove(), 520);
+      });
+    });
+  })();
+
   /* ========== COLLAPSE / EXPAND ========== */
   const collBtn = document.getElementById('sidebarCollapse');
   if (collBtn) {

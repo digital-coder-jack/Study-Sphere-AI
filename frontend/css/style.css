@@ -277,6 +277,42 @@ img { max-width: 100%; display: block; }
 .hero p.lead { max-width: 640px; margin: 0 auto 2.2rem; color: var(--text-dim); font-size: clamp(0.95rem, 2vw, 1.1rem); }
 .hero-cta { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
 
+/* ---------- Hero CTA buttons: premium scale + glow pulse ---------- */
+.hero .btn,
+.cta-buttons .btn {
+  transition: transform var(--dur-base, 240ms) var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
+              box-shadow var(--dur-base, 240ms) var(--ease-smooth, ease),
+              filter var(--dur-base, 240ms) var(--ease-smooth, ease);
+}
+.hero .btn:hover,
+.cta-buttons .btn:hover {
+  transform: scale(1.03);
+  animation: ctaGlow 1.6s var(--ease-smooth, ease) infinite;
+}
+.hero .btn:active,
+.cta-buttons .btn:active {
+  transform: scale(0.97);
+  animation: none;
+}
+
+@keyframes ctaGlow {
+  0%, 100% { box-shadow: 0 10px 30px rgba(109, 123, 255, 0.35); }
+  50%      { box-shadow: 0 0 26px 6px rgba(109, 123, 255, 0.45), 0 14px 38px rgba(109, 123, 255, 0.5); }
+}
+
+/* ---------- Hero / brand logo: gentle perpetual float ---------- */
+.hero .logo,
+.hero .logo-img,
+.nav .brand .logo {
+  animation: heroLogoFloat 4s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes heroLogoFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
 .hero-stats { display: flex; gap: 2.5rem; justify-content: center; flex-wrap: wrap; margin-top: 3.5rem; }
 .hero-stats .stat { text-align: center; }
 .hero-stats .stat b { display: block; font-size: 2rem; font-weight: 800; background: var(--grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }

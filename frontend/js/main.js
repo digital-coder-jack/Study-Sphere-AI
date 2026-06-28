@@ -13,8 +13,14 @@
 })();
 
 function init() {
-  // AOS scroll animations
-  if (window.AOS) AOS.init({ duration: 800, once: true, offset: 60 });
+  // AOS scroll animations.
+  // The inline <script> in index.html already calls AOS.init() with the
+  // premium config (duration:600, ease-out-cubic, once:true). We only need
+  // to refresh here in case content/layout changed before main.js ran.
+  if (window.AOS) {
+    if (typeof AOS.refreshHard === 'function') AOS.refreshHard();
+    else AOS.init({ duration: 600, easing: 'ease-out-cubic', once: true, offset: 60 });
+  }
 
   // If already logged in, swap "Get started" CTA to Dashboard
   if (window.SS && SS.isAuthed()) {

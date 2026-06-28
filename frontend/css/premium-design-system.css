@@ -83,6 +83,16 @@
   --transition-base: 0.3s ease;
   --transition-slow: 0.5s ease;
   --transition-smooth: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ===== Premium Motion Tokens (smooth animation system) ===== */
+  /* Easing curves */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);  /* overshoot / bouncy */
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);        /* material standard */
+
+  /* Standardised durations */
+  --dur-fast: 120ms;
+  --dur-base: 240ms;
+  --dur-slow: 420ms;
 }
 
 /* ===== PREMIUM LIGHT THEME ===== */
@@ -152,6 +162,13 @@
   --transition-base: 0.3s ease;
   --transition-slow: 0.5s ease;
   --transition-smooth: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ===== Premium Motion Tokens (inherit from dark, kept for explicitness) ===== */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur-base: 240ms;
+  --dur-slow: 420ms;
 }
 
 /* ===== PREMIUM ANIMATIONS ===== */
@@ -281,14 +298,52 @@
   }
 }
 
+/* Subtle float for premium icons / hero logo (gentle -6px lift) */
 @keyframes float {
   0%, 100% {
-    transform: translateY(0px);
+    transform: translateY(0);
   }
   50% {
-    transform: translateY(-20px);
+    transform: translateY(-6px);
   }
 }
+
+/* =====================================================================
+   PREMIUM MOTION LIBRARY — smooth, reusable keyframes used site-wide.
+   Pair these with --ease-smooth / --ease-spring and --dur-* tokens.
+   ===================================================================== */
+
+/* Slide + fade upward into place */
+@keyframes fadeInLeft {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Gentle scale-in for cards / panels */
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Drop-in from above (topbar text, banners) */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Skeleton / loading shimmer sweep */
+@keyframes shimmerSweep {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+
+/* Soft pulsing glow ring (hover affordance) */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(109, 123, 255, 0); }
+  50%      { box-shadow: 0 0 18px 4px rgba(109, 123, 255, 0.22); }
+}
+
+/* countUp is JS-driven (see dashboard.js) — declared here for reference */
 
 /* Loading Skeleton */
 @keyframes skeletonLoading {
@@ -347,6 +402,18 @@
 
 .animate-zoom-in {
   animation: zoomIn var(--transition-smooth) ease-out;
+}
+
+.animate-fade-in-left {
+  animation: fadeInLeft var(--dur-base) var(--ease-smooth) both;
+}
+
+.animate-scale-in {
+  animation: scaleIn var(--dur-slow) var(--ease-spring) both;
+}
+
+.animate-slide-down {
+  animation: slideDown var(--dur-slow) var(--ease-smooth) both;
 }
 
 .animate-pulse {

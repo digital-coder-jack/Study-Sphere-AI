@@ -214,7 +214,8 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: all 0.2s ease;
+  /* Smooth, consistent timing via global motion tokens */
+  transition: all var(--dur-base, 240ms) var(--ease-smooth, cubic-bezier(0.4, 0, 0.2, 1));
   cursor: pointer;
   z-index: 1;
   pointer-events: auto;
@@ -229,30 +230,33 @@
   text-align: center;
   font-size: 1.2rem;
   flex-shrink: 0;
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform var(--dur-base, 240ms) var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 
-.side-nav a:hover i { transform: scale(1.18) rotate(-4deg); }
+/* Icon scales up + tilts slightly on hover */
+.side-nav a:hover i { transform: scale(1.15) rotate(-5deg); }
 
-/* Active indicator bar */
+/* Active indicator bar — slides in with a scaleY reveal from center */
 .side-nav a::before {
   content: '';
   position: absolute;
   left: 0;
   top: 50%;
   transform: translateY(-50%) scaleY(0);
+  transform-origin: center;
   width: 4px;
   height: 55%;
   border-radius: 0 4px 4px 0;
   background: var(--grad);
-  transition: transform 0.28s ease;
+  transition: transform var(--dur-base, 240ms) var(--ease-smooth, ease);
   z-index: 1;
 }
 
 .side-nav a:hover:not(.active)::before { transform: translateY(-50%) scaleY(1); }
+.side-nav a.active::before { transform: translateY(-50%) scaleY(1); }
 
 .side-nav a:hover {
-  background: var(--glass);
+  background: var(--glass-strong);
   color: var(--text);
   transform: translateX(4px);
 }
@@ -261,6 +265,21 @@
   background: var(--grad);
   color: #fff;
   box-shadow: 0 8px 22px rgba(109, 123, 255, 0.45);
+}
+
+/* ---- Ripple effect on click (injected by sidebar.js) ---- */
+.side-nav a .ripple {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  background: rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+  z-index: 0;
+  animation: navRipple 0.5s var(--ease-smooth, ease-out);
+}
+
+@keyframes navRipple {
+  to { transform: scale(2.6); opacity: 0; }
 }
 
 .side-nav a.active i { animation: navPop 0.4s ease; }
