@@ -264,32 +264,32 @@
         <p>From instant answers to full study plans — AI Notebook brings powerful learning tools together.</p>
       </div>
       <div class="grid cols-3">
-        <article class="feature glass" data-aos="fade-up">
+        <article class="feature glass" data-aos="fade-up" data-aos-delay="0">
           <div class="feature-icon"><i class="fas fa-comments"></i></div>
           <h3>AI Chat Assistant</h3>
           <p>A ChatGPT-style tutor with streaming replies, Markdown, code highlighting and full chat history.</p>
         </article>
-        <article class="feature glass" data-aos="fade-up" data-aos-delay="80">
+        <article class="feature glass" data-aos="fade-up" data-aos-delay="100">
           <div class="feature-icon"><i class="fas fa-note-sticky"></i></div>
           <h3>Notes Generator</h3>
           <p>Turn any topic into clean, structured study notes you can save and revisit anytime.</p>
         </article>
-        <article class="feature glass" data-aos="fade-up" data-aos-delay="160">
+        <article class="feature glass" data-aos="fade-up" data-aos-delay="200">
           <div class="feature-icon"><i class="fas fa-circle-question"></i></div>
           <h3>Quiz Generator</h3>
           <p>Auto-create multiple-choice quizzes with answers and explanations to test yourself.</p>
         </article>
-        <article class="feature glass" data-aos="fade-up">
+        <article class="feature glass" data-aos="fade-up" data-aos-delay="0">
           <div class="feature-icon"><i class="fas fa-layer-group"></i></div>
           <h3>Flashcards</h3>
           <p>Generate interactive flip-cards for fast, focused memorisation of key concepts.</p>
         </article>
-        <article class="feature glass" data-aos="fade-up" data-aos-delay="80">
+        <article class="feature glass" data-aos="fade-up" data-aos-delay="100">
           <div class="feature-icon"><i class="fas fa-calendar-days"></i></div>
           <h3>Study Planner</h3>
           <p>Get a personalised day-by-day plan with milestones to reach any learning goal.</p>
         </article>
-        <article class="feature glass" data-aos="fade-up" data-aos-delay="160">
+        <article class="feature glass" data-aos="fade-up" data-aos-delay="200">
           <div class="feature-icon"><i class="fas fa-file-upload"></i></div>
           <h3>File Uploads</h3>
           <p>Upload PDFs, documents, and images to instantly generate summaries and quizzes.</p>
@@ -307,17 +307,17 @@
         <p>Get started in seconds. No credit card required.</p>
       </div>
       <div class="grid cols-3">
-        <div class="feature glass" data-aos="fade-up">
+        <div class="feature glass" data-aos="fade-up" data-aos-delay="0">
           <div class="feature-icon"><i class="fas fa-pen-to-square"></i></div>
           <h3>1. Ask a Question</h3>
           <p>Type any topic or question into the AI chat. Get instant, detailed explanations tailored to your level.</p>
         </div>
-        <div class="feature glass" data-aos="fade-up" data-aos-delay="80">
+        <div class="feature glass" data-aos="fade-up" data-aos-delay="100">
           <div class="feature-icon"><i class="fas fa-lightbulb"></i></div>
           <h3>2. Generate Resources</h3>
           <p>Create study notes, quizzes, flashcards, and study plans with a single click.</p>
         </div>
-        <div class="feature glass" data-aos="fade-up" data-aos-delay="160">
+        <div class="feature glass" data-aos="fade-up" data-aos-delay="200">
           <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
           <h3>3. Track Progress</h3>
           <p>Monitor your learning journey with analytics, streaks, and personalized recommendations.</p>
@@ -417,6 +417,14 @@
   <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
   <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+  <!-- Initialise AOS scroll animations (premium, smooth, fire once) -->
+  <script>
+    (function () {
+      if (window.AOS) {
+        AOS.init({ duration: 600, easing: 'ease-out-cubic', once: true, offset: 60 });
+      }
+    })();
+  </script>
   <script src="/js/config.js"></script>
   <script src="/js/main.js"></script>
   <script src="/js/pwa.js"></script>

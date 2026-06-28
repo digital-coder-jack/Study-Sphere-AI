@@ -283,28 +283,57 @@ const SS = (() => {
 
   /* ---------- page transitions ---------- */
   function initPageTransitions() {
-    // Add page-in animation to body
-    document.body.classList.add('animate-fade-in-up');
-    
-    // Intercept link clicks for smooth transitions
+    const reduceMotion = window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Page-in: fade the .app-shell (or body) up into place on load.
+    if (!reduceMotion) {
+      const shell = document.querySelector('.app-shell') || document.body;
+      shell.style.opacity = '0';
+      shell.style.transform = 'translateY(10px)';
+      requestAnimationFrame(() => {
+        shell.style.transition = 'opacity 0.32s var(--ease-smooth, ease), transform 0.32s var(--ease-smooth, ease)';
+        shell.style.opacity = '1';
+        shell.style.transform = 'translateY(0)';
+      });
+      // Clean up inline styles once the entrance finishes so they don't
+      // interfere with later layout / animations.
+      setTimeout(() => {
+        shell.style.transition = '';
+        shell.style.transform = '';
+      }, 420);
+    }
+
+    // Intercept same-origin link clicks for a quick fade-out before navigating.
     document.addEventListener('click', (e) => {
+      if (reduceMotion) return;
       const link = e.target.closest('a');
       if (!link || !link.href) return;
-      
-      const url = new URL(link.href);
-      if (url.origin !== window.location.origin) return; // External link
-      if (link.getAttribute('target') === '_blank') return; // New tab
-      if (link.getAttribute('download') !== null) return; // Download
-      if (url.pathname === window.location.pathname && url.hash) return; // Anchor on same page
+
+      // Ignore modified clicks (open in new tab / download manager, etc.)
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+
+      const url = new URL(link.href, window.location.href);
+      if (url.origin !== window.location.origin) return;     // External link
+      if (link.getAttribute('target') === '_blank') return;  // New tab
+      if (link.hasAttribute('download')) return;             // Download
+      if (link.getAttribute('href') && link.getAttribute('href').startsWith('#')) return; // Pure anchor
+      if (url.pathname === window.location.pathname && url.hash) return; // In-page anchor
 
       e.preventDefault();
+      document.body.style.transition = 'opacity 0.18s ease';
       document.body.style.opacity = '0';
-      document.body.style.transform = 'translateY(10px)';
-      document.body.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-      
+
       setTimeout(() => {
         window.location.href = link.href;
-      }, 300);
+      }, 180);
+    });
+
+    // If the page is restored from the bfcache (back/forward), reset opacity
+    // so the user never lands on a blank faded-out page.
+    window.addEventListener('pageshow', () => {
+      document.body.style.transition = '';
+      document.body.style.opacity = '';
     });
   }
 

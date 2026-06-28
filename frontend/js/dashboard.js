@@ -114,17 +114,63 @@ function renderStats(s) {
       <span>${c.label}</span>
     </div>`).join('');
 
-  // animate counts
-  grid.querySelectorAll('b[data-target]').forEach((el) => {
+  // Animate numeric values 0 -> target with an easeOutExpo curve over 900ms,
+  // driven by requestAnimationFrame, triggered when each value scrolls into
+  // view (IntersectionObserver). Falls back to an instant value if IO is
+  // unavailable or the user prefers reduced motion.
+  animateCounters(grid.querySelectorAll('b[data-target]'));
+}
+
+/* ---------------------------------------------------------------------
+   countUp — premium counter animation
+   - easeOutExpo easing for a fast-then-settle feel
+   - requestAnimationFrame for buttery 60fps updates
+   - IntersectionObserver so numbers count only when visible
+   ------------------------------------------------------------------- */
+function animateCounters(els) {
+  if (!els || !els.length) return;
+
+  const reduceMotion = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // easeOutExpo: 1 - 2^(-10t)
+  const easeOutExpo = (t) => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t));
+
+  const runCount = (el) => {
     const target = parseInt(el.dataset.target, 10) || 0;
-    let cur = 0;
-    const step = Math.max(1, Math.ceil(target / 35));
-    const t = setInterval(() => {
-      cur += step;
-      if (cur >= target) { cur = target; clearInterval(t); }
-      el.textContent = cur;
-    }, 26);
-  });
+    if (reduceMotion || target === 0) { el.textContent = target; return; }
+
+    const duration = 900;
+    const start = performance.now();
+
+    const tick = (now) => {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const value = Math.round(easeOutExpo(progress) * target);
+      el.textContent = value;
+      if (progress < 1) {
+        requestAnimationFrame(tick);
+      } else {
+        el.textContent = target; // guarantee exact final value
+      }
+    };
+    requestAnimationFrame(tick);
+  };
+
+  if (!('IntersectionObserver' in window)) {
+    els.forEach(runCount);
+    return;
+  }
+
+  const observer = new IntersectionObserver((entries, obs) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      runCount(entry.target);
+      obs.unobserve(entry.target); // count once
+    });
+  }, { threshold: 0.4 });
+
+  els.forEach((el) => observer.observe(el));
 }
 
 function renderRecent(chats) {
@@ -138,6 +184,18 @@ function renderRecent(chats) {
       <span class="ttl"><i class="fas fa-comment"></i> <b>${escapeHtml(c.title)}</b></span>
       <small>${formatDate(c.updated_at)}</small>
     </a>`).join('');
+
+  // Micro-interaction: flash a subtle highlight ring when an item is clicked.
+  // The ring fades out via the .flash-ring class (300ms, see dashboard.css).
+  box.querySelectorAll('.recent-item').forEach((item) => {
+    item.addEventListener('click', () => {
+      item.classList.remove('flash-ring');
+      // Force reflow so the animation can restart on rapid repeat clicks.
+      void item.offsetWidth;
+      item.classList.add('flash-ring');
+      setTimeout(() => item.classList.remove('flash-ring'), 320);
+    });
+  });
 }
 
 let chartRef = null;

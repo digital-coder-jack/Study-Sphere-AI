@@ -197,4 +197,25 @@ html, body { max-width: 100%; overflow-x: hidden; }
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
+
+  /* Entrance animations set opacity:0 as their start state. With motion
+     reduced the animation collapses to ~0ms, so force the final visible
+     state to guarantee nothing stays hidden. */
+  .stat-card,
+  .panel.glass,
+  .topbar h1,
+  .topbar .sub,
+  .app-shell {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Disable perpetual decorative motion entirely. */
+  .stat-card .ic,
+  .hero .logo,
+  .hero .logo-img,
+  .nav .brand .logo {
+    animation: none !important;
+    transform: none !important;
+  }
 }
