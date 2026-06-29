@@ -11,12 +11,16 @@
   <script>
     (function () {
       try {
-        var t = localStorage.getItem('ss_theme') || 'dark';
-        document.documentElement.setAttribute('data-theme', t);
+        var r = document.documentElement;
+        r.setAttribute('data-theme', localStorage.getItem('ss_theme') || 'dark');
+        r.setAttribute('data-accent', localStorage.getItem('ss_accent') || 'violet');
+        r.setAttribute('data-font', localStorage.getItem('ss_font') || 'md');
+        r.setAttribute('data-density', localStorage.getItem('ss_density') || 'comfortable');
+        if (localStorage.getItem('ss_contrast') === 'high') r.setAttribute('data-contrast', 'high');
       } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
     })();
   </script>
-  <title>Settings · AI Notebook</title>
+  <title>Settings · Study Sphere AI</title>
   <meta name="theme-color" content="#4F46E5" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -31,12 +35,19 @@
   <link rel="stylesheet" href="/css/sidebar-mobile.css" />
   <link rel="stylesheet" href="/css/profile.css" />
   <link rel="stylesheet" href="/css/responsive.css" />
-  
+
   <!-- Vercel Speed Insights -->
   <script type="module">
     import { injectSpeedInsights } from 'https://cdn.jsdelivr.net/npm/@vercel/speed-insights@2.0.0/dist/index.mjs';
     injectSpeedInsights();
   </script>
+
+  <!-- Premium layer (loaded last to override legacy tokens) -->
+  <link rel="stylesheet" href="/css/theme.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/sidebar.css" />
+  <link rel="stylesheet" href="/css/command-palette.css" />
+  <link rel="stylesheet" href="/css/settings-premium.css" />
 </head>
 <body>
   <div id="particles-js"></div>
@@ -50,179 +61,528 @@
       <div class="topbar">
         <div>
           <h1><i class="fas fa-sliders-h"></i> Settings</h1>
-          <p class="sub">Customize your AI Notebook experience</p>
+          <p class="sub">Personalize your Study Sphere experience</p>
         </div>
-        <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+        <div class="topbar-actions">
+          <button class="search-trigger" data-cmdk type="button" aria-label="Search">
+            <i class="fas fa-search"></i>
+            <span class="stxt">Search…</span>
+            <span class="kbd"><kbd>Ctrl</kbd><kbd>K</kbd></span>
+          </button>
+          <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+        </div>
       </div>
 
-      <div class="settings-wrapper">
-        <!-- Settings Tabs -->
-        <div class="settings-tabs">
-          <button class="tab-btn active" data-tab="account"><i class="fas fa-user"></i> Account</button>
-          <button class="tab-btn" data-tab="appearance"><i class="fas fa-palette"></i> Appearance</button>
-          <button class="tab-btn" data-tab="dashboard"><i class="fas fa-gauge-high"></i> Dashboard</button>
-          <button class="tab-btn" data-tab="notifications"><i class="fas fa-bell"></i> Notifications</button>
-          <button class="tab-btn" data-tab="ai"><i class="fas fa-brain"></i> AI Settings</button>
-        </div>
+      <div id="settingsMsg" class="settings-msg"></div>
 
-        <div id="settingsMsg" class="settings-msg"></div>
+      <div class="settings-shell">
+        <!-- ============ Sticky vertical nav ============ -->
+        <nav class="settings-nav" id="settingsNav" aria-label="Settings sections">
+          <span class="nav-group-label">Account</span>
+          <button class="snav-btn active" data-tab="profile"><i class="fas fa-user"></i><span>Profile</span></button>
+          <button class="snav-btn" data-tab="security"><i class="fas fa-shield-halved"></i><span>Security</span></button>
+          <button class="snav-btn" data-tab="privacy"><i class="fas fa-user-lock"></i><span>Privacy</span></button>
 
-        <!-- Account Settings -->
-        <div class="settings-panel active" id="account-tab">
-          <div class="settings-card">
-            <h3><i class="fas fa-user-circle"></i> Profile Information</h3>
-            <p>Update your personal details and how others see you.</p>
-            <div class="settings-field">
-              <label>Full Name</label>
-              <input type="text" id="fullName" placeholder="Your name" />
-            </div>
-            <div class="settings-field">
-              <label>Username</label>
-              <input type="text" id="username" placeholder="your_username" disabled />
-            </div>
-            <div class="settings-field">
-              <label>Email Address</label>
-              <input type="email" id="email" placeholder="your@email.com" disabled />
-            </div>
-            <button class="btn primary" id="saveProfileBtn"><i class="fas fa-save"></i> Save Changes</button>
-          </div>
+          <span class="nav-group-label">Workspace</span>
+          <button class="snav-btn" data-tab="appearance"><i class="fas fa-palette"></i><span>Appearance</span></button>
+          <button class="snav-btn" data-tab="dashboard"><i class="fas fa-gauge-high"></i><span>Dashboard</span></button>
+          <button class="snav-btn" data-tab="notifications"><i class="fas fa-bell"></i><span>Notifications</span></button>
 
-          <div class="settings-card">
-            <h3><i class="fas fa-lock"></i> Password & Security</h3>
-            <p>Change your password to keep your account secure.</p>
-            <div class="settings-field">
-              <label>New Password</label>
-              <input type="password" id="newPassword" placeholder="••••••••" />
-            </div>
-            <div class="settings-field">
-              <label>Confirm New Password</label>
-              <input type="password" id="confirmPassword" placeholder="••••••••" />
-            </div>
-            <button class="btn secondary" id="changePasswordBtn"><i class="fas fa-key"></i> Update Password</button>
-          </div>
+          <span class="nav-group-label">Intelligence</span>
+          <button class="snav-btn" data-tab="ai"><i class="fas fa-brain"></i><span>AI Preferences</span></button>
+          <button class="snav-btn" data-tab="accessibility"><i class="fas fa-universal-access"></i><span>Accessibility</span></button>
+        </nav>
 
-          <div class="settings-card danger">
-            <h3><i class="fas fa-trash-can"></i> Danger Zone</h3>
-            <p>Permanently delete your account and all your data. This cannot be undone.</p>
-            <button class="btn danger" id="deleteAccountBtn"><i class="fas fa-trash"></i> Delete Account</button>
-          </div>
-        </div>
+        <!-- ============ Panels ============ -->
+        <div class="settings-body">
 
-        <!-- Appearance Settings -->
-        <div class="settings-panel" id="appearance-tab">
-          <div class="settings-card">
-            <h3><i class="fas fa-sun"></i> Theme Mode</h3>
-            <p>Choose between light, dark, or system-matched appearance.</p>
-            <div class="theme-options">
-              <button class="theme-opt" data-theme="light"><i class="fas fa-sun"></i> Light</button>
-              <button class="theme-opt active" data-theme="dark"><i class="fas fa-moon"></i> Dark</button>
-              <button class="theme-opt" data-theme="system"><i class="fas fa-circle-half-stroke"></i> System</button>
-            </div>
-          </div>
+          <!-- ===== PROFILE ===== -->
+          <section class="set-panel active" id="profile-tab" data-reveal>
+            <div class="set-card">
+              <div class="set-card-head">
+                <div class="sc-icon"><i class="fas fa-id-card"></i></div>
+                <div>
+                  <h3>Profile Information</h3>
+                  <p>This information helps personalize your study experience and how the AI tutors you.</p>
+                </div>
+              </div>
 
-          <div class="settings-card">
-            <h3><i class="fas fa-palette"></i> Accent Color</h3>
-            <p>Personalize your interface with a custom accent color.</p>
-            <div class="color-picker">
-              <button class="color-opt active" data-color="#3b82f6" title="Blue"><div class="color-circle" style="background: #3b82f6;"></div> Blue</button>
-              <button class="color-opt" data-color="#8b5cf6" title="Purple"><div class="color-circle" style="background: #8b5cf6;"></div> Purple</button>
-              <button class="color-opt" data-color="#ec4899" title="Pink"><div class="color-circle" style="background: #ec4899;"></div> Pink</button>
-              <button class="color-opt" data-color="#f59e0b" title="Amber"><div class="color-circle" style="background: #f59e0b;"></div> Amber</button>
-              <button class="color-opt" data-color="#10b981" title="Green"><div class="color-circle" style="background: #10b981;"></div> Green</button>
-              <button class="color-opt" data-color="#06b6d4" title="Cyan"><div class="color-circle" style="background: #06b6d4;"></div> Cyan</button>
-            </div>
-          </div>
-        </div>
+              <div class="avatar-row">
+                <div class="avatar-preview" id="avatarPreview">S</div>
+                <div class="avatar-actions">
+                  <button class="btn subtle small" id="changeAvatarBtn" type="button"><i class="fas fa-camera"></i> Change photo</button>
+                  <small>JPG, PNG or GIF · stored locally on this device</small>
+                </div>
+              </div>
 
-        <!-- Dashboard Settings -->
-        <div class="settings-panel" id="dashboard-tab">
-          <div class="settings-card">
-            <h3><i class="fas fa-gauge-high"></i> Dashboard Preferences</h3>
-            <p>Customize your workspace layout and features.</p>
-            <div class="toggle-group">
-              <label>Compact Sidebar</label>
-              <button class="toggle-switch" id="compactSidebar"></button>
-            </div>
-            <div class="toggle-group">
-              <label>Show Welcome Animation</label>
-              <button class="toggle-switch active" id="showWelcome"></button>
-            </div>
-            <div class="toggle-group">
-              <label>Show Study Streak</label>
-              <button class="toggle-switch active" id="showStreak"></button>
-            </div>
-            <div class="settings-field" style="margin-top: 1rem;">
-              <label>Default Start Page</label>
-              <select id="defaultPage">
-                <option value="dashboard">Dashboard</option>
-                <option value="chat">AI Chat</option>
-                <option value="tools">Study Tools</option>
-              </select>
-            </div>
-            <button class="btn primary" id="saveDashboardBtn" style="margin-top: 1rem;"><i class="fas fa-save"></i> Save Preferences</button>
-          </div>
-        </div>
+              <div class="set-field-grid">
+                <div class="set-field">
+                  <label>Full Name</label>
+                  <input type="text" id="fullName" placeholder="Your name" />
+                </div>
+                <div class="set-field">
+                  <label>Username</label>
+                  <input type="text" id="username" placeholder="your_username" disabled />
+                </div>
+              </div>
 
-        <!-- Notifications Settings -->
-        <div class="settings-panel" id="notifications-tab">
-          <div class="settings-card">
-            <h3><i class="fas fa-bell"></i> Notifications</h3>
-            <p>Control how and when you receive updates.</p>
-            <div class="toggle-group">
-              <label>Email Notifications</label>
-              <button class="toggle-switch active" id="emailNotifications"></button>
-            </div>
-            <div class="toggle-group">
-              <label>Study Reminders</label>
-              <button class="toggle-switch active" id="studyReminders"></button>
-            </div>
-            <div class="toggle-group">
-              <label>Daily Goal Reminders</label>
-              <button class="toggle-switch active" id="dailyGoalReminders"></button>
-            </div>
-            <button class="btn primary" id="saveNotificationsBtn" style="margin-top: 1rem;"><i class="fas fa-save"></i> Save Preferences</button>
-          </div>
-        </div>
+              <div class="set-field">
+                <label>Email Address</label>
+                <input type="email" id="email" placeholder="your@email.com" disabled />
+              </div>
 
-        <!-- AI Settings -->
-        <div class="settings-panel" id="ai-tab">
-          <div class="settings-card">
-            <h3><i class="fas fa-brain"></i> AI Personalization</h3>
-            <p>Fine-tune your AI tutor's responses and difficulty level.</p>
-            <div class="settings-field">
-              <label>Preferred AI Model</label>
-              <select id="aiModel">
-                <option value="auto">Auto (Smart fallback: Kimi → Gemini → Groq)</option>
-                <option value="kimi">Kimi (Moonshot) — Primary</option>
-                <option value="gemini">Google Gemini — Secondary</option>
-                <option value="groq">Groq — Tertiary</option>
-              </select>
-              <small class="field-hint">Auto picks the first available provider and falls back automatically if one is down.</small>
-            </div>
-            <div class="settings-field">
-              <label>Provider Status</label>
-              <div id="aiProviderStatus" class="provider-status">
-                <span class="model-badge"><span class="model-dot off"></span> Checking…</span>
+              <div class="set-field">
+                <label>Bio</label>
+                <textarea id="bio" placeholder="Tell us a little about yourself and your study goals…" maxlength="280"></textarea>
+                <span class="field-hint">Max 280 characters.</span>
+              </div>
+
+              <div class="set-field-grid">
+                <div class="set-field">
+                  <label>Education Level</label>
+                  <select id="educationLevel">
+                    <option value="">Prefer not to say</option>
+                    <option value="high-school">High School</option>
+                    <option value="undergraduate">Undergraduate</option>
+                    <option value="graduate">Graduate / Masters</option>
+                    <option value="phd">PhD / Doctorate</option>
+                    <option value="self-learner">Self-learner</option>
+                  </select>
+                </div>
+                <div class="set-field">
+                  <label>Primary Study Goal</label>
+                  <select id="studyGoal">
+                    <option value="">Choose a goal</option>
+                    <option value="exams">Ace my exams</option>
+                    <option value="skills">Build new skills</option>
+                    <option value="career">Career growth</option>
+                    <option value="curiosity">Learn for curiosity</option>
+                    <option value="research">Research & writing</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="set-actions">
+                <button class="btn primary" id="saveProfileBtn"><i class="fas fa-save"></i> Save Profile</button>
               </div>
             </div>
-            <div class="settings-field">
-              <label>Response Detail Level</label>
-              <select id="responseLength">
-                <option value="short">Concise (Fast answers)</option>
-                <option value="medium" selected>Balanced (Standard)</option>
-                <option value="long">Comprehensive (In-depth)</option>
-              </select>
+          </section>
+
+          <!-- ===== SECURITY ===== -->
+          <section class="set-panel" id="security-tab" data-reveal>
+            <div class="set-card">
+              <div class="set-card-head">
+                <div class="sc-icon"><i class="fas fa-key"></i></div>
+                <div>
+                  <h3>Password</h3>
+                  <p>Use a strong password you don't reuse anywhere else.</p>
+                </div>
+              </div>
+              <div class="set-field-grid">
+                <div class="set-field">
+                  <label>New Password</label>
+                  <input type="password" id="newPassword" placeholder="••••••••" />
+                </div>
+                <div class="set-field">
+                  <label>Confirm New Password</label>
+                  <input type="password" id="confirmPassword" placeholder="••••••••" />
+                </div>
+              </div>
+              <div class="set-actions">
+                <button class="btn secondary" id="changePasswordBtn"><i class="fas fa-rotate"></i> Update Password</button>
+              </div>
             </div>
-            <div class="settings-field">
-              <label>Study Difficulty</label>
-              <select id="studyDifficulty">
-                <option value="beginner">Beginner (Simplified)</option>
-                <option value="intermediate" selected>Intermediate (Standard)</option>
-                <option value="advanced">Advanced (Rigorous)</option>
-              </select>
+
+            <div class="set-card">
+              <div class="set-card-head">
+                <div class="sc-icon"><i class="fas fa-mobile-screen"></i></div>
+                <div>
+                  <h3>Two-Factor Authentication</h3>
+                  <p>Add an extra layer of security to your account with an authenticator app.</p>
+                </div>
+              </div>
+              <div class="set-row">
+                <div class="set-label">
+                  <b>Enable 2FA</b>
+                  <span>Require a one-time code at sign-in</span>
+                </div>
+                <div class="set-control"><button class="toggle-switch" id="twoFactor" type="button"></button></div>
+              </div>
             </div>
-            <button class="btn primary" id="saveAiBtn"><i class="fas fa-save"></i> Save AI Preferences</button>
-          </div>
+
+            <div class="set-card">
+              <div class="set-card-head">
+                <div class="sc-icon"><i class="fas fa-laptop"></i></div>
+                <div>
+                  <h3>Connected Devices &amp; Sessions</h3>
+                  <p>You're signed in on these devices. Sign out of any you don't recognize.</p>
+                </div>
+              </div>
+              <div class="device-list" id="deviceList">
+                <div class="device-item">
+                  <div class="dev-icon"><i class="fas fa-desktop"></i></div>
+                  <div class="dev-meta">
+                    <b>This device</b>
+                    <span id="thisDeviceMeta">Active now</span>
+                  </div>
+                  <span class="dev-badge">Current</span>
+                </div>
+              </div>
+              <div class="set-actions">
+                <button class="btn outline small" id="signOutAllBtn"><i class="fas fa-arrow-right-from-bracket"></i> Sign out everywhere</button>
+              </div>
+            </div>
+
+            <div class="set-card danger">
+              <div class="set-card-head">
+                <div class="sc-icon"><i class="fas fa-triangle-exclamation"></i></div>
+                <div>
+                  <h3>Danger Zone</h3>
+                  <p>Permanently delete your account and all your data. This action cannot be undone.</p>
+                </div>
+              </div>
+              <div class="set-actions">
+                <button class="btn danger" id="deleteAccountBtn"><i class="fas fa-trash"></i> Delete Account</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== PRIVACY ===== -->
+          <section class="set-panel" id="privacy-tab" data-reveal>
+            <div class="set-card">
+              <div class="set-card-head">
+                <div class="sc-icon"><i class="fas fa-eye"></i></div>
+                <div>
+                  <h3>Profile Visibility</h3>
+                  <p>Control who can see your profile and activity.</p>
+                </div>
+              </div>
+              <div class="set-field">
+                <div class="segmented" id="visibilitySeg" role="tablist">
+                  <button class="seg active" data-value="private"><i class="fas fa-lock"></i> Private</button>
+                  <button class="seg" data-value="friends"><i class="fas fa-user-group"></i> Friends</button>
+                  <button class="seg" data-value="public"><i class="fas fa-globe"></i> Public</button>
+                </div>
+              </div>
+              <div class="set-row" style="margin-top:0.6rem;">
+                <div class="set-label">
+                  <b>Show study activity</b>
+                  <span>Let others see your streaks and progress</span>
+                </div>
+                <div class="set-control"><button class="toggle-switch" id="showActivity" type="button"></button></div>
+              </div>
+              <div class="set-row">
+                <div class="set-label">
+                  <b>Personalized usage analytics</b>
+                  <span>Help improve Study Sphere with anonymous usage data</span>
+                </div>
+                <div class="set-control"><button class="toggle-switch active" id="usageAnalytics" type="button"></button></div>
+              </div>
+              <div class="set-actions">
+                <button class="btn primary" id="savePrivacyBtn"><i class="fas fa-save"></i> Save Privacy Settings</button>
+              </div>
+            </div>
+
+            <div class="set-card">
+              <div class="set-card-head">
+                <div class="sc-icon"><i class="fas fa-database"></i></div>
+                <div>
+                  <h3>Your Data</h3>
+                  <p>Download a copy of your data or clear your local activity.</p>
+                </div>
+              </div>
+              <div class="set-actions">
+                <button class="btn subtle" id="downloadDataBtn"><i class="fas fa-download"></i> Download my data</button>
+                <button class="btn outline" id="clearHistoryBtn"><i class="fas fa-broom"></i> Clear local history</button>
+              </div>
+            </div>
+
+            <div class="set-card">
+              <div class="set-card-head">
+                <div class="sc-icon"><i class="fas fa-clock-rotate-left"></i></div>
+                <div>
+                  <h3>Login History</h3>
+                  <p>Recent sign-in activity on your account.</p>
+                </div>
+              </div>
+              <div class="device-list" id="loginHistory">
+                <div class="device-item">
+                  <div class="dev-icon"><i class="fas fa-circle-check"></i></div>
+                  <div class="dev-meta">
+                    <b>Successful sign-in</b>
+                    <span id="lastLoginMeta">This session</span>
+                  </div>
+                  <span class="dev-badge">OK</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== APPEARANCE ===== -->
+          <section class="set-panel" id="appearance-tab" data-reveal>
+            <div class="set-card">
+              <div class="set-card-head">
+                <div class="sc-icon"><i class="fas fa-circle-half-stroke"></i></div>
+                <div>
+                  <h3>Theme</h3>
+                  <p>Choose between light, dark, or follow your system setting.</p>
+                </div>
+              </div>
+              <div class="opt-grid" id="themeOpts">
+                <button class="opt-card" data-theme="light"><i class="fas fa-sun"></i> Light</button>
+                <button class="opt-card active" data-theme="dark"><i class="fas fa-moon"></i> Dark</button>
+                <button class="opt-card" data-theme="system"><i class="fas fa-desktop"></i> System</button>
+              </div>
+            </div>
+
+            <div class="set-card">
+              <div class="set-card-head">
+                <div class="sc-icon"><i class="fas fa-droplet"></i></div>
+                <div>
+                  <h3>Accent Color</h3>
+                  <p>Pick a color that makes the interface feel like yours.</p>
+                </div>
+              </div>
+              <div class="swatch-row" id="accentSwatches">
+                <button class="swatch active" data-accent="violet" title="Violet"></button>
+                <button class="swatch" data-accent="indigo" title="Indigo"></button>
+                <button class="swatch" data-accent="blue" title="Blue"></button>
+                <button class="swatch" data-accent="cyan" title="Cyan"></button>
+                <button class="swatch" data-accent="emerald" title="Emerald"></button>
+                <button class="swatch" data-accent="amber" title="Amber"></button>
+                <button class="swatch" data-accent="rose" title="Rose"></button>
+                <button class="swatch" data-accent="pink" title="Pink"></button>
+              </div>
+            </div>
+
+            <div class="set-card">
+              <div class="set-card-head">
+                <div class="sc-icon"><i class="fas fa-text-height"></i></div>
+                <div>
+                  <h3>Typography &amp; Density</h3>
+                  <p>Adjust how spacious and readable the interface feels.</p>
+                </div>
+              </div>
+              <div class="set-row">
+                <div class="set-label"><b>Font Size</b><span>Scale text across the app</span></div>
+                <div class="set-control">
+                  <div class="segmented" id="fontSeg">
+                    <button class="seg" data-value="sm">Small</button>
+                    <button class="seg active" data-value="md">Medium</button>
+                    <button class="seg" data-value="lg">Large</button>
+                  </div>
+                </div>
+              </div>
+              <div class="set-row">
+                <div class="set-label"><b>Density</b><span>Comfortable spacing or compact layout</span></div>
+                <div class="set-control">
+                  <div class="segmented" id="densitySeg">
+                    <button class="seg active" data-value="comfortable">Comfortable</button>
+                    <button class="seg" data-value="compact">Compact</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== DASHBOARD ===== -->
+          <section class="set-panel" id="dashboard-tab" data-reveal>
+            <div class="set-card">
+              <div class="set-card-head">
+                <div class="sc-icon"><i class="fas fa-house"></i></div>
+                <div>
+                  <h3>Startup &amp; Navigation</h3>
+                  <p>Choose where you land and how the sidebar behaves.</p>
+                </div>
+              </div>
+              <div class="set-field">
+                <label>Default Start Page</label>
+                <select id="defaultPage">
+                  <option value="dashboard">Dashboard</option>
+                  <option value="chat">AI Chat</option>
+                  <option value="tools">Study Tools</option>
+                  <option value="analytics">Analytics</option>
+                </select>
+              </div>
+              <div class="set-row">
+                <div class="set-label"><b>Collapse sidebar by default</b><span>Start with a compact, icon-only sidebar</span></div>
+                <div class="set-control"><button class="toggle-switch" id="compactSidebar" type="button"></button></div>
+              </div>
+            </div>
+
+            <div class="set-card">
+              <div class="set-card-head">
+                <div class="sc-icon"><i class="fas fa-table-cells-large"></i></div>
+                <div>
+                  <h3>Widgets</h3>
+                  <p>Show or hide widgets on your dashboard.</p>
+                </div>
+              </div>
+              <div class="set-row">
+                <div class="set-label"><b>Welcome animation</b><span>Animated greeting when you arrive</span></div>
+                <div class="set-control"><button class="toggle-switch active" id="showWelcome" type="button"></button></div>
+              </div>
+              <div class="set-row">
+                <div class="set-label"><b>Study streak</b><span>Display your current learning streak</span></div>
+                <div class="set-control"><button class="toggle-switch active" id="showStreak" type="button"></button></div>
+              </div>
+              <div class="set-row">
+                <div class="set-label"><b>Activity chart</b><span>Weekly activity visualization</span></div>
+                <div class="set-control"><button class="toggle-switch active" id="showChart" type="button"></button></div>
+              </div>
+              <div class="set-row">
+                <div class="set-label"><b>Achievements</b><span>Unlockable achievement cards</span></div>
+                <div class="set-control"><button class="toggle-switch active" id="showAchievements" type="button"></button></div>
+              </div>
+              <div class="set-actions">
+                <button class="btn primary" id="saveDashboardBtn"><i class="fas fa-save"></i> Save Dashboard Settings</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== NOTIFICATIONS ===== -->
+          <section class="set-panel" id="notifications-tab" data-reveal>
+            <div class="set-card">
+              <div class="set-card-head">
+                <div class="sc-icon"><i class="fas fa-bell"></i></div>
+                <div>
+                  <h3>Notifications</h3>
+                  <p>Decide how and when Study Sphere reaches out to you.</p>
+                </div>
+              </div>
+              <div class="set-row">
+                <div class="set-label"><b>Email notifications</b><span>Important account updates by email</span></div>
+                <div class="set-control"><button class="toggle-switch active" id="emailNotifications" type="button"></button></div>
+              </div>
+              <div class="set-row">
+                <div class="set-label"><b>Push notifications</b><span>Real-time alerts in your browser</span></div>
+                <div class="set-control"><button class="toggle-switch" id="pushNotifications" type="button"></button></div>
+              </div>
+              <div class="set-row">
+                <div class="set-label"><b>AI response alerts</b><span>Notify me when the AI finishes long answers</span></div>
+                <div class="set-control"><button class="toggle-switch active" id="aiAlerts" type="button"></button></div>
+              </div>
+              <div class="set-row">
+                <div class="set-label"><b>Study reminders</b><span>Gentle nudges to keep up your habit</span></div>
+                <div class="set-control"><button class="toggle-switch active" id="studyReminders" type="button"></button></div>
+              </div>
+              <div class="set-row">
+                <div class="set-label"><b>Daily goal reminders</b><span>Reminders to hit your daily target</span></div>
+                <div class="set-control"><button class="toggle-switch active" id="dailyGoalReminders" type="button"></button></div>
+              </div>
+              <div class="set-row">
+                <div class="set-label"><b>Weekly summary</b><span>A recap of your week every Sunday</span></div>
+                <div class="set-control"><button class="toggle-switch active" id="weeklySummary" type="button"></button></div>
+              </div>
+              <div class="set-actions">
+                <button class="btn primary" id="saveNotificationsBtn"><i class="fas fa-save"></i> Save Notifications</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== AI PREFERENCES ===== -->
+          <section class="set-panel" id="ai-tab" data-reveal>
+            <div class="set-card">
+              <div class="set-card-head">
+                <div class="sc-icon"><i class="fas fa-brain"></i></div>
+                <div>
+                  <h3>AI Personalization</h3>
+                  <p>Fine-tune how your AI tutor thinks and responds.</p>
+                </div>
+              </div>
+              <div class="set-field">
+                <label>Preferred AI Model</label>
+                <select id="aiModel">
+                  <option value="auto">Auto (Smart fallback)</option>
+                  <option value="kimi">Kimi (Moonshot) — Primary</option>
+                  <option value="gemini">Google Gemini — Secondary</option>
+                  <option value="groq">Groq — Tertiary</option>
+                </select>
+                <span class="field-hint">Auto picks the first available provider and falls back automatically if one is down.</span>
+              </div>
+              <div class="set-field">
+                <label>Provider Status</label>
+                <div id="aiProviderStatus" class="provider-status">
+                  <span class="model-badge"><span class="model-dot off"></span> Checking…</span>
+                </div>
+              </div>
+
+              <div class="set-row">
+                <div class="set-label"><b>Response Length</b><span>How detailed answers should be</span></div>
+                <div class="set-control">
+                  <div class="segmented" id="lengthSeg">
+                    <button class="seg" data-value="short">Concise</button>
+                    <button class="seg active" data-value="medium">Balanced</button>
+                    <button class="seg" data-value="long">In-depth</button>
+                  </div>
+                </div>
+              </div>
+              <div class="set-row">
+                <div class="set-label"><b>Creativity</b><span>From precise &amp; factual to imaginative</span></div>
+                <div class="set-control">
+                  <div class="segmented" id="creativitySeg">
+                    <button class="seg" data-value="precise">Precise</button>
+                    <button class="seg active" data-value="balanced">Balanced</button>
+                    <button class="seg" data-value="creative">Creative</button>
+                  </div>
+                </div>
+              </div>
+              <div class="set-field">
+                <label>Study Difficulty</label>
+                <select id="studyDifficulty">
+                  <option value="beginner">Beginner (Simplified)</option>
+                  <option value="intermediate" selected>Intermediate (Standard)</option>
+                  <option value="advanced">Advanced (Rigorous)</option>
+                </select>
+              </div>
+              <div class="set-field">
+                <label>Preferred Language</label>
+                <select id="aiLanguage">
+                  <option value="en">English</option>
+                  <option value="es">Spanish</option>
+                  <option value="fr">French</option>
+                  <option value="de">German</option>
+                  <option value="hi">Hindi</option>
+                  <option value="zh">Chinese</option>
+                  <option value="ar">Arabic</option>
+                  <option value="pt">Portuguese</option>
+                </select>
+              </div>
+              <div class="set-actions">
+                <button class="btn primary" id="saveAiBtn"><i class="fas fa-save"></i> Save AI Preferences</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== ACCESSIBILITY ===== -->
+          <section class="set-panel" id="accessibility-tab" data-reveal>
+            <div class="set-card">
+              <div class="set-card-head">
+                <div class="sc-icon"><i class="fas fa-universal-access"></i></div>
+                <div>
+                  <h3>Accessibility</h3>
+                  <p>Make Study Sphere more comfortable to use. Changes apply instantly.</p>
+                </div>
+              </div>
+              <div class="set-row">
+                <div class="set-label"><b>Reduce motion</b><span>Minimize animations and transitions</span></div>
+                <div class="set-control"><button class="toggle-switch" id="reduceMotion" type="button"></button></div>
+              </div>
+              <div class="set-row">
+                <div class="set-label"><b>High contrast</b><span>Stronger borders &amp; text contrast</span></div>
+                <div class="set-control"><button class="toggle-switch" id="highContrast" type="button"></button></div>
+              </div>
+              <div class="set-row">
+                <div class="set-label"><b>Keyboard navigation hints</b><span>Show focus outlines &amp; shortcut hints</span></div>
+                <div class="set-control"><button class="toggle-switch active" id="keyboardNav" type="button"></button></div>
+              </div>
+              <div class="set-row">
+                <div class="set-label"><b>Screen reader optimizations</b><span>Enhanced ARIA labels &amp; announcements</span></div>
+                <div class="set-control"><button class="toggle-switch" id="screenReader" type="button"></button></div>
+              </div>
+            </div>
+          </section>
+
         </div>
       </div>
     </main>
@@ -232,6 +592,8 @@
   <script src="/js/config.js"></script>
   <script src="/js/analytics-tracker.js"></script>
   <script src="/js/app.js"></script>
+  <script src="/js/motion.js"></script>
+  <script src="/js/command-palette.js"></script>
   <script src="/js/pwa.js"></script>
   <script src="/js/sidebar.js"></script>
   <script src="/js/profile.js"></script>

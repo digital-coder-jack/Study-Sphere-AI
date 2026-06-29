@@ -9,22 +9,24 @@
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#4F46E5">
   <script>
-    /* Apply saved theme before paint to avoid a flash of the wrong theme. */
+    /* Apply saved theme + accent before paint to avoid a flash of the wrong theme. */
     (function () {
       try {
-        var t = localStorage.getItem('ss_theme') || 'dark';
-        document.documentElement.setAttribute('data-theme', t);
+        var r = document.documentElement;
+        r.setAttribute('data-theme', localStorage.getItem('ss_theme') || 'dark');
+        r.setAttribute('data-accent', localStorage.getItem('ss_accent') || 'violet');
+        r.setAttribute('data-font', localStorage.getItem('ss_font') || 'md');
       } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
     })();
   </script>
-  <title>AI Notebook — Your Intelligent Learning Companion</title>
+  <title>Study Sphere AI — Your Intelligent Learning Companion</title>
   <meta name="theme-color" content="#4F46E5" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="AI Notebook" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" href="/assets/logo-192.png" />
-  <meta name="description" content="AI Notebook: an AI-powered study assistant with chat, notes, quizzes, flashcards, study planner and more. Learn smarter, explore deeper, grow faster." />
+  <meta name="description" content="Study Sphere AI: an AI-powered study assistant with chat, notes, quizzes, flashcards, study planner and more. Learn smarter, explore deeper, grow faster." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -179,6 +181,10 @@
     import { injectSpeedInsights } from 'https://cdn.jsdelivr.net/npm/@vercel/speed-insights@2.0.0/dist/index.mjs';
     injectSpeedInsights();
   </script>
+
+  <!-- Premium layer (loaded last to override legacy tokens) -->
+  <link rel="stylesheet" href="/css/theme.css" />
+  <link rel="stylesheet" href="/css/components.css" />
 </head>
 <body>
   <div id="particles-js"></div>
@@ -188,8 +194,8 @@
   <header class="nav">
     <div class="container">
       <a class="brand" href="/">
-        <span class="logo"><img src="/assets/logo.png" alt="AI Notebook Logo" class="logo-img" /></span>
-        <span>AI <span class="grad-text">Notebook</span></span>
+        <span class="logo"><img src="/assets/logo.png" alt="Study Sphere AI Logo" class="logo-img" /></span>
+        <span>Study <span class="grad-text">Sphere</span></span>
       </a>
       <nav class="nav-links" id="navLinks">
         <a class="link" href="#features">Features</a>
@@ -261,7 +267,7 @@
       <div class="section-head" data-aos="fade-up">
         <span class="eyebrow">Everything you need</span>
         <h2>One workspace for all your studying</h2>
-        <p>From instant answers to full study plans — AI Notebook brings powerful learning tools together.</p>
+        <p>From instant answers to full study plans — Study Sphere brings powerful learning tools together.</p>
       </div>
       <div class="grid cols-3">
         <article class="feature glass" data-aos="fade-up" data-aos-delay="0">
@@ -303,7 +309,7 @@
     <div class="container">
       <div class="section-head" data-aos="fade-up">
         <span class="eyebrow">Simple & Powerful</span>
-        <h2>How AI Notebook works</h2>
+        <h2>How Study Sphere works</h2>
         <p>Get started in seconds. No credit card required.</p>
       </div>
       <div class="grid cols-3">
@@ -332,12 +338,12 @@
       <div class="section-head" data-aos="fade-up">
         <span class="eyebrow">Loved by learners</span>
         <h2>What students say</h2>
-        <p>Join thousands of students who are learning smarter with AI Notebook.</p>
+        <p>Join thousands of students who are learning smarter with Study Sphere.</p>
       </div>
       <div class="grid cols-3">
         <div class="testimonial glass" data-aos="fade-up">
           <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-          <p>"AI Notebook completely transformed how I study. The AI explanations are crystal clear, and the quiz generator saves me hours!"</p>
+          <p>"Study Sphere completely transformed how I study. The AI explanations are crystal clear, and the quiz generator saves me hours!"</p>
           <div class="author"><strong>Sarah M.</strong><span>University Student</span></div>
         </div>
         <div class="testimonial glass" data-aos="fade-up" data-aos-delay="80">
@@ -357,7 +363,7 @@
   <!-- CTA Band -->
   <section class="cta-band">
     <h2>Ready to transform your learning?</h2>
-    <p>Join thousands of students who are already learning smarter with AI Notebook.</p>
+    <p>Join thousands of students who are already learning smarter with Study Sphere.</p>
     <div class="cta-buttons">
       <a href="/signup" class="btn primary"><i class="fas fa-rocket"></i> Get Started Free</a>
       <button class="btn ghost" id="guestBtn2" data-guest><i class="fas fa-user-secret"></i> Try as Guest</button>
@@ -373,8 +379,8 @@
       </div>
       <div class="faq-list">
         <div class="faq-item" data-aos="fade-up">
-          <div class="faq-q"><i class="fas fa-chevron-down"></i> Is AI Notebook really free?</div>
-          <div class="faq-a">Yes! AI Notebook is completely free to start. You get unlimited access to all core features including AI chat, notes, quizzes, and flashcards. Premium features are optional.</div>
+          <div class="faq-q"><i class="fas fa-chevron-down"></i> Is Study Sphere really free?</div>
+          <div class="faq-a">Yes! Study Sphere is completely free to start. You get unlimited access to all core features including AI chat, notes, quizzes, and flashcards. Premium features are optional.</div>
         </div>
         <div class="faq-item" data-aos="fade-up" data-aos-delay="80">
           <div class="faq-q"><i class="fas fa-chevron-down"></i> How accurate is the AI?</div>
@@ -382,7 +388,7 @@
         </div>
         <div class="faq-item" data-aos="fade-up" data-aos-delay="160">
           <div class="faq-q"><i class="fas fa-chevron-down"></i> Can I use it on mobile?</div>
-          <div class="faq-a">Absolutely! AI Notebook is fully optimized for mobile devices. You can study on the go with the same powerful features available on desktop.</div>
+          <div class="faq-a">Absolutely! Study Sphere is fully optimized for mobile devices. You can study on the go with the same powerful features available on desktop.</div>
         </div>
         <div class="faq-item" data-aos="fade-up" data-aos-delay="240">
           <div class="faq-q"><i class="fas fa-chevron-down"></i> Is my data private?</div>
@@ -401,8 +407,8 @@
     <div class="container">
       <div>
         <a class="brand" href="/">
-          <span class="logo"><img src="/assets/logo.png" alt="AI Notebook Logo" class="logo-img" /></span>
-          <span>AI <span class="grad-text">Notebook</span></span>
+          <span class="logo"><img src="/assets/logo.png" alt="Study Sphere AI Logo" class="logo-img" /></span>
+          <span>Study <span class="grad-text">Sphere</span></span>
         </a>
         <p class="muted">Your intelligent learning companion. Learn smarter, explore deeper, grow faster.</p>
       </div>

@@ -1,0 +1,317 @@
+/* =====================================================================
+   Study Sphere AI  —  theme.css  (2026 Premium Redesign)
+   ---------------------------------------------------------------------
+   The single source of truth for the refreshed design language. Loaded
+   FIRST (before legacy stylesheets) so it can establish the premium
+   token system, then individual component files layer on top.
+
+   Inspired by Notion · Linear · Vercel · Raycast · Apple · Framer · Stripe.
+
+   Features
+   - Refined premium colour palette (dark + light)
+   - User-selectable accent colour  (html[data-accent="violet|blue|..."])
+   - Font-size scaling             (html[data-font="sm|md|lg"])
+   - Density                       (html[data-density="comfortable|compact"])
+   - High contrast                 (html[data-contrast="high"])
+   - Reduced motion                (html[data-motion="reduced"])
+   - Consistent radius / shadow / spacing scale
+   ===================================================================== */
+
+/* ===================================================================
+   1. CORE TOKENS — DARK (default)
+   =================================================================== */
+:root,
+:root[data-theme='dark'] {
+  /* ---- Surfaces ---- */
+  --bg-0: #07080f;          /* page base */
+  --bg-1: #0c0e1a;          /* raised */
+  --bg-2: #11142a;          /* card */
+  --bg-3: #181c38;          /* elevated */
+
+  /* ---- Glass ---- */
+  --glass: rgba(255, 255, 255, 0.045);
+  --glass-2: rgba(255, 255, 255, 0.07);
+  --glass-strong: rgba(255, 255, 255, 0.1);
+  --glass-premium: rgba(255, 255, 255, 0.06);
+
+  /* ---- Borders / hairlines ---- */
+  --border: rgba(255, 255, 255, 0.09);
+  --border-light: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  /* ---- Text ---- */
+  --text: #eef1ff;
+  --text-dim: #9aa1c4;
+  --text-muted: #6b7193;
+
+  /* ---- Accent (overridable, see §3) ---- */
+  --accent-h: 252;
+  --accent: hsl(var(--accent-h) 90% 66%);
+  --accent-2: hsl(calc(var(--accent-h) + 38) 85% 65%);
+  --accent-soft: hsl(var(--accent-h) 90% 66% / 0.14);
+  --accent-ring: hsl(var(--accent-h) 90% 66% / 0.32);
+
+  /* Legacy aliases (kept so existing CSS keeps working) */
+  --primary: var(--accent);
+  --primary-2: var(--accent-2);
+  --primary-light: hsl(var(--accent-h) 95% 75%);
+  --primary-dark: hsl(var(--accent-h) 70% 55%);
+
+  /* ---- Status ---- */
+  --success: #38d39f;
+  --warning: #fbbf24;
+  --danger: #fb7185;
+  --info: #60a5fa;
+
+  /* ---- Shadows (soft, layered) ---- */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.22);
+  --shadow-md: 0 8px 26px rgba(0, 0, 0, 0.32);
+  --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.45);
+  --shadow-xl: 0 32px 80px rgba(0, 0, 0, 0.55);
+  --shadow: var(--shadow-lg);
+  --shadow-glow: 0 0 0 1px var(--accent-ring), 0 14px 40px hsl(var(--accent-h) 90% 50% / 0.28);
+  --shadow-accent: 0 12px 30px hsl(var(--accent-h) 90% 50% / 0.32);
+
+  /* ---- Gradients ---- */
+  --grad: linear-gradient(135deg, var(--accent), var(--accent-2));
+  --grad-primary: linear-gradient(135deg, var(--accent), var(--accent-2));
+  --grad-accent: linear-gradient(135deg, var(--accent-2), var(--accent));
+  --grad-mesh:
+    radial-gradient(60% 80% at 50% 0%, hsl(var(--accent-h) 90% 60% / 0.16), transparent 60%);
+  --grad-text: linear-gradient(120deg, var(--text) 0%, var(--accent) 60%, var(--accent-2) 100%);
+
+  /* ---- Chrome ---- */
+  --nav-bg: rgba(10, 12, 24, 0.62);
+  --menu-bg: rgba(14, 16, 32, 0.92);
+  --surface-glass: rgba(16, 19, 38, 0.72);
+
+  --page-bg:
+    radial-gradient(1200px 760px at 12% -12%, hsl(var(--accent-h) 90% 55% / 0.16), transparent 55%),
+    radial-gradient(1000px 680px at 112% 6%, hsl(calc(var(--accent-h) + 40) 85% 55% / 0.13), transparent 55%),
+    var(--bg-0);
+}
+
+/* ===================================================================
+   2. CORE TOKENS — LIGHT
+   =================================================================== */
+:root[data-theme='light'] {
+  --bg-0: #f4f6fd;
+  --bg-1: #ffffff;
+  --bg-2: #ffffff;
+  --bg-3: #f1f4ff;
+
+  --glass: rgba(255, 255, 255, 0.7);
+  --glass-2: rgba(255, 255, 255, 0.82);
+  --glass-strong: rgba(255, 255, 255, 0.92);
+  --glass-premium: rgba(255, 255, 255, 0.86);
+
+  --border: rgba(18, 26, 64, 0.1);
+  --border-light: rgba(18, 26, 64, 0.06);
+  --border-strong: rgba(18, 26, 64, 0.16);
+
+  --text: #15192e;
+  --text-dim: #565d80;
+  --text-muted: #8b91ad;
+
+  --accent: hsl(var(--accent-h) 80% 58%);
+  --accent-2: hsl(calc(var(--accent-h) + 38) 72% 56%);
+  --accent-soft: hsl(var(--accent-h) 80% 58% / 0.12);
+  --accent-ring: hsl(var(--accent-h) 80% 58% / 0.26);
+
+  --primary: var(--accent);
+  --primary-2: var(--accent-2);
+  --primary-light: hsl(var(--accent-h) 85% 66%);
+  --primary-dark: hsl(var(--accent-h) 65% 46%);
+
+  --success: #0f9d72;
+  --warning: #d97706;
+  --danger: #e11d48;
+  --info: #2563eb;
+
+  --shadow-xs: 0 1px 2px rgba(40, 50, 100, 0.06);
+  --shadow-sm: 0 2px 10px rgba(40, 50, 100, 0.08);
+  --shadow-md: 0 10px 30px rgba(40, 50, 100, 0.1);
+  --shadow-lg: 0 20px 48px rgba(40, 50, 100, 0.14);
+  --shadow-xl: 0 32px 80px rgba(40, 50, 100, 0.18);
+  --shadow: var(--shadow-lg);
+  --shadow-glow: 0 0 0 1px var(--accent-ring), 0 14px 36px hsl(var(--accent-h) 80% 55% / 0.22);
+  --shadow-accent: 0 12px 28px hsl(var(--accent-h) 80% 55% / 0.25);
+
+  --nav-bg: rgba(255, 255, 255, 0.72);
+  --menu-bg: rgba(255, 255, 255, 0.95);
+  --surface-glass: rgba(255, 255, 255, 0.78);
+
+  --page-bg:
+    radial-gradient(1200px 760px at 12% -12%, hsl(var(--accent-h) 80% 60% / 0.14), transparent 55%),
+    radial-gradient(1000px 680px at 112% 6%, hsl(calc(var(--accent-h) + 40) 75% 60% / 0.1), transparent 55%),
+    var(--bg-0);
+}
+
+/* ===================================================================
+   3. ACCENT COLOUR SYSTEM
+   Apply with  <html data-accent="violet">  (default = violet)
+   =================================================================== */
+:root[data-accent='violet'] { --accent-h: 256; }
+:root[data-accent='indigo'] { --accent-h: 236; }
+:root[data-accent='blue']   { --accent-h: 214; }
+:root[data-accent='cyan']   { --accent-h: 190; }
+:root[data-accent='emerald']{ --accent-h: 158; }
+:root[data-accent='amber']  { --accent-h: 38;  }
+:root[data-accent='rose']   { --accent-h: 346; }
+:root[data-accent='pink']   { --accent-h: 326; }
+
+/* ===================================================================
+   4. SCALE TOKENS  (shared across themes)
+   =================================================================== */
+:root {
+  /* Spacing (8px grid) */
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+
+  /* Radius */
+  --radius-xs: 8px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-2xl: 30px;
+  --radius-full: 999px;
+  --radius: var(--radius-lg);
+
+  /* Typography scale (multiplied by --font-scale) */
+  --font-scale: 1;
+  --fs-xs: calc(0.75rem * var(--font-scale));
+  --fs-sm: calc(0.875rem * var(--font-scale));
+  --fs-base: calc(1rem * var(--font-scale));
+  --fs-lg: calc(1.125rem * var(--font-scale));
+  --fs-xl: calc(1.35rem * var(--font-scale));
+  --fs-2xl: calc(1.75rem * var(--font-scale));
+  --fs-3xl: calc(2.25rem * var(--font-scale));
+
+  /* Density (row paddings adapt) */
+  --density-pad: 0.9rem;
+  --density-gap: 1.1rem;
+
+  /* Motion */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 130ms;
+  --dur-base: 240ms;
+  --dur-slow: 420ms;
+  --transition-fast: var(--dur-fast) var(--ease-smooth);
+  --transition-base: var(--dur-base) var(--ease-smooth);
+  --transition-smooth: var(--dur-slow) var(--ease-smooth);
+}
+
+/* ---- Font size preference ---- */
+:root[data-font='sm'] { --font-scale: 0.92; }
+:root[data-font='md'] { --font-scale: 1; }
+:root[data-font='lg'] { --font-scale: 1.1; }
+
+/* ---- Density preference ---- */
+:root[data-density='compact'] {
+  --density-pad: 0.62rem;
+  --density-gap: 0.7rem;
+}
+:root[data-density='comfortable'] {
+  --density-pad: 1rem;
+  --density-gap: 1.2rem;
+}
+
+/* ===================================================================
+   5. HIGH CONTRAST
+   =================================================================== */
+:root[data-contrast='high'] {
+  --border: rgba(255, 255, 255, 0.32);
+  --border-light: rgba(255, 255, 255, 0.22);
+  --text-dim: #c3c9ea;
+  --text-muted: #9aa1c4;
+  --glass: rgba(255, 255, 255, 0.1);
+}
+:root[data-theme='light'][data-contrast='high'] {
+  --border: rgba(18, 26, 64, 0.4);
+  --text-dim: #2a3050;
+  --text-muted: #4a5170;
+}
+
+/* ===================================================================
+   6. REDUCED MOTION (user toggle OR OS preference)
+   =================================================================== */
+:root[data-motion='reduced'] *,
+:root[data-motion='reduced'] *::before,
+:root[data-motion='reduced'] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ===================================================================
+   7. GLOBAL BASE POLISH
+   =================================================================== */
+html { font-size: 100%; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: var(--fs-base);
+  letter-spacing: -0.011em;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-soft); color: var(--text); }
+
+/* Refined scrollbars */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); background-clip: padding-box; }
+* { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+
+/* Gradient text helper used across pages */
+.grad-text,
+.text-grad {
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Focus ring — consistent & accessible */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Animated gradient utility (for premium headings / borders) */
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.animated-gradient {
+  background-size: 200% 200%;
+  animation: gradientShift 6s var(--ease-smooth) infinite;
+}

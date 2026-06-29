@@ -16,7 +16,7 @@
       } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
     })();
   </script>
-  <title>Dashboard · AI Notebook</title>
+  <title>Dashboard · Study Sphere AI</title>
   <meta name="theme-color" content="#4F46E5" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -36,6 +36,11 @@
     import { injectSpeedInsights } from 'https://cdn.jsdelivr.net/npm/@vercel/speed-insights@2.0.0/dist/index.mjs';
     injectSpeedInsights();
   </script>
+  <link rel="stylesheet" href="/css/theme.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/sidebar.css" />
+  <link rel="stylesheet" href="/css/command-palette.css" />
+  <link rel="stylesheet" href="/css/dashboard-premium.css" />
 </head>
 <body>
   <div id="particles-js"></div>
@@ -48,36 +53,122 @@
     <main class="content">
       <div class="topbar">
         <div>
-          <h1>Welcome back, <span id="userName">there</span> 👋</h1>
-          <p class="sub">Here's your learning activity at a glance.</p>
+          <h1>Welcome back, <span id="userName">there</span> <span class="wave">👋</span></h1>
+          <p class="sub" id="dashSubtitle">Here's your learning activity at a glance.</p>
         </div>
-        <div style="display:flex; gap:.7rem; align-items:center;">
+        <div class="topbar-actions">
+          <button class="search-trigger" data-cmdk aria-label="Search">
+            <i class="fas fa-magnifying-glass"></i>
+            <span class="stxt">Search or jump to…</span>
+            <span class="kbd">⌘K</span>
+          </button>
           <a class="btn" href="/chat"><i class="fas fa-plus"></i> New chat</a>
           <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
         </div>
       </div>
 
       <!-- Stats -->
-      <section class="stats-grid" id="statsGrid">
+      <section class="stats-grid" id="statsGrid" data-stagger>
         <div class="stat-card glass"><div class="ic skeleton" style="width:46px;height:46px"></div><b class="skeleton" style="height:28px;width:60%">&nbsp;</b><span class="skeleton" style="height:14px;width:80%">&nbsp;</span></div>
         <div class="stat-card glass"><div class="ic skeleton" style="width:46px;height:46px"></div><b class="skeleton" style="height:28px;width:60%">&nbsp;</b><span class="skeleton" style="height:14px;width:80%">&nbsp;</span></div>
         <div class="stat-card glass"><div class="ic skeleton" style="width:46px;height:46px"></div><b class="skeleton" style="height:28px;width:60%">&nbsp;</b><span class="skeleton" style="height:14px;width:80%">&nbsp;</span></div>
         <div class="stat-card glass"><div class="ic skeleton" style="width:46px;height:46px"></div><b class="skeleton" style="height:28px;width:60%">&nbsp;</b><span class="skeleton" style="height:14px;width:80%">&nbsp;</span></div>
       </section>
 
-      <!-- Panels -->
-      <section class="panels">
-        <div class="panel glass">
-          <h3><i class="fas fa-chart-line"></i> Daily activity (last 7 days)</h3>
+      <!-- Quick actions -->
+      <section class="dash-section" data-reveal>
+        <div class="section-title"><h2><i class="fas fa-bolt"></i> Quick actions</h2></div>
+        <div class="quick-actions" data-stagger>
+          <a class="qa-card glass ripple-host" href="/chat">
+            <span class="qa-ic" style="--qa: 256"><i class="fas fa-pen-to-square"></i></span>
+            <b>Ask AI</b><span>Start a new conversation</span>
+          </a>
+          <a class="qa-card glass ripple-host" href="/tools#notes">
+            <span class="qa-ic" style="--qa: 190"><i class="fas fa-note-sticky"></i></span>
+            <b>New note</b><span>Capture an idea</span>
+          </a>
+          <a class="qa-card glass ripple-host" href="/tools#quiz">
+            <span class="qa-ic" style="--qa: 158"><i class="fas fa-clipboard-question"></i></span>
+            <b>Generate quiz</b><span>Test your knowledge</span>
+          </a>
+          <a class="qa-card glass ripple-host" href="/tools#flashcards">
+            <span class="qa-ic" style="--qa: 38"><i class="fas fa-layer-group"></i></span>
+            <b>Flashcards</b><span>Revise faster</span>
+          </a>
+        </div>
+      </section>
+
+      <!-- Main grid -->
+      <section class="dash-grid">
+        <!-- Activity chart -->
+        <div class="panel glass dash-activity" data-reveal>
+          <div class="panel-head">
+            <h3><i class="fas fa-chart-line"></i> Daily activity</h3>
+            <span class="chip" id="activityTotal">Last 7 days</span>
+          </div>
           <div class="chart-wrap"><canvas id="activityChart"></canvas></div>
         </div>
-        <div class="panel glass" id="history">
-          <h3><i class="fas fa-clock-rotate-left"></i> Recent chats</h3>
+
+        <!-- Study progress -->
+        <div class="panel glass dash-progress" data-reveal="right">
+          <div class="panel-head">
+            <h3><i class="fas fa-bullseye"></i> Study progress</h3>
+          </div>
+          <div class="progress-ring-wrap">
+            <div class="progress-ring" id="progressRing" style="--p: 0">
+              <div class="progress-ring-inner">
+                <b id="progressPct" data-count="0" data-count-suffix="%">0%</b>
+                <span>Weekly goal</span>
+              </div>
+            </div>
+          </div>
+          <div class="progress-meta" id="progressMeta">
+            <div class="pm-row"><span><i class="fas fa-fire"></i> Streak</span><b id="streakVal">0 days</b></div>
+            <div class="pm-row"><span><i class="fas fa-comments"></i> This week</span><b id="weekMsgs">0 msgs</b></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Secondary grid -->
+      <section class="dash-grid-2">
+        <!-- Recent chats -->
+        <div class="panel glass" id="history" data-reveal="left">
+          <div class="panel-head">
+            <h3><i class="fas fa-clock-rotate-left"></i> Recent chats</h3>
+            <a class="chip clickable" href="/chat">View all</a>
+          </div>
           <div class="recent-list" id="recentChats">
             <div class="recent-item skeleton" style="height:54px"></div>
             <div class="recent-item skeleton" style="height:54px"></div>
             <div class="recent-item skeleton" style="height:54px"></div>
           </div>
+        </div>
+
+        <!-- AI usage -->
+        <div class="panel glass dash-ai" data-reveal="right">
+          <div class="panel-head">
+            <h3><i class="fas fa-robot"></i> AI usage</h3>
+          </div>
+          <div class="ai-usage" id="aiUsage">
+            <div class="ai-usage-bar">
+              <div class="aub-label"><span>Responses generated</span><b id="aiResponses">0</b></div>
+              <div class="progress"><span id="aiResponsesBar" style="width:0%"></span></div>
+            </div>
+            <div class="ai-providers" id="aiProvidersMini">
+              <span class="model-badge"><span class="model-dot off"></span> Checking…</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Achievements -->
+      <section class="dash-section" data-reveal>
+        <div class="section-title"><h2><i class="fas fa-trophy"></i> Achievements</h2></div>
+        <div class="achievements" id="achievements" data-stagger>
+          <div class="ach-card glass skeleton" style="height:96px"></div>
+          <div class="ach-card glass skeleton" style="height:96px"></div>
+          <div class="ach-card glass skeleton" style="height:96px"></div>
+          <div class="ach-card glass skeleton" style="height:96px"></div>
         </div>
       </section>
     </main>
@@ -88,6 +179,8 @@
   <script src="/js/config.js"></script>
   <script src="/js/analytics-tracker.js"></script>
   <script src="/js/app.js"></script>
+  <script src="/js/motion.js"></script>
+  <script src="/js/command-palette.js"></script>
   <script src="/js/pwa.js"></script>
   <script src="/js/sidebar.js"></script>
   <script src="/js/dashboard.js"></script>

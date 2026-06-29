@@ -1,0 +1,184 @@
+/* =====================================================================
+   Study Sphere AI  -  command-palette.css
+   Raycast / Linear-style instant search & command palette (Ctrl + K)
+   ===================================================================== */
+
+/* Shared topbar action cluster (used by every app page that shows the
+   search pill — defined here so it is available wherever the palette is). */
+.topbar-actions { display: flex; gap: 0.7rem; align-items: center; }
+
+.cmdk-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(1rem, 12vh, 9rem) 1rem 1rem;
+  background: rgba(4, 6, 16, 0.5);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--dur-base) var(--ease-smooth), visibility var(--dur-base);
+}
+.cmdk-overlay.open { opacity: 1; visibility: visible; }
+
+.cmdk {
+  width: min(640px, 100%);
+  background: var(--menu-bg);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  backdrop-filter: blur(28px) saturate(150%);
+  overflow: hidden;
+  transform: translateY(-14px) scale(0.97);
+  opacity: 0;
+  transition: transform var(--dur-slow) var(--ease-spring), opacity var(--dur-base) var(--ease-smooth);
+}
+.cmdk-overlay.open .cmdk { transform: translateY(0) scale(1); opacity: 1; }
+
+/* Search input row */
+.cmdk-search {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid var(--border);
+}
+.cmdk-search > i { color: var(--accent); font-size: 1.1rem; }
+.cmdk-search input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: var(--fs-lg);
+  font-family: inherit;
+}
+.cmdk-search input::placeholder { color: var(--text-muted); }
+.cmdk-search .cmdk-esc {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.2rem 0.45rem;
+  background: var(--glass);
+}
+
+/* Filter chips */
+.cmdk-filters {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.7rem 1.2rem;
+  border-bottom: 1px solid var(--border-light);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.cmdk-filters::-webkit-scrollbar { display: none; }
+
+/* Results list */
+.cmdk-results {
+  max-height: min(52vh, 440px);
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+.cmdk-group-label {
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  padding: 0.7rem 0.7rem 0.4rem;
+  font-weight: 700;
+}
+.cmdk-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--text-dim);
+  transition: background var(--dur-fast), color var(--dur-fast);
+}
+.cmdk-item .cmdk-ic {
+  width: 36px; height: 36px;
+  flex-shrink: 0;
+  display: grid; place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.95rem;
+}
+.cmdk-item .cmdk-text { flex: 1; min-width: 0; }
+.cmdk-item .cmdk-text b { display: block; font-size: var(--fs-sm); color: var(--text); font-weight: 600; }
+.cmdk-item .cmdk-text span { font-size: var(--fs-xs); color: var(--text-muted); }
+.cmdk-item .cmdk-hint { font-size: var(--fs-xs); color: var(--text-muted); }
+.cmdk-item.active,
+.cmdk-item:hover { background: var(--accent-soft); color: var(--text); }
+.cmdk-item.active .cmdk-ic { background: var(--grad); color: #fff; }
+.cmdk-item mark { background: transparent; color: var(--accent); font-weight: 700; }
+
+/* Empty state */
+.cmdk-empty {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--text-dim);
+}
+.cmdk-empty .cmdk-empty-ic {
+  width: 64px; height: 64px; margin: 0 auto 0.9rem;
+  display: grid; place-items: center;
+  border-radius: var(--radius-xl);
+  background: var(--accent-soft); color: var(--accent);
+  font-size: 1.6rem;
+}
+.cmdk-empty b { display: block; color: var(--text); margin-bottom: 0.2rem; }
+.cmdk-empty span { font-size: var(--fs-sm); }
+
+/* Footer hints */
+.cmdk-foot {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 0.7rem 1.2rem;
+  border-top: 1px solid var(--border);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+.cmdk-foot .k {
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0.1rem 0.4rem;
+  background: var(--glass);
+  margin: 0 0.15rem;
+}
+
+/* Search trigger pill used in topbars */
+.search-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.9rem;
+  min-width: 220px;
+  border-radius: var(--radius-md);
+  background: var(--glass);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  transition: all var(--dur-base) var(--ease-smooth);
+}
+.search-trigger:hover { border-color: var(--accent-ring); color: var(--text-dim); background: var(--glass-2); }
+.search-trigger i { color: var(--accent); }
+.search-trigger .kbd {
+  margin-left: auto;
+  font-size: var(--fs-xs);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.12rem 0.4rem;
+  background: var(--glass-2);
+}
+@media (max-width: 880px) {
+  .search-trigger { min-width: 0; }
+  .search-trigger .stxt, .search-trigger .kbd { display: none; }
+  .search-trigger { width: 42px; height: 42px; justify-content: center; padding: 0; }
+}

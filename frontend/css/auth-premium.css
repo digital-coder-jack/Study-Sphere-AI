@@ -1,0 +1,132 @@
+/* =====================================================================
+   Study Sphere AI  -  auth-premium.css  (2026 Premium Redesign)
+   ---------------------------------------------------------------------
+   Refines the login / signup / forgot pages on top of auth.css using the
+   theme.css token system. Keeps existing markup & JS untouched.
+   ===================================================================== */
+
+.auth-wrap {
+  position: relative;
+  z-index: 2;
+}
+
+/* Ambient gradient orbs behind the card */
+.auth-wrap::before,
+.auth-wrap::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.5;
+  z-index: 0;
+  pointer-events: none;
+}
+.auth-wrap::before {
+  width: 420px; height: 420px;
+  top: -120px; left: -100px;
+  background: radial-gradient(circle, hsl(var(--accent-h) 90% 60% / 0.45), transparent 70%);
+  animation: authFloat 14s ease-in-out infinite;
+}
+.auth-wrap::after {
+  width: 380px; height: 380px;
+  bottom: -120px; right: -90px;
+  background: radial-gradient(circle, hsl(calc(var(--accent-h) + 40) 85% 60% / 0.35), transparent 70%);
+  animation: authFloat 18s ease-in-out infinite reverse;
+}
+@keyframes authFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(28px, -22px) scale(1.08); }
+}
+:root[data-motion="reduced"] .auth-wrap::before,
+:root[data-motion="reduced"] .auth-wrap::after { animation: none; }
+
+/* The card */
+.auth-card.glass {
+  position: relative;
+  z-index: 3;
+  background: var(--surface, rgba(20, 24, 38, 0.72)) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl, 22px) !important;
+  box-shadow: var(--shadow-lg, 0 30px 80px rgba(0,0,0,0.45)) !important;
+  backdrop-filter: blur(22px) saturate(160%);
+  animation: authCardIn 0.6s var(--ease-smooth) both;
+}
+@keyframes authCardIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.auth-card .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.auth-card .brand .logo-img {
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  box-shadow: var(--shadow-accent);
+}
+.auth-card h1 {
+  letter-spacing: -0.02em;
+  background: var(--grad, linear-gradient(135deg, var(--text), var(--accent)));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* Inputs */
+.auth-card .input-wrap input {
+  transition: border-color var(--dur-base) var(--ease-smooth),
+              box-shadow var(--dur-base) var(--ease-smooth),
+              background var(--dur-base) var(--ease-smooth);
+}
+.auth-card .input-wrap input:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--accent-ring) !important;
+}
+.auth-card .input-wrap .lead-icon { transition: color var(--dur-base) var(--ease-smooth); }
+.auth-card .input-wrap input:focus ~ .lead-icon,
+.auth-card .field:focus-within .lead-icon { color: var(--accent); }
+
+/* Primary submit button — premium gradient */
+.auth-card .btn.block:not(.ghost) {
+  background: var(--grad, linear-gradient(135deg, var(--accent), var(--accent-2))) !important;
+  border: none !important;
+  box-shadow: var(--shadow-accent);
+  transition: transform var(--dur-fast) var(--ease-smooth),
+              box-shadow var(--dur-base) var(--ease-smooth),
+              filter var(--dur-base) var(--ease-smooth);
+}
+.auth-card .btn.block:not(.ghost):hover {
+  transform: translateY(-2px);
+  filter: brightness(1.06);
+  box-shadow: var(--shadow-glow);
+}
+.auth-card .btn.block:not(.ghost):active { transform: translateY(0); }
+
+.auth-card .btn.ghost.block {
+  border: 1px solid var(--border) !important;
+  transition: border-color var(--dur-base) var(--ease-smooth),
+              background var(--dur-base) var(--ease-smooth),
+              transform var(--dur-fast) var(--ease-smooth);
+}
+.auth-card .btn.ghost.block:hover {
+  border-color: var(--accent-ring) !important;
+  background: var(--accent-soft) !important;
+  transform: translateY(-1px);
+}
+
+.auth-card .auth-row a,
+.auth-card .auth-foot a { color: var(--accent); }
+
+.auth-or { color: var(--text-muted); }
+
+/* Floating helpers */
+.back-home, .theme-toggle.floating {
+  z-index: 10;
+  transition: transform var(--dur-base) var(--ease-smooth),
+              color var(--dur-base) var(--ease-smooth);
+}
+.back-home:hover { transform: translateX(-3px); color: var(--accent); }
+.theme-toggle.floating:hover { transform: scale(1.08); }

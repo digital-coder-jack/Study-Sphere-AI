@@ -1,8 +1,9 @@
 <div align="center">
 
-# 🌌 AI Notebook
+# 🌌 Study Sphere AI
 
 ### ✨ Your Intelligent Learning Companion — now a full Web App + Telegram Bot
+### 🎨 2026 Premium Redesign — minimal yet premium (Notion · Linear · Vercel · Raycast · Stripe)
 
 **Learn smarter. Explore deeper. Grow faster.**
 
@@ -34,6 +35,42 @@ The original Telegram bot is **fully preserved** — it now benefits from the sa
 - Service worker (`/sw.js`) — app-shell caching, **offline page** (`/offline.html`), update notifications, background-sync hook
 - **Install app** button, standalone app mode, adaptive/maskable icons, network status banners
 - Compatible with **PWABuilder** for Android APK generation
+
+---
+
+## 🎨 2026 Premium Redesign (Study Sphere)
+
+A full **premium UI/UX overhaul** giving the app the look & feel of Notion / Linear / Vercel / Raycast / Stripe Dashboard — **minimal yet premium**. No functionality, auth, API, or Android code was removed; existing features were redesigned, not replaced.
+
+**Design system & theming**
+- **`css/theme.css`** — premium design-token layer (loaded *last* so it overrides legacy tokens). Glassmorphism, soft shadows, consistent radius/spacing/typography scales, dark + light themes.
+- **HSL accent system** — 8 selectable accent colors (`data-accent="violet|indigo|blue|cyan|emerald|amber|rose|pink"`); a single `--accent-h` hue drives the entire palette and updates **instantly & globally**.
+- **Adaptive prefs** via `<html data-*>`: font scaling (`data-font`), density (`data-density`), high contrast (`data-contrast`), reduced motion (`data-motion`).
+
+**Animation (vanilla, no framework)**
+- **`js/motion.js`** → `window.SSMotion` — the best motion approach for this *vanilla multi-page* app (Framer Motion is React-only). Provides scroll reveal (IntersectionObserver), universal click **ripple**, **tilt**, **count-up** numbers, staggered lists, page-transition feel, and persisted-preference application (`applyPreferences` / `setPreference`).
+- Respects `prefers-reduced-motion` and the Accessibility “Reduce motion” toggle.
+
+**Component library**
+- **`css/components.css`** — one consistent design system: buttons (primary/ghost/subtle/outline/danger/icon), inputs, **toggle switches**, **segmented controls**, chips/badges, tooltips, dropdowns, modals, progress bars, **skeletons**, alerts, tabs, breadcrumbs, empty states, upgraded toasts.
+
+**Command palette (Raycast-style)**
+- **`css/command-palette.css` + `js/command-palette.js`** → `window.SSCommand` — instant search popup via **Ctrl/⌘ + K** (or `/`). Pages + actions catalogue, filter chips (All / Pages / Actions / Recent), recent searches & recent chats, match highlighting, full keyboard navigation, empty-state. A `.search-trigger` pill is in every app topbar.
+
+**Sidebar redesign**
+- **`js/sidebar.js` + `css/sidebar.css`** — grouped nav (Workspace / Insights) with a modern active indicator & hover effects. **Profile card** footer: expanded shows avatar + name + email + dropdown (View profile / Settings / Analytics / Logout); collapsed shows avatar + status dot + settings shortcut. Animated collapse/expand, persisted state, mobile drawer preserved.
+
+**Dashboard redesign**
+- **`dashboard.html` + `css/dashboard-premium.css` + `js/dashboard.js`** — Linear/Vercel-style: stat cards with count-up, quick-action cards, **weekly activity chart** (Chart.js, accent-aware), **study-progress ring** (conic-gradient), **AI usage** panel, **recent chats** with empty state, and 4 derived **achievement cards**. All widgets derived client-side from the existing `/api/stats` — **no backend changes**.
+
+**Settings expansion** (`/settings`)
+- **`profile.html` + `js/profile.js` + `css/settings-premium.css`** — sticky vertical nav with 8 sections: **Profile** (photo, bio, education, goals), **Security** (password, 2FA UI, connected devices/sessions, danger zone), **Privacy** (visibility, activity, data download, clear history, login history), **Appearance** (theme light/dark/system, accent swatches, font size, density), **Dashboard** (default page, sidebar behavior, widget toggles), **Notifications** (email/push/AI/reminders/weekly summary), **AI Preferences** (model, length, creativity, difficulty, language), **Accessibility** (reduce motion, high contrast, keyboard nav, screen-reader).
+- Persists the **4 existing backend categories** (`appearance` / `dashboard` / `notifications` / `ai_settings`) as JSON blobs (no schema change); extended fields nest inside these blobs + mirror to `localStorage` and apply instantly via `SSMotion`.
+
+**Responsive & accessible**
+- Verified across desktop / laptop / tablet / large monitor and mobile (390px) — no broken or overflowing layouts. Focus rings, keyboard shortcuts, reduced-motion and high-contrast support throughout.
+
+> **Verified:** all routes return `200`; dashboard renders 4 stat cards, 4 quick actions, profile card, 4 achievements, chart + progress ring; Ctrl+K palette opens; settings shows 8 nav sections / 8 panels / 18 toggles / 5 segmented controls / 8 accent swatches; selecting an accent applies it globally & instantly; **zero JS errors** (only harmless Vercel Speed-Insights 404 locally).
 
 ---
 
@@ -154,9 +191,17 @@ AINotebook/  (repo root)
 │   └── bot.py            # The Telegram bot (shared backend, unchanged behaviour)
 ├── frontend/
 │   ├── index.html login.html signup.html forgot.html
-│   ├── dashboard.html chat.html tools.html profile.html
-│   ├── css/  (style, auth, dashboard, chat, tools)
-│   └── js/   (app, main, auth, sidebar, dashboard, chat, tools, profile)
+│   ├── dashboard.html chat.html tools.html analytics.html profile.html telegram.html
+│   ├── css/  (style, auth, dashboard, chat, tools, analytics, responsive,
+│   │          premium-design-system, sidebar-mobile,
+│   │          ┌── 2026 Premium layer (loaded last to override legacy) ──┐
+│   │          theme, components, sidebar, command-palette,
+│   │          dashboard-premium, settings-premium, auth-premium)
+│   └── js/   (app, main, auth, sidebar, dashboard, chat, tools, profile,
+│              config, analytics-tracker, analytics-dashboard, pwa, confetti,
+│              ┌── 2026 Premium layer ──┐
+│              motion  → window.SSMotion,
+│              command-palette → window.SSCommand)
 ├── requirements.txt
 ├── vercel.json
 └── .env.example
