@@ -1,6 +1,6 @@
 <div align="center">
 
-# <img src="/frontend/assets/logo-192.png" alt="Project Logo" width="200" height="100"> AI Notebook
+# <img src="/frontend/assets/logo-192.png" alt="Project Logo" width="100" height="100"> AI Notebook
 
 ### ✨ Your Intelligent Learning Companion — now a full Web App + Telegram Bot
 ### 🎨 2026 Premium Redesign — minimal yet premium (Notion · Linear · Vercel · Raycast · Stripe)
