@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🌌 Study Sphere AI
+# <img src="/frontend/assets/logo.png" alt="Project Logo" width="800">AI Notebook
 
 ### ✨ Your Intelligent Learning Companion — now a full Web App + Telegram Bot
 ### 🎨 2026 Premium Redesign — minimal yet premium (Notion · Linear · Vercel · Raycast · Stripe)
